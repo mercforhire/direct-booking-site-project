@@ -124,58 +124,67 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | TBD | Pending |
-| AUTH-02 | TBD | Pending |
-| AUTH-03 | TBD | Pending |
-| AUTH-04 | TBD | Pending |
-| AUTH-05 | TBD | Pending |
-| BRND-01 | TBD | Pending |
-| BRND-02 | TBD | Pending |
-| BRND-03 | TBD | Pending |
-| BRND-04 | TBD | Pending |
-| BRND-05 | TBD | Pending |
-| GENR-01 | TBD | Pending |
-| GENR-02 | TBD | Pending |
-| GENR-03 | TBD | Pending |
-| GENR-04 | TBD | Pending |
-| GENR-05 | TBD | Pending |
-| GENR-06 | TBD | Pending |
-| GENR-07 | TBD | Pending |
-| GENR-08 | TBD | Pending |
-| RSLT-01 | TBD | Pending |
-| RSLT-02 | TBD | Pending |
-| RSLT-03 | TBD | Pending |
-| RSLT-04 | TBD | Pending |
-| RSLT-05 | TBD | Pending |
-| RSLT-06 | TBD | Pending |
-| RSLT-07 | TBD | Pending |
-| RSLT-08 | TBD | Pending |
-| BILL-01 | TBD | Pending |
-| BILL-02 | TBD | Pending |
-| BILL-03 | TBD | Pending |
-| BILL-04 | TBD | Pending |
-| BILL-05 | TBD | Pending |
-| BILL-06 | TBD | Pending |
-| BILL-07 | TBD | Pending |
-| LAND-01 | TBD | Pending |
-| LAND-02 | TBD | Pending |
-| LAND-03 | TBD | Pending |
-| LAND-04 | TBD | Pending |
-| LAND-05 | TBD | Pending |
-| LAND-06 | TBD | Pending |
-| LAND-07 | TBD | Pending |
-| DASH-01 | TBD | Pending |
-| DASH-02 | TBD | Pending |
-| DASH-03 | TBD | Pending |
-| DASH-04 | TBD | Pending |
-| DASH-05 | TBD | Pending |
-| DASH-06 | TBD | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| AUTH-05 | Phase 1 | Pending |
+| BRND-01 | Phase 2 | Pending |
+| BRND-02 | Phase 2 | Pending |
+| BRND-03 | Phase 2 | Pending |
+| BRND-04 | Phase 2 | Pending |
+| BRND-05 | Phase 2 | Pending |
+| GENR-01 | Phase 3 | Pending |
+| GENR-02 | Phase 3 | Pending |
+| GENR-03 | Phase 3 | Pending |
+| GENR-04 | Phase 3 | Pending |
+| GENR-05 | Phase 3 | Pending |
+| GENR-06 | Phase 3 | Pending |
+| GENR-07 | Phase 3 | Pending |
+| GENR-08 | Phase 3 | Pending |
+| RSLT-01 | Phase 6 | Pending |
+| RSLT-02 | Phase 6 | Pending |
+| RSLT-03 | Phase 6 | Pending |
+| RSLT-04 | Phase 6 | Pending |
+| RSLT-05 | Phase 6 | Pending |
+| RSLT-06 | Phase 6 | Pending |
+| RSLT-07 | Phase 6 | Pending |
+| RSLT-08 | Phase 6 | Pending |
+| BILL-01 | Phase 4 | Pending |
+| BILL-02 | Phase 5 | Pending |
+| BILL-03 | Phase 4 | Pending |
+| BILL-04 | Phase 4 | Pending |
+| BILL-05 | Phase 5 | Pending |
+| BILL-06 | Phase 5 | Pending |
+| BILL-07 | Phase 4 | Pending |
+| LAND-01 | Phase 1 | Pending |
+| LAND-02 | Phase 1 | Pending |
+| LAND-03 | Phase 1 | Pending |
+| LAND-04 | Phase 1 | Pending |
+| LAND-05 | Phase 1 | Pending |
+| LAND-06 | Phase 7 | Pending |
+| LAND-07 | Phase 7 | Pending |
+| DASH-01 | Phase 1 | Pending |
+| DASH-02 | Phase 2 | Pending |
+| DASH-03 | Phase 3 | Pending |
+| DASH-04 | Phase 6 | Pending |
+| DASH-05 | Phase 4 | Pending |
+| DASH-06 | Phase 1 | Pending |
 
 **Coverage:**
 - v1 requirements: 40 total
-- Mapped to phases: 0
-- Unmapped: 40 (pending roadmap creation)
+- Mapped to phases: 40
+- Unmapped: 0
+
+**Distribution:**
+- Phase 1: 12 requirements (Foundation & Authentication)
+- Phase 2: 6 requirements (Data Management & Brand Profiles)
+- Phase 3: 9 requirements (AI Generation Pipeline)
+- Phase 4: 5 requirements (Usage Tracking & Limits)
+- Phase 5: 3 requirements (Stripe Subscription Billing)
+- Phase 6: 8 requirements (Downloads & History)
+- Phase 7: 2 requirements (Polish & Optimization)
 
 ---
 *Requirements defined: 2026-01-23*
-*Last updated: 2026-01-23 after initial definition*
+*Last updated: 2026-01-23 after roadmap creation*

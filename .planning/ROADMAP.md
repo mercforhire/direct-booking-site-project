@@ -1,261 +1,186 @@
-# Project Roadmap: Carousel Creator
-
-**Project:** LinkedIn Carousel SaaS
-**Core Value:** Turn an idea into a ready-to-post LinkedIn carousel in one click
-**Created:** 2026-01-23
-**Depth:** Standard (5-8 phases)
+# Roadmap: Direct Booking Site
 
 ## Overview
 
-This roadmap delivers a multi-tenant SaaS platform for LinkedIn creators to generate AI-powered carousels from ideas. The phase structure follows dependency chains: Foundation establishes auth and RLS architecture, Data Management creates entities (brands, templates) needed for generation, Generation Pipeline implements the core async workflow with n8n, Usage Tracking enables quota enforcement, Stripe Billing adds monetization, Downloads completes the user flow, and Polish refines the experience. All 40 v1 requirements mapped with 100% coverage.
+This roadmap delivers a semi-private direct booking website for a single landlord (5-10 rooms) in 9 phases. The build starts with the landlord's admin tools (room management, availability), layers on the guest-facing browsing and booking experience, then adds the approval-to-payment pipeline, and finishes with lifecycle features (extensions, cancellations, messaging). Each phase delivers a complete, verifiable capability. The entire v1 scope covers 49 requirements.
 
 ## Phases
 
-### Phase 1: Foundation & Authentication
-**Goal:** Users can securely access their accounts and navigate a branded landing page
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-**Dependencies:** None (foundational)
+Decimal phases appear between their surrounding integers in numeric order.
 
-**Requirements:** AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05, LAND-01, LAND-02, LAND-03, LAND-04, LAND-05, DASH-01, DASH-06
+- [ ] **Phase 1: Foundation & Room Management** - Project setup, database schema, admin auth, room/fee CRUD, and global settings
+- [ ] **Phase 2: Availability Management** - Availability calendar, date blocking, booking window, and stay length constraints
+- [ ] **Phase 3: Guest Room Browsing** - Public room listing pages with photos, rates, fees, and capacity
+- [ ] **Phase 4: Booking Requests** - Guest booking request form with itemized pricing, add-ons, and guest identity
+- [ ] **Phase 5: Approval Flow & Notifications** - Admin booking dashboard, approve/decline actions, and email notifications
+- [ ] **Phase 6: Payment** - Stripe Checkout, e-transfer tracking, service fee, and deposit handling
+- [ ] **Phase 7: Booking Extensions** - Extension requests, landlord approval, and extension payment
+- [ ] **Phase 8: Cancellations & Refunds** - Booking cancellation, Stripe refunds, e-transfer refund tracking, and deposit rules
+- [ ] **Phase 9: Messaging** - Booking-scoped text messaging between guest and landlord with email notifications
 
-**Success Criteria:**
-1. User can sign up with email/password and receives verification email
-2. User can log in and session persists across browser restarts
-3. User can log out from any authenticated page
-4. User can reset forgotten password via email link
-5. Landing page loads in under 2 seconds with smooth animations
-6. Dashboard displays with light theme matching landing page aesthetic
+## Phase Details
 
-**Technical Notes:**
-- Next.js 15 App Router with TypeScript
-- Supabase for PostgreSQL + auth (@supabase/ssr for cookie-based sessions)
-- RLS policies enabled on ALL tables from day one (defense-in-depth)
-- Tailwind CSS 4.x + shadcn/ui for components
-- Framer Motion for landing page animations
-- Server-side ownership verification patterns established
+### Phase 1: Foundation & Room Management
+**Goal**: Landlord can log in to an admin dashboard and fully configure rooms with photos, descriptions, fees, add-ons, and global site settings
+**Depends on**: Nothing (first phase)
+**Requirements**: ADMIN-02, ADMIN-03, ADMIN-05
+**Success Criteria** (what must be TRUE):
+  1. Landlord can log in to a protected admin dashboard
+  2. Landlord can create a new room with name, description, photos, property assignment, base nightly rate, and max guest capacity
+  3. Landlord can edit any existing room listing (all fields including photos)
+  4. Landlord can configure per-room fees: cleaning fee, per-extra-guest nightly fee, and add-on options (each with name and price)
+  5. Landlord can configure global settings: service fee percentage and deposit amount
+**Plans**: TBD
 
----
+Plans:
+- [ ] 01-01: TBD
+- [ ] 01-02: TBD
 
-### Phase 2: Data Management & Brand Profiles
-**Goal:** Users can create and manage brand profiles with templates and styles available for selection
+### Phase 2: Availability Management
+**Goal**: Landlord can control room availability and guests can see which dates are open on a calendar
+**Depends on**: Phase 1
+**Requirements**: AVAIL-01, AVAIL-02, AVAIL-03, AVAIL-04, ADMIN-04
+**Success Criteria** (what must be TRUE):
+  1. Guest can view a per-room availability calendar showing which dates are blocked and which are available
+  2. Landlord can block and unblock specific dates for any room from the admin dashboard
+  3. Landlord can set the global booking window (3-9 months ahead) controlling how far out guests can see availability
+  4. Landlord can set minimum and maximum stay length per room
+  5. Calendar correctly enforces all constraints: blocked dates, booking window limits, and stay length rules are visually indicated
+**Plans**: TBD
 
-**Dependencies:** Phase 1 (requires auth and database schema)
+Plans:
+- [ ] 02-01: TBD
+- [ ] 02-02: TBD
 
-**Requirements:** BRND-01, BRND-02, BRND-03, BRND-04, BRND-05, DASH-02
+### Phase 3: Guest Room Browsing
+**Goal**: Guests can browse all available rooms and see complete information needed to decide which room to book
+**Depends on**: Phase 2
+**Requirements**: ROOM-01, ROOM-02, ROOM-03, ROOM-04
+**Success Criteria** (what must be TRUE):
+  1. Guest can view a listing of all rooms with photos and written descriptions
+  2. Each room listing displays the estimated nightly rate
+  3. Each room listing displays the full fee structure: cleaning fee, per-extra-guest fee, and available add-on options with prices
+  4. Each room listing displays the maximum guest capacity
+**Plans**: TBD
 
-**Success Criteria:**
-1. User can create brand with all attributes (name, colors, voice, product, audience, CTA)
-2. User can edit existing brands and see changes immediately
-3. User can delete brands with confirmation prompt
-4. User can switch between multiple brands in the UI
-5. User can select a brand when starting carousel generation
-6. Template library displays 10-15 design options with previews
-7. Image style presets are available for selection
+Plans:
+- [ ] 03-01: TBD
 
-**Technical Notes:**
-- Server Actions for CRUD operations (type-safe mutations)
-- Supabase Storage for brand logos and template preview images
-- RLS policies enforce brand ownership (brands.user_id = auth.uid())
-- Server-side brand ownership verification on every endpoint
-- Seed data for templates and image style presets
-- Zod schemas for validation (shared client/server)
+### Phase 4: Booking Requests
+**Goal**: Guests can submit a booking request with full pricing transparency and minimal friction (no account required)
+**Depends on**: Phase 3
+**Requirements**: BOOK-01, BOOK-02, BOOK-03, BOOK-04, BOOK-05, BOOK-06, GUEST-01
+**Success Criteria** (what must be TRUE):
+  1. Guest can submit a booking request specifying room, check-in/check-out dates, number of guests, and optional add-ons
+  2. Guest sees a full itemized price estimate before submitting (nightly rate x nights + cleaning fee + extra guest fees + selected add-ons + deposit + service fee)
+  3. Guest can include a note or message to the landlord with their request
+  4. Guest can submit a booking request without creating an account (name, email, phone required)
+  5. Guest can optionally create an account to view booking history
+  6. After submitting, guest can view a booking page showing their booking details, itemized costs, and current status
+**Plans**: TBD
 
----
+Plans:
+- [ ] 04-01: TBD
+- [ ] 04-02: TBD
 
-### Phase 3: AI Generation Pipeline
-**Goal:** Users can generate complete carousels from ideas with AI-powered content and images
+### Phase 5: Approval Flow & Notifications
+**Goal**: Landlord can review, approve, or decline booking requests, and both parties receive email notifications at each step
+**Depends on**: Phase 4
+**Requirements**: APPR-01, APPR-02, APPR-03, APPR-04, APPR-05, ADMIN-01
+**Success Criteria** (what must be TRUE):
+  1. Landlord receives an email notification when a new booking request is submitted
+  2. Landlord can view all bookings organized by status (pending, approved, payment pending, paid, completed, cancelled) in the admin dashboard
+  3. Landlord can approve a booking request and set the exact confirmed price
+  4. Landlord can decline a booking request with an optional reason
+  5. Guest receives an email when approved (with confirmed price and payment instructions) or declined (with optional reason)
+**Plans**: TBD
 
-**Dependencies:** Phase 2 (requires brands, templates, styles to exist)
+Plans:
+- [ ] 05-01: TBD
+- [ ] 05-02: TBD
 
-**Requirements:** GENR-01, GENR-02, GENR-03, GENR-04, GENR-05, GENR-06, GENR-07, GENR-08, DASH-03
+### Phase 6: Payment
+**Goal**: Approved guests can pay for their booking via Stripe or e-transfer, completing the full booking lifecycle
+**Depends on**: Phase 5
+**Requirements**: PAY-01, PAY-02, PAY-03, PAY-04
+**Success Criteria** (what must be TRUE):
+  1. Approved guest can pay online via Stripe Checkout (credit/debit card) and booking status updates to paid upon successful payment
+  2. Approved guest can pay by e-transfer, and landlord can manually mark the booking as paid in the admin dashboard
+  3. Service fee (configurable percentage) is correctly added to the booking total
+  4. Deposit amount (configurable by landlord) is included in the payment breakdown and collected as part of payment
+**Plans**: TBD
 
-**Success Criteria:**
-1. User enters idea text and selects template/style/brand
-2. Generation submits immediately and displays "processing" state
-3. User can view AI-powered idea suggestions to spark content
-4. Status updates in real-time (polling or Supabase Realtime)
-5. n8n webhook receives request with all context (idea, brand, template, style)
-6. n8n completes generation and callback updates database
-7. User sees carousel preview with all slides visible
-8. User sees AI-generated post copy with one-click copy button
-9. Custom image style names can be added and used in generation
+Plans:
+- [ ] 06-01: TBD
+- [ ] 06-02: TBD
 
-**Technical Notes:**
-- Async generation architecture (prevents Vercel timeouts)
-- n8n Queue Mode with Redis for horizontal scaling
-- Generation job records with status tracking (pending, processing, completed, failed)
-- Webhook signature verification (HMAC) for security
-- Idempotency tracking prevents duplicate processing
-- Frontend polls status every 3-5 seconds or uses Supabase Realtime
-- Next.js API routes for webhook receivers
-- LLM integration for brand voice enforcement (research during planning)
-- Image generation API integration (research during planning)
+### Phase 7: Booking Extensions
+**Goal**: Guests can request to extend an existing stay, and the landlord can approve and collect payment for the additional nights
+**Depends on**: Phase 6
+**Requirements**: EXT-01, EXT-02, EXT-03, EXT-04, EXT-05, EXT-06, GUEST-02, GUEST-03
+**Success Criteria** (what must be TRUE):
+  1. Guest can submit an extension request from their booking page (before or during an active stay)
+  2. Landlord receives an email notification when an extension request is submitted
+  3. Landlord can approve an extension (setting the additional price) or decline it from the admin dashboard
+  4. Guest receives email notification of extension approval (with price and payment link) or decline
+  5. Guest can pay the extension amount via Stripe or e-transfer (same flow as original payment)
+  6. Guest can view extension request status from their booking page
+**Plans**: TBD
 
----
+Plans:
+- [ ] 07-01: TBD
+- [ ] 07-02: TBD
 
-### Phase 4: Usage Tracking & Limits
-**Goal:** Users can see their usage and are prevented from exceeding monthly allowances
+### Phase 8: Cancellations & Refunds
+**Goal**: Landlord can cancel any booking and issue appropriate refunds through the original payment channel
+**Depends on**: Phase 6
+**Requirements**: CNCL-01, CNCL-02, CNCL-03, CNCL-04, CNCL-05, CNCL-06, CNCL-07
+**Success Criteria** (what must be TRUE):
+  1. Landlord can cancel any booking from the admin dashboard at any time
+  2. When cancelling, landlord enters the refund amount (case-by-case, no fixed policy)
+  3. For Stripe-paid bookings, the system automatically issues the Stripe refund for the entered amount
+  4. For e-transfer bookings, landlord manually processes the refund and marks it as refunded in the system
+  5. Deposit is automatically included in the refundable amount for pre-check-in cancellations; landlord decides for mid-stay cancellations
+  6. Guest receives a cancellation email with the refund amount and expected timeline
+**Plans**: TBD
 
-**Dependencies:** Phase 3 (must track what generations produce)
+Plans:
+- [ ] 08-01: TBD
+- [ ] 08-02: TBD
 
-**Requirements:** BILL-01, BILL-03, BILL-04, BILL-07, DASH-05
+### Phase 9: Messaging
+**Goal**: Guest and landlord can communicate via text messages scoped to a booking, with email notifications for new messages
+**Depends on**: Phase 4
+**Requirements**: MSG-01, MSG-02, MSG-03, MSG-04, MSG-05
+**Success Criteria** (what must be TRUE):
+  1. Guest can send a text message to the landlord from their booking page
+  2. Landlord can send a text message to the guest from the booking detail in the admin dashboard
+  3. Both guest and landlord can view the full message thread on their respective booking views
+  4. Landlord receives an email notification when a guest sends a new message
+  5. Guest receives an email notification when the landlord replies
+**Plans**: TBD
 
-**Success Criteria:**
-1. User sees current usage display (X/Y carousels used this month)
-2. Generation deducts 1 credit atomically (no race conditions)
-3. User receives warning when approaching limit ("1 credit remaining")
-4. User is blocked from generating when limit reached
-5. Free tier users see 0/3, paid tier users see 0/10
-6. Usage resets automatically at start of billing month
-7. Reset date is visible to users
-
-**Technical Notes:**
-- PostgreSQL stored procedures with SELECT FOR UPDATE (atomic operations)
-- Period-based usage tracking (not reset-based, prevents race conditions)
-- Supabase RPC to call stored procedures from API
-- Real-time credit display (Supabase Realtime or polling)
-- Pre-generation quota enforcement (check before n8n webhook)
-- Usage table with composite index on (user_id, period_start)
-
----
-
-### Phase 5: Stripe Subscription Billing
-**Goal:** Users can upgrade to paid tier and subscription status stays synchronized
-
-**Dependencies:** Phase 4 (billing resets usage allowances)
-
-**Requirements:** BILL-02, BILL-05, BILL-06
-
-**Success Criteria:**
-1. User can click "Upgrade" and complete Stripe checkout
-2. User is redirected to dashboard after successful payment
-3. Paid tier users immediately see increased allowance (10/month)
-4. User can manage subscription via Stripe Customer Portal
-5. Subscription cancellation revokes paid tier access at period end
-6. Failed payments trigger email notifications
-7. Webhook events update database status reliably (no desync)
-
-**Technical Notes:**
-- Stripe SDK integration (@stripe/stripe-js)
-- Stripe Checkout for subscription creation
-- Stripe Customer Portal for self-service management
-- Webhook signature verification (stripe.webhooks.constructEvent)
-- Idempotency tracking table (webhook_events with event_id)
-- Critical webhook events: invoice.paid, subscription.deleted, subscription.updated
-- Queue processing for webhook handlers (return 200 immediately)
-- Subscription schedule handling for downgrades
-- Plan-based feature gates (free: 3/month single brand, paid: 10/month unlimited brands)
-
----
-
-### Phase 6: Downloads & History
-**Goal:** Users can download carousels and access their generation history
-
-**Dependencies:** Phase 3 (requires generated carousels to exist)
-
-**Requirements:** RSLT-01, RSLT-02, RSLT-03, RSLT-04, RSLT-05, RSLT-06, RSLT-07, RSLT-08, DASH-04
-
-**Success Criteria:**
-1. User can download carousel as PDF (LinkedIn format: 1080x1080px)
-2. User can download carousel as individual PNG images
-3. User can reorder slides before downloading
-4. User can remove slides before downloading
-5. User sees history page with all past generations
-6. History displays original idea, brand used, and preview thumbnails
-7. User can regenerate from history with different template/style
-8. Downloaded files are optimized for web sharing
-
-**Technical Notes:**
-- @react-pdf/renderer 4.3+ for PDF generation (React components)
-- jsPDF upgrade to 4.0.0+ (CVE-2025-68428 security fix)
-- Input sanitization with DOMPurify (prevent SSRF)
-- Supabase Storage for generated images and PDFs
-- Signed URLs for temporary access to private files
-- Image optimization (compression for web display)
-- PDF layout research for LinkedIn carousel formatting (during planning)
-
----
-
-### Phase 7: Polish & Optimization
-**Goal:** Users experience a delightful, error-free product with smooth interactions
-
-**Dependencies:** Phases 1-6 (all core functionality complete)
-
-**Requirements:** LAND-06, LAND-07
-
-**Success Criteria:**
-1. Error messages are user-friendly with clear next steps
-2. All forms have loading states that prevent double submission
-3. Animations are smooth (60fps) across all interactions
-4. Toast notifications appear for success/error/warning events
-5. Empty states guide users ("No carousels yet, create your first!")
-6. First-time users see onboarding flow explaining key features
-7. Interactive demo on landing page shows carousel generation process
-8. Testimonials section displays social proof
-9. SEO meta tags are complete (Open Graph, Twitter Cards)
-10. Performance metrics meet targets (LCP < 2.5s, FID < 100ms)
-
-**Technical Notes:**
-- Framer Motion 12.x for microinteractions
-- Skeleton screens during data loading
-- React Hook Form debouncing (prevent double-click generation)
-- Toast library (sonner or react-hot-toast)
-- Onboarding state management (localStorage or database)
-- Vercel Analytics + Speed Insights for monitoring
-- SEO optimization (meta tags, sitemap, robots.txt)
-- Image lazy loading, route prefetching
-- Optional: Sentry for error tracking in production
-
----
+Plans:
+- [ ] 09-01: TBD
 
 ## Progress
 
-| Phase | Status | Requirements | Completion |
-|-------|--------|--------------|------------|
-| 1 - Foundation & Authentication | Pending | AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05, LAND-01, LAND-02, LAND-03, LAND-04, LAND-05, DASH-01, DASH-06 | 0% |
-| 2 - Data Management & Brand Profiles | Pending | BRND-01, BRND-02, BRND-03, BRND-04, BRND-05, DASH-02 | 0% |
-| 3 - AI Generation Pipeline | Pending | GENR-01, GENR-02, GENR-03, GENR-04, GENR-05, GENR-06, GENR-07, GENR-08, DASH-03 | 0% |
-| 4 - Usage Tracking & Limits | Pending | BILL-01, BILL-03, BILL-04, BILL-07, DASH-05 | 0% |
-| 5 - Stripe Subscription Billing | Pending | BILL-02, BILL-05, BILL-06 | 0% |
-| 6 - Downloads & History | Pending | RSLT-01, RSLT-02, RSLT-03, RSLT-04, RSLT-05, RSLT-06, RSLT-07, RSLT-08, DASH-04 | 0% |
-| 7 - Polish & Optimization | Pending | LAND-06, LAND-07 | 0% |
+**Execution Order:**
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
+Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. Phase 7 and 8 both depend on Phase 6. Phase 9 depends on Phase 4.
 
-**Overall Progress:** 0/7 phases complete (0%)
-
----
-
-## Coverage Validation
-
-**Total v1 requirements:** 40
-**Mapped to phases:** 40
-**Unmapped (orphaned):** 0
-
-**Coverage by category:**
-- Authentication (5 requirements): Phase 1 ✓
-- Brand Management (5 requirements): Phase 2 ✓
-- Carousel Generation (8 requirements): Phase 3 ✓
-- Results & Downloads (8 requirements): Phase 6 ✓
-- Billing & Usage (7 requirements): Phases 4, 5 ✓
-- Landing Page (7 requirements): Phases 1, 7 ✓
-- Dashboard (6 requirements): Phases 1, 2, 3, 4, 6 ✓
-
-**Coverage status:** 100% ✓
-
----
-
-## Research Flags
-
-**Phases requiring deeper research during planning:**
-
-- **Phase 3 (Generation Pipeline):** Needs research into specific LLM API selection (OpenAI vs Claude), image generation API (DALL-E 3 vs others), n8n workflow patterns, prompt engineering for brand voice enforcement, error handling for AI failures, cost optimization strategies.
-
-- **Phase 5 (Billing):** May need research for Stripe Tax configuration (multi-state sales tax), dunning management (failed payment recovery), proration handling (mid-cycle upgrades).
-
-- **Phase 6 (Downloads):** May need research for LinkedIn carousel PDF format specifications, @react-pdf layout patterns for multi-slide carousels, image optimization strategies.
-
-**Phases with standard patterns (no additional research):**
-- Phase 1, 2, 4, 7 use well-documented patterns
-
----
-
-*Last updated: 2026-01-23*
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. Foundation & Room Management | 0/? | Not started | - |
+| 2. Availability Management | 0/? | Not started | - |
+| 3. Guest Room Browsing | 0/? | Not started | - |
+| 4. Booking Requests | 0/? | Not started | - |
+| 5. Approval Flow & Notifications | 0/? | Not started | - |
+| 6. Payment | 0/? | Not started | - |
+| 7. Booking Extensions | 0/? | Not started | - |
+| 8. Cancellations & Refunds | 0/? | Not started | - |
+| 9. Messaging | 0/? | Not started | - |

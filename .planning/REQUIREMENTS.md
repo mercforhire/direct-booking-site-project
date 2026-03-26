@@ -22,7 +22,7 @@
 ### Booking Request
 
 - [ ] **BOOK-01**: Guest can submit a booking request specifying room, check-in/check-out dates, and number of guests
-- [ ] **BOOK-02**: Guest sees a full itemized price estimate before submitting (nightly rate × nights + cleaning fee + extra guest fees + selected add-ons + deposit + service fee)
+- [ ] **BOOK-02**: Guest sees a full itemized price estimate before submitting (nightly rate x nights + cleaning fee + extra guest fees + selected add-ons + deposit + service fee)
 - [ ] **BOOK-03**: Guest can select per-room add-on options at request time (e.g. parking, sofa bed — each option is free or has a fixed cost set by the landlord)
 - [ ] **BOOK-04**: Guest can include a note or message to the landlord with their request
 - [ ] **BOOK-05**: Guest can submit a booking request without creating an account (name, email, phone number required)
@@ -120,65 +120,63 @@
 
 ## Traceability
 
-*(Populated during roadmap creation)*
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ROOM-01 | — | Pending |
-| ROOM-02 | — | Pending |
-| ROOM-03 | — | Pending |
-| ROOM-04 | — | Pending |
-| AVAIL-01 | — | Pending |
-| AVAIL-02 | — | Pending |
-| AVAIL-03 | — | Pending |
-| AVAIL-04 | — | Pending |
-| BOOK-01 | — | Pending |
-| BOOK-02 | — | Pending |
-| BOOK-03 | — | Pending |
-| BOOK-04 | — | Pending |
-| BOOK-05 | — | Pending |
-| BOOK-06 | — | Pending |
-| APPR-01 | — | Pending |
-| APPR-02 | — | Pending |
-| APPR-03 | — | Pending |
-| APPR-04 | — | Pending |
-| APPR-05 | — | Pending |
-| PAY-01 | — | Pending |
-| PAY-02 | — | Pending |
-| PAY-03 | — | Pending |
-| PAY-04 | — | Pending |
-| EXT-01 | — | Pending |
-| EXT-02 | — | Pending |
-| EXT-03 | — | Pending |
-| EXT-04 | — | Pending |
-| EXT-05 | — | Pending |
-| EXT-06 | — | Pending |
-| CNCL-01 | — | Pending |
-| CNCL-02 | — | Pending |
-| CNCL-03 | — | Pending |
-| CNCL-04 | — | Pending |
-| CNCL-05 | — | Pending |
-| CNCL-06 | — | Pending |
-| CNCL-07 | — | Pending |
-| GUEST-01 | — | Pending |
-| GUEST-02 | — | Pending |
-| GUEST-03 | — | Pending |
-| MSG-01 | — | Pending |
-| MSG-02 | — | Pending |
-| MSG-03 | — | Pending |
-| MSG-04 | — | Pending |
-| MSG-05 | — | Pending |
-| ADMIN-01 | — | Pending |
-| ADMIN-02 | — | Pending |
-| ADMIN-03 | — | Pending |
-| ADMIN-04 | — | Pending |
-| ADMIN-05 | — | Pending |
+| ROOM-01 | Phase 3 | Pending |
+| ROOM-02 | Phase 3 | Pending |
+| ROOM-03 | Phase 3 | Pending |
+| ROOM-04 | Phase 3 | Pending |
+| AVAIL-01 | Phase 2 | Pending |
+| AVAIL-02 | Phase 2 | Pending |
+| AVAIL-03 | Phase 2 | Pending |
+| AVAIL-04 | Phase 2 | Pending |
+| BOOK-01 | Phase 4 | Pending |
+| BOOK-02 | Phase 4 | Pending |
+| BOOK-03 | Phase 4 | Pending |
+| BOOK-04 | Phase 4 | Pending |
+| BOOK-05 | Phase 4 | Pending |
+| BOOK-06 | Phase 4 | Pending |
+| APPR-01 | Phase 5 | Pending |
+| APPR-02 | Phase 5 | Pending |
+| APPR-03 | Phase 5 | Pending |
+| APPR-04 | Phase 5 | Pending |
+| APPR-05 | Phase 5 | Pending |
+| PAY-01 | Phase 6 | Pending |
+| PAY-02 | Phase 6 | Pending |
+| PAY-03 | Phase 6 | Pending |
+| PAY-04 | Phase 6 | Pending |
+| EXT-01 | Phase 7 | Pending |
+| EXT-02 | Phase 7 | Pending |
+| EXT-03 | Phase 7 | Pending |
+| EXT-04 | Phase 7 | Pending |
+| EXT-05 | Phase 7 | Pending |
+| EXT-06 | Phase 7 | Pending |
+| CNCL-01 | Phase 8 | Pending |
+| CNCL-02 | Phase 8 | Pending |
+| CNCL-03 | Phase 8 | Pending |
+| CNCL-04 | Phase 8 | Pending |
+| CNCL-05 | Phase 8 | Pending |
+| CNCL-06 | Phase 8 | Pending |
+| CNCL-07 | Phase 8 | Pending |
+| GUEST-01 | Phase 4 | Pending |
+| GUEST-02 | Phase 7 | Pending |
+| GUEST-03 | Phase 7 | Pending |
+| MSG-01 | Phase 9 | Pending |
+| MSG-02 | Phase 9 | Pending |
+| MSG-03 | Phase 9 | Pending |
+| MSG-04 | Phase 9 | Pending |
+| MSG-05 | Phase 9 | Pending |
+| ADMIN-01 | Phase 5 | Pending |
+| ADMIN-02 | Phase 1 | Pending |
+| ADMIN-03 | Phase 1 | Pending |
+| ADMIN-04 | Phase 2 | Pending |
+| ADMIN-05 | Phase 1 | Pending |
 
 **Coverage:**
 - v1 requirements: 49 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 49 ⚠️
+- Mapped to phases: 49
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-25*
-*Last updated: 2026-03-25 after initial definition*
+*Last updated: 2026-03-25 after roadmap creation*

@@ -13,6 +13,7 @@ This roadmap delivers a semi-private direct booking website for a single landlor
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Foundation & Room Management** - Project setup, database schema, admin auth, room/fee CRUD, and global settings
+- [ ] **Phase 1.5: Supabase Migration** (INSERTED) - Replace local PostgreSQL + NextAuth with Supabase managed PostgreSQL and Supabase Auth, keeping Prisma as ORM and UploadThing for file storage
 - [ ] **Phase 2: Availability Management** - Availability calendar, date blocking, booking window, and stay length constraints
 - [ ] **Phase 3: Guest Room Browsing** - Public room listing pages with photos, rates, fees, and capacity
 - [ ] **Phase 4: Booking Requests** - Guest booking request form with itemized pricing, add-ons, and guest identity
@@ -42,6 +43,26 @@ Plans:
 - [ ] 01-03-PLAN.md — Global settings server action and settings form page
 - [ ] 01-04-PLAN.md — Photo upload (UploadThing), drag-to-reorder (dnd-kit), and CDN deletion
 - [ ] 01-05-PLAN.md — Full test suite run + human visual verification checkpoint
+
+### Phase 1.5: Supabase Migration (INSERTED)
+**Goal**: App runs on Supabase managed PostgreSQL with Supabase Auth replacing NextAuth — landlord can log in via magic link, all existing admin features work unchanged
+**Depends on**: Phase 1
+**Requirements**: INFRA-01
+**Success Criteria** (what must be TRUE):
+  1. Supabase project is created and credentials are configured in environment
+  2. DATABASE_URL points to Supabase PostgreSQL and Prisma schema is migrated
+  3. Landlord can receive a magic link email and log in to the admin dashboard via Supabase Auth
+  4. All protected routes (/dashboard, /rooms, /settings) redirect unauthenticated users to /login
+  5. All server actions (room CRUD, photo management, settings) authenticate via Supabase session
+  6. UploadThing photo upload still works end-to-end after migration
+**Plans**: 5 plans
+
+Plans:
+- [ ] 01.5-01-PLAN.md — Human setup: Supabase project creation, landlord user seed, SMTP + redirect URL config, env vars; package swap (install @supabase/supabase-js + @supabase/ssr, uninstall next-auth + @auth/prisma-adapter)
+- [ ] 01.5-02-PLAN.md — Prisma schema cleanup (remove Account/Session/User/VerificationToken, add directUrl) and push to Supabase PostgreSQL
+- [ ] 01.5-03-PLAN.md — Supabase client utilities (client.ts + server.ts), middleware rewrite (updateSession + getUser pattern), /auth/confirm route handler (magic link token exchange)
+- [ ] 01.5-04-PLAN.md — Server actions auth swap (room.ts, settings.ts, room-photos.ts), login page rewrite (signInWithOtp), delete old NextAuth files (auth.ts, auth-edge.ts, [...nextauth] route)
+- [ ] 01.5-05-PLAN.md — End-to-end human verification: magic link login flow, route protection, all admin features, UploadThing
 
 ### Phase 2: Availability Management
 **Goal**: Landlord can control room availability and guests can see which dates are open on a calendar
@@ -173,12 +194,13 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
+Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. Phase 7 and 8 both depend on Phase 6. Phase 9 depends on Phase 4.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Room Management | 4/5 | In Progress|  |
+| 1.5. Supabase Migration | 0/5 | Not started | - |
 | 2. Availability Management | 0/? | Not started | - |
 | 3. Guest Room Browsing | 0/? | Not started | - |
 | 4. Booking Requests | 0/? | Not started | - |

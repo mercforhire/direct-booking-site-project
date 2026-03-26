@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 01-foundation-room-management/01-01-PLAN.md
-last_updated: "2026-03-26T04:21:13.580Z"
+stopped_at: Completed 01-foundation-room-management/01-02-PLAN.md
+last_updated: "2026-03-26T06:09:43.656Z"
 last_activity: 2026-03-25 — Roadmap created (9 phases, 49 requirements mapped)
 progress:
   total_phases: 9
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -51,6 +51,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 01-foundation-room-management P01 | 7 | 2 tasks | 25 files |
+| Phase 01-foundation-room-management P02 | 15 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -65,6 +66,8 @@ Recent decisions affecting current work:
 - [Phase 01-foundation-room-management]: Auth split into auth.ts (Prisma) and auth-edge.ts (no Prisma) — middleware must use edge-safe export
 - [Phase 01-foundation-room-management]: Settings singleton uses id='global' string default for simple upsert pattern
 - [Phase 01-foundation-room-management]: Money values: always Decimal(10,2) in Prisma schema, never Float
+- [Phase 01-foundation-room-management]: Dual Zod schema: roomSchema (plain z.number for react-hook-form) + roomSchemaCoerced (z.coerce for server actions)
+- [Phase 01-foundation-room-management]: Decimal-to-number coercion in RoomForm defaultValues: Number(room.baseNightlyRate) to avoid non-serializable Prisma Decimal objects
 
 ### Pending Todos
 
@@ -78,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T04:21:13.578Z
-Stopped at: Completed 01-foundation-room-management/01-01-PLAN.md
+Last session: 2026-03-26T06:09:43.654Z
+Stopped at: Completed 01-foundation-room-management/01-02-PLAN.md
 Resume file: None

@@ -187,6 +187,10 @@ After setting env vars, run: `npx prisma db push` (or `npx prisma migrate dev`) 
 - Test framework ready for TDD tasks in subsequent plans
 - Blockers: user must configure `.env.local` and run `prisma db push` before testing auth flow end-to-end
 
+## Self-Check: PASSED
+
+All key files verified to exist. Both task commits (9ba10bf, f6975ac) confirmed in git log. Build exits 0. Vitest exits 0.
+
 ---
 *Phase: 01-foundation-room-management*
 *Completed: 2026-03-26*

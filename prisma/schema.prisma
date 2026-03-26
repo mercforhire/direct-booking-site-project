@@ -8,21 +8,20 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Application models
 model Room {
   id              String      @id @default(cuid())
   name            String
-  description     String      @db.Text
+  description     String
   location        String
   baseNightlyRate Decimal     @db.Decimal(10, 2)
-  cleaningFee     Decimal     @db.Decimal(10, 2) @default(0)
-  extraGuestFee   Decimal     @db.Decimal(10, 2) @default(0)
+  cleaningFee     Decimal     @default(0) @db.Decimal(10, 2)
+  extraGuestFee   Decimal     @default(0) @db.Decimal(10, 2)
   maxGuests       Int
   isActive        Boolean     @default(true)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
-  photos          RoomPhoto[]
   addOns          AddOn[]
+  photos          RoomPhoto[]
 }
 
 model RoomPhoto {

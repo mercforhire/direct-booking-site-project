@@ -79,10 +79,10 @@
 ### Admin Dashboard
 
 - [ ] **ADMIN-01**: Landlord can view all bookings organized by status (pending, approved, payment pending, paid, completed, cancelled)
-- [ ] **ADMIN-02**: Landlord can add and edit room listings (photos, name, description, property, base nightly rate, max guests)
-- [ ] **ADMIN-03**: Landlord can configure per-room fees: cleaning fee, per-extra-guest nightly fee, add-on options (name, price — free or fixed)
+- [x] **ADMIN-02**: Landlord can add and edit room listings (photos, name, description, property, base nightly rate, max guests)
+- [x] **ADMIN-03**: Landlord can configure per-room fees: cleaning fee, per-extra-guest nightly fee, add-on options (name, price — free or fixed)
 - [ ] **ADMIN-04**: Landlord can manage room availability: block/unblock dates, set min/max stay length, configure the booking window
-- [ ] **ADMIN-05**: Landlord can configure global settings: service fee percentage, deposit amount
+- [x] **ADMIN-05**: Landlord can configure global settings: service fee percentage, deposit amount
 
 ## v2 Requirements
 
@@ -167,10 +167,10 @@
 | MSG-04 | Phase 9 | Pending |
 | MSG-05 | Phase 9 | Pending |
 | ADMIN-01 | Phase 5 | Pending |
-| ADMIN-02 | Phase 1 | Pending |
-| ADMIN-03 | Phase 1 | Pending |
+| ADMIN-02 | Phase 1 | Complete |
+| ADMIN-03 | Phase 1 | Complete |
 | ADMIN-04 | Phase 2 | Pending |
-| ADMIN-05 | Phase 1 | Pending |
+| ADMIN-05 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 49 total

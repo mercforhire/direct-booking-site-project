@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-03-26T03:47:20.528Z"
+stopped_at: Completed 01-foundation-room-management/01-01-PLAN.md
+last_updated: "2026-03-26T04:21:13.580Z"
 last_activity: 2026-03-25 — Roadmap created (9 phases, 49 requirements mapped)
 progress:
   total_phases: 9
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 5
+  completed_plans: 1
   percent: 0
 ---
 
@@ -50,6 +50,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01-foundation-room-management P01 | 7 | 2 tasks | 25 files |
 
 ## Accumulated Context
 
@@ -60,6 +61,10 @@ Recent decisions affecting current work:
 
 - [Roadmap]: 9 phases derived from 49 requirements at fine granularity
 - [Roadmap]: Phases 7/8 (extensions/cancellations) depend on Phase 6 (payment); Phase 9 (messaging) depends on Phase 4 (booking requests)
+- [Phase 01-foundation-room-management]: Prisma v6 pinned (not v7) — v7 is ESM-only and incompatible with Next.js bundler
+- [Phase 01-foundation-room-management]: Auth split into auth.ts (Prisma) and auth-edge.ts (no Prisma) — middleware must use edge-safe export
+- [Phase 01-foundation-room-management]: Settings singleton uses id='global' string default for simple upsert pattern
+- [Phase 01-foundation-room-management]: Money values: always Decimal(10,2) in Prisma schema, never Float
 
 ### Pending Todos
 
@@ -73,6 +78,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T03:47:20.526Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-foundation-room-management/01-CONTEXT.md
+Last session: 2026-03-26T04:21:13.578Z
+Stopped at: Completed 01-foundation-room-management/01-01-PLAN.md
+Resume file: None

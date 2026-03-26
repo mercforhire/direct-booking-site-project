@@ -1,0 +1,18 @@
+import { prisma } from "@/lib/prisma"
+import { RoomForm } from "@/components/forms/room-form"
+import { notFound } from "next/navigation"
+
+export default async function EditRoomPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const room = await prisma.room.findUnique({
+    where: { id },
+    include: { addOns: true },
+  })
+  if (!room) notFound()
+  return (
+    <div className="max-w-2xl">
+      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Edit Room</h1>
+      <RoomForm room={room} />
+    </div>
+  )
+}

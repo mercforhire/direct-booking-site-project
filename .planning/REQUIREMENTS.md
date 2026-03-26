@@ -1,190 +1,161 @@
-# Requirements: Carousel Creator
+# Requirements: Direct Booking Site
 
-**Defined:** 2026-01-23
-**Core Value:** Turn an idea into a ready-to-post LinkedIn carousel in one click
+**Defined:** 2026-03-25
+**Core Value:** Repeat guests can book a room directly with the landlord without going through Airbnb, saving both parties on platform fees.
 
 ## v1 Requirements
 
-Requirements for initial release. Each maps to roadmap phases.
+### Room Listings
 
-### Authentication
+- [ ] **ROOM-01**: Guest can browse all rooms with photos and written description
+- [ ] **ROOM-02**: Guest can see the estimated nightly rate on each room listing
+- [ ] **ROOM-03**: Guest can see the full fee structure on each room listing (cleaning fee, per-extra-guest fee, available add-on options with prices)
+- [ ] **ROOM-04**: Each room listing shows the maximum guest capacity
 
-- [ ] **AUTH-01**: User can sign up with email and password
-- [ ] **AUTH-02**: User receives email verification after signup
-- [ ] **AUTH-03**: User can log in and stay logged in across sessions
-- [ ] **AUTH-04**: User can log out from any page
-- [ ] **AUTH-05**: User can reset password via email link
+### Availability
 
-### Brand Management
+- [ ] **AVAIL-01**: Guest can view a room's availability calendar showing which dates are blocked or available
+- [ ] **AVAIL-02**: Landlord can manually block and unblock specific dates per room from the admin dashboard
+- [ ] **AVAIL-03**: Landlord can configure the global booking window (how far ahead guests can book, between 3–9 months)
+- [ ] **AVAIL-04**: Landlord can set minimum and maximum stay length per room
 
-- [ ] **BRND-01**: User can create brand with name, colors, voice guidelines, product, audience, CTA text
-- [ ] **BRND-02**: User can edit existing brands
-- [ ] **BRND-03**: User can delete brands
-- [ ] **BRND-04**: User can have multiple brands per account
-- [ ] **BRND-05**: User can select which brand to use for each carousel generation
+### Booking Request
 
-### Carousel Generation
+- [ ] **BOOK-01**: Guest can submit a booking request specifying room, check-in/check-out dates, and number of guests
+- [ ] **BOOK-02**: Guest sees a full itemized price estimate before submitting (nightly rate × nights + cleaning fee + extra guest fees + selected add-ons + deposit + service fee)
+- [ ] **BOOK-03**: Guest can select per-room add-on options at request time (e.g. parking, sofa bed — each option is free or has a fixed cost set by the landlord)
+- [ ] **BOOK-04**: Guest can include a note or message to the landlord with their request
+- [ ] **BOOK-05**: Guest can submit a booking request without creating an account (name, email, phone number required)
+- [ ] **BOOK-06**: Guest can optionally create an account to view their booking history
 
-- [ ] **GENR-01**: User can enter an idea as text input
-- [ ] **GENR-02**: User can select from 5-6 design templates
-- [ ] **GENR-03**: User can select image style from 4 presets (Technical Annotation, Realism Notebook, White Board Diagram, Comic Strip Storyboard)
-- [ ] **GENR-04**: User can add custom image style names
-- [ ] **GENR-05**: System sends generation request to n8n webhook with idea, brand, template, and style
-- [ ] **GENR-06**: System receives carousel image URLs and post body from n8n
-- [ ] **GENR-07**: User sees carousel preview after generation completes
-- [ ] **GENR-08**: User can view AI-powered idea suggestions to spark content
+### Approval Flow
 
-### Results & Downloads
+- [ ] **APPR-01**: Landlord receives an email notification when a new booking request is submitted
+- [ ] **APPR-02**: Landlord can approve a booking request and set the exact confirmed price
+- [ ] **APPR-03**: Landlord can decline a booking request with an optional reason
+- [ ] **APPR-04**: Guest receives an email when their request is approved, including the confirmed price and payment instructions
+- [ ] **APPR-05**: Guest receives an email when their request is declined, including the optional reason
 
-- [ ] **RSLT-01**: User sees generated carousel as preview
-- [ ] **RSLT-02**: User sees post body text with one-click copy button
-- [ ] **RSLT-03**: User can download carousel as individual images
-- [ ] **RSLT-04**: User can download carousel as PDF file
-- [ ] **RSLT-05**: User can view history of all generated carousels
-- [ ] **RSLT-06**: History shows original idea, brand, and outputs for each carousel
-- [ ] **RSLT-07**: User can reorder slides before downloading
-- [ ] **RSLT-08**: User can remove slides before downloading
+### Payment
 
-### Billing & Usage
+- [ ] **PAY-01**: Approved guest can pay online via Stripe Checkout (credit/debit card)
+- [ ] **PAY-02**: Approved guest can pay by e-transfer; landlord manually marks the booking as paid in the admin dashboard
+- [ ] **PAY-03**: Landlord can configure an adjustable service fee (percentage of booking total) to offset Stripe processing costs
+- [ ] **PAY-04**: Landlord can configure an optional deposit amount required per booking
 
-- [ ] **BILL-01**: Free tier allows 3 carousel generations per month
-- [ ] **BILL-02**: Paid tier ($29.99/month) allows 10 carousel generations per month
-- [ ] **BILL-03**: User can see current usage (X/Y carousels used this month)
-- [ ] **BILL-04**: Generation deducts 1 from monthly allowance
-- [ ] **BILL-05**: User can upgrade to paid tier via Stripe checkout
-- [ ] **BILL-06**: System receives Stripe webhooks for subscription status changes
-- [ ] **BILL-07**: Usage allowance resets at start of each billing month
+### Booking Extensions
 
-### Landing Page
+- [ ] **EXT-01**: Guest can submit a request to extend an existing approved or active booking (before or during the stay)
+- [ ] **EXT-02**: Landlord receives an email notification when an extension request is submitted
+- [ ] **EXT-03**: Landlord can approve an extension request and set the additional price for the extended nights
+- [ ] **EXT-04**: Landlord can decline an extension request
+- [ ] **EXT-05**: Guest receives email notification of extension approval (with price) or decline
+- [ ] **EXT-06**: Guest can pay the extension amount via Stripe or e-transfer (same flow as original payment)
 
-- [ ] **LAND-01**: Marketing landing page with clear value proposition for LinkedIn creators
-- [ ] **LAND-02**: Sign up and login call-to-action buttons
-- [ ] **LAND-03**: Responsive design for desktop and mobile
-- [ ] **LAND-04**: Light theme with relume.io-inspired aesthetic (whitespace, typography)
-- [ ] **LAND-05**: Smooth animations using Framer Motion
-- [ ] **LAND-06**: Interactive demo/preview of carousel generation
-- [ ] **LAND-07**: Testimonials section with social proof
+### Cancellations & Refunds
 
-### Dashboard
+- [ ] **CNCL-01**: Landlord can cancel any booking from the admin dashboard at any time
+- [ ] **CNCL-02**: When cancelling, landlord enters the refund amount (no fixed policy — case by case)
+- [ ] **CNCL-03**: For Stripe-paid bookings, the system automatically issues the Stripe refund for the entered amount (service fee included in refund)
+- [ ] **CNCL-04**: For e-transfer bookings, landlord manually processes the refund outside the system and marks it as refunded
+- [ ] **CNCL-05**: If cancelled before check-in, the deposit is always included in the refundable amount
+- [ ] **CNCL-06**: If cancelled mid-stay, landlord decides whether to include the deposit in the refund
+- [ ] **CNCL-07**: Guest receives an email on cancellation with the refund amount and expected timeline
 
-- [ ] **DASH-01**: Clean, minimal dashboard for logged-in users
-- [ ] **DASH-02**: Brand management section
-- [ ] **DASH-03**: Carousel generation interface
-- [ ] **DASH-04**: History/gallery view of past generations
-- [ ] **DASH-05**: Usage display showing remaining monthly allowance
-- [ ] **DASH-06**: Light theme consistent with landing page
+### Admin Dashboard
+
+- [ ] **ADMIN-01**: Landlord can view all bookings organized by status (pending, approved, payment pending, paid, completed, cancelled)
+- [ ] **ADMIN-02**: Landlord can add and edit room listings (photos, name, description, property, base nightly rate, max guests)
+- [ ] **ADMIN-03**: Landlord can configure per-room fees: cleaning fee, per-extra-guest nightly fee, add-on options (name, price — free or fixed)
+- [ ] **ADMIN-04**: Landlord can manage room availability: block/unblock dates, set min/max stay length, configure the booking window
+- [ ] **ADMIN-05**: Landlord can configure global settings: service fee percentage, deposit amount
 
 ## v2 Requirements
 
-Deferred to future release. Tracked but not in current roadmap.
+### Guest Experience
 
-### Authentication
+- **GUEST-01**: Guest can view booking history across multiple stays (requires account)
+- **GUEST-02**: Guest receives a pre-arrival reminder email (e.g. 24 hours before check-in)
+- **GUEST-03**: Guest can initiate a cancellation request (landlord still approves)
 
-- **AUTH-06**: Magic link (passwordless) login
-- **AUTH-07**: OAuth login with Google
-- **AUTH-08**: OAuth login with LinkedIn
+### Operational
 
-### Brand Management
+- **OPS-01**: Admin can manually override booking status (escape hatch for edge cases)
+- **OPS-02**: Admin can re-send any transactional email from the booking detail view
+- **OPS-03**: Stripe payment reconciliation report in admin
 
-- **BRND-06**: Brand voice AI analysis from writing samples
-- **BRND-07**: Brand templates (save favorite template+style combinations)
+### Availability
 
-### Carousel Generation
-
-- **GENR-09**: Regenerate specific slides without regenerating entire carousel
-
-### Results & Downloads
-
-- **RSLT-09**: Multiple export formats (PNG, JPG, WebP selection)
-- **RSLT-10**: Public share link for carousels
-
-### Billing & Usage
-
-- **BILL-08**: Usage analytics dashboard with generation trends
-- **BILL-09**: Credit top-up to purchase beyond monthly allowance
-- **BILL-10**: Annual billing option with discount
+- **AVAIL-05**: iCal export of room availability (for external calendar sync)
 
 ## Out of Scope
 
-Explicitly excluded. Documented to prevent scope creep.
-
 | Feature | Reason |
 |---------|--------|
-| Direct posting to social media | Users download and post manually; integration complexity deferred |
-| Dark theme | Light theme only for v1; matches relume.io aesthetic |
-| Mobile app | Web-first, responsive design covers mobile use cases |
-| Real-time collaboration | Single user per account; team features deferred to v2+ |
-| Video carousels | Static image carousels only; video adds significant complexity |
-| Team plans | Multi-user accounts deferred; focus on individual creators |
-| A/B test variations | Advanced feature; defer until core generation is validated |
+| Airbnb iCal / channel sync | Manual availability management is sufficient at this volume |
+| Multi-landlord / team accounts | Single operator only |
+| Instant booking | Request-to-approve flow is intentional |
+| Guest-initiated cancellation | Landlord handles cancellations; guests request via email/phone |
+| SMS notifications | Email is sufficient for this volume |
+| In-app messaging | Landlord and guest communicate via email |
+| Dynamic / seasonal pricing | Landlord sets price manually per booking |
+| Reviews and ratings | Not relevant for a semi-private trusted-guest site |
+| Public SEO / marketing pages | URL-shared only; no public discovery |
+| Mobile app | Web-first only |
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
+*(Populated during roadmap creation)*
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
-| AUTH-05 | Phase 1 | Pending |
-| BRND-01 | Phase 2 | Pending |
-| BRND-02 | Phase 2 | Pending |
-| BRND-03 | Phase 2 | Pending |
-| BRND-04 | Phase 2 | Pending |
-| BRND-05 | Phase 2 | Pending |
-| GENR-01 | Phase 3 | Pending |
-| GENR-02 | Phase 3 | Pending |
-| GENR-03 | Phase 3 | Pending |
-| GENR-04 | Phase 3 | Pending |
-| GENR-05 | Phase 3 | Pending |
-| GENR-06 | Phase 3 | Pending |
-| GENR-07 | Phase 3 | Pending |
-| GENR-08 | Phase 3 | Pending |
-| RSLT-01 | Phase 6 | Pending |
-| RSLT-02 | Phase 6 | Pending |
-| RSLT-03 | Phase 6 | Pending |
-| RSLT-04 | Phase 6 | Pending |
-| RSLT-05 | Phase 6 | Pending |
-| RSLT-06 | Phase 6 | Pending |
-| RSLT-07 | Phase 6 | Pending |
-| RSLT-08 | Phase 6 | Pending |
-| BILL-01 | Phase 4 | Pending |
-| BILL-02 | Phase 5 | Pending |
-| BILL-03 | Phase 4 | Pending |
-| BILL-04 | Phase 4 | Pending |
-| BILL-05 | Phase 5 | Pending |
-| BILL-06 | Phase 5 | Pending |
-| BILL-07 | Phase 4 | Pending |
-| LAND-01 | Phase 1 | Pending |
-| LAND-02 | Phase 1 | Pending |
-| LAND-03 | Phase 1 | Pending |
-| LAND-04 | Phase 1 | Pending |
-| LAND-05 | Phase 1 | Pending |
-| LAND-06 | Phase 7 | Pending |
-| LAND-07 | Phase 7 | Pending |
-| DASH-01 | Phase 1 | Pending |
-| DASH-02 | Phase 2 | Pending |
-| DASH-03 | Phase 3 | Pending |
-| DASH-04 | Phase 6 | Pending |
-| DASH-05 | Phase 4 | Pending |
-| DASH-06 | Phase 1 | Pending |
+| ROOM-01 | — | Pending |
+| ROOM-02 | — | Pending |
+| ROOM-03 | — | Pending |
+| ROOM-04 | — | Pending |
+| AVAIL-01 | — | Pending |
+| AVAIL-02 | — | Pending |
+| AVAIL-03 | — | Pending |
+| AVAIL-04 | — | Pending |
+| BOOK-01 | — | Pending |
+| BOOK-02 | — | Pending |
+| BOOK-03 | — | Pending |
+| BOOK-04 | — | Pending |
+| BOOK-05 | — | Pending |
+| BOOK-06 | — | Pending |
+| APPR-01 | — | Pending |
+| APPR-02 | — | Pending |
+| APPR-03 | — | Pending |
+| APPR-04 | — | Pending |
+| APPR-05 | — | Pending |
+| PAY-01 | — | Pending |
+| PAY-02 | — | Pending |
+| PAY-03 | — | Pending |
+| PAY-04 | — | Pending |
+| EXT-01 | — | Pending |
+| EXT-02 | — | Pending |
+| EXT-03 | — | Pending |
+| EXT-04 | — | Pending |
+| EXT-05 | — | Pending |
+| EXT-06 | — | Pending |
+| CNCL-01 | — | Pending |
+| CNCL-02 | — | Pending |
+| CNCL-03 | — | Pending |
+| CNCL-04 | — | Pending |
+| CNCL-05 | — | Pending |
+| CNCL-06 | — | Pending |
+| CNCL-07 | — | Pending |
+| ADMIN-01 | — | Pending |
+| ADMIN-02 | — | Pending |
+| ADMIN-03 | — | Pending |
+| ADMIN-04 | — | Pending |
+| ADMIN-05 | — | Pending |
 
 **Coverage:**
-- v1 requirements: 40 total
-- Mapped to phases: 40
-- Unmapped: 0
-
-**Distribution:**
-- Phase 1: 12 requirements (Foundation & Authentication)
-- Phase 2: 6 requirements (Data Management & Brand Profiles)
-- Phase 3: 9 requirements (AI Generation Pipeline)
-- Phase 4: 5 requirements (Usage Tracking & Limits)
-- Phase 5: 3 requirements (Stripe Subscription Billing)
-- Phase 6: 8 requirements (Downloads & History)
-- Phase 7: 2 requirements (Polish & Optimization)
+- v1 requirements: 41 total
+- Mapped to phases: 0 (pending roadmap)
+- Unmapped: 41 ⚠️
 
 ---
-*Requirements defined: 2026-01-23*
-*Last updated: 2026-01-23 after roadmap creation*
+*Requirements defined: 2026-03-25*
+*Last updated: 2026-03-25 after initial definition*

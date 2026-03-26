@@ -8,7 +8,7 @@ import { Room, AddOn, RoomPhoto } from "@prisma/client"
 import { Trash2, Plus } from "lucide-react"
 import { PhotoUploader } from "@/components/admin/photo-uploader"
 
-import { roomSchema, RoomFormData } from "@/lib/validations/room"
+import { roomSchemaCoerced as roomSchema, RoomFormData } from "@/lib/validations/room"
 import { createRoom, updateRoom, deleteRoom } from "@/actions/room"
 
 import { Button } from "@/components/ui/button"

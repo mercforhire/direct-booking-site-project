@@ -62,6 +62,20 @@
 - [ ] **CNCL-06**: If cancelled mid-stay, landlord decides whether to include the deposit in the refund
 - [ ] **CNCL-07**: Guest receives an email on cancellation with the refund amount and expected timeline
 
+### Guest Booking Page
+
+- [ ] **GUEST-01**: Guest can view a current booking page showing booking details (room, dates, guests, itemized costs, status)
+- [ ] **GUEST-02**: Guest can view their extension request status from the booking page
+- [ ] **GUEST-03**: Guest can submit an extension request directly from the booking page
+
+### Messaging
+
+- [ ] **MSG-01**: Guest can send a text message to the landlord from their booking page at any time
+- [ ] **MSG-02**: Landlord can send a text message to the guest from the booking detail in the admin dashboard
+- [ ] **MSG-03**: Both guest and landlord can view the full message thread on their respective booking views
+- [ ] **MSG-04**: Landlord receives an email notification when a guest sends a new message
+- [ ] **MSG-05**: Guest receives an email notification when the landlord replies
+
 ### Admin Dashboard
 
 - [ ] **ADMIN-01**: Landlord can view all bookings organized by status (pending, approved, payment pending, paid, completed, cancelled)
@@ -74,9 +88,9 @@
 
 ### Guest Experience
 
-- **GUEST-01**: Guest can view booking history across multiple stays (requires account)
-- **GUEST-02**: Guest receives a pre-arrival reminder email (e.g. 24 hours before check-in)
-- **GUEST-03**: Guest can initiate a cancellation request (landlord still approves)
+- **V2-GUEST-01**: Guest can view booking history across multiple stays (requires account)
+- **V2-GUEST-02**: Guest receives a pre-arrival reminder email (e.g. 24 hours before check-in)
+- **V2-GUEST-03**: Guest can initiate a cancellation request (landlord still approves)
 
 ### Operational
 
@@ -97,7 +111,7 @@
 | Instant booking | Request-to-approve flow is intentional |
 | Guest-initiated cancellation | Landlord handles cancellations; guests request via email/phone |
 | SMS notifications | Email is sufficient for this volume |
-| In-app messaging | Landlord and guest communicate via email |
+| Rich media messaging | Text-only messaging is sufficient; no image/file attachments in v1 |
 | Dynamic / seasonal pricing | Landlord sets price manually per booking |
 | Reviews and ratings | Not relevant for a semi-private trusted-guest site |
 | Public SEO / marketing pages | URL-shared only; no public discovery |
@@ -145,6 +159,14 @@
 | CNCL-05 | — | Pending |
 | CNCL-06 | — | Pending |
 | CNCL-07 | — | Pending |
+| GUEST-01 | — | Pending |
+| GUEST-02 | — | Pending |
+| GUEST-03 | — | Pending |
+| MSG-01 | — | Pending |
+| MSG-02 | — | Pending |
+| MSG-03 | — | Pending |
+| MSG-04 | — | Pending |
+| MSG-05 | — | Pending |
 | ADMIN-01 | — | Pending |
 | ADMIN-02 | — | Pending |
 | ADMIN-03 | — | Pending |
@@ -152,9 +174,9 @@
 | ADMIN-05 | — | Pending |
 
 **Coverage:**
-- v1 requirements: 41 total
+- v1 requirements: 49 total
 - Mapped to phases: 0 (pending roadmap)
-- Unmapped: 41 ⚠️
+- Unmapped: 49 ⚠️
 
 ---
 *Requirements defined: 2026-03-25*

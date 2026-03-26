@@ -1,2 +1,20 @@
 # GSD codebase intelligence (auto-generated, regenerate with /gsd:analyze-codebase)
 .planning/intel/
+node_modules
+
+/src/generated/prisma
+
+# Environment files
+.env
+.env.local
+.env*.local
+
+# Next.js
+.next/
+out/
+
+# Build
+dist/
+
+# OS
+.DS_Store

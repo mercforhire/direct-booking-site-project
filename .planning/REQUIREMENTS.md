@@ -72,7 +72,7 @@
 
 - [ ] **MSG-01**: Guest can send a text message to the landlord from their booking page at any time
 - [ ] **MSG-02**: Landlord can send a text message to the guest from the booking detail in the admin dashboard
-- [ ] **MSG-03**: Both guest and landlord can view the full message thread on their respective booking views
+- [ ] **MSG-03**: Both guest and landlord can view the full message thread on their respective booking views — thread is scoped to the booking and does not persist across different bookings
 - [ ] **MSG-04**: Landlord receives an email notification when a guest sends a new message
 - [ ] **MSG-05**: Guest receives an email notification when the landlord replies
 
@@ -112,6 +112,7 @@
 | Guest-initiated cancellation | Landlord handles cancellations; guests request via email/phone |
 | SMS notifications | Email is sufficient for this volume |
 | Rich media messaging | Text-only messaging is sufficient; no image/file attachments in v1 |
+| Persistent cross-booking chat | Message history is scoped per booking — intentional design decision |
 | Dynamic / seasonal pricing | Landlord sets price manually per booking |
 | Reviews and ratings | Not relevant for a semi-private trusted-guest site |
 | Public SEO / marketing pages | URL-shared only; no public discovery |

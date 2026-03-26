@@ -2,7 +2,7 @@
 
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { roomSchema } from "@/lib/validations/room"
+import { roomSchemaCoerced } from "@/lib/validations/room"
 import { revalidatePath } from "next/cache"
 
 async function requireAuth() {
@@ -13,7 +13,7 @@ async function requireAuth() {
 
 export async function createRoom(data: unknown) {
   await requireAuth()
-  const parsed = roomSchema.safeParse(data)
+  const parsed = roomSchemaCoerced.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
   const { addOns, ...roomData } = parsed.data
   const room = await prisma.$transaction(async (tx) => {
@@ -38,7 +38,7 @@ export async function createRoom(data: unknown) {
 
 export async function updateRoom(id: string, data: unknown) {
   await requireAuth()
-  const parsed = roomSchema.safeParse(data)
+  const parsed = roomSchemaCoerced.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
   const { addOns, ...roomData } = parsed.data
   const room = await prisma.$transaction(async (tx) => {

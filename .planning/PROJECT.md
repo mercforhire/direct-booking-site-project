@@ -1,12 +1,12 @@
-# Carousel Creator
+# Direct Booking Site
 
 ## What This Is
 
-A SaaS platform for LinkedIn creators to generate social media carousels from ideas. Users input a concept, connect it to their brand profile, select a design template and image style, then receive a complete carousel with post copy — ready to download as images or PDF.
+A semi-private direct booking website for a small landlord (1–2 properties, 5–10 rooms) to accept bookings from repeat Airbnb guests and word-of-mouth referrals. Guests browse available rooms, submit booking requests, and pay directly — bypassing Airbnb's platform fees and taxes. The site URL is shared post-stay with Airbnb guests; it is not publicly marketed.
 
 ## Core Value
 
-Turn an idea into a ready-to-post LinkedIn carousel in one click.
+Repeat guests can book a room directly with the landlord without going through Airbnb, saving both parties on platform fees.
 
 ## Requirements
 
@@ -16,97 +16,78 @@ Turn an idea into a ready-to-post LinkedIn carousel in one click.
 
 ### Active
 
-**Authentication & Accounts**
-- [ ] User can sign up with email and password
-- [ ] User receives email verification after signup
-- [ ] User can log in and stay logged in across sessions
-- [ ] User can log out
+**Room Listings**
+- [ ] Guest can browse all rooms with photos, descriptions, and estimated nightly rates
+- [ ] Guest can view a room's availability calendar
+- [ ] Each room displays its full fee structure (cleaning fee, per-extra-guest fee, optional add-ons)
 
-**Brand Management**
-- [ ] User can create multiple brands per account
-- [ ] Brand includes: name, colors, voice guidelines, product, audience, CTA text
-- [ ] User can edit and delete brands
-- [ ] User can select which brand to use for each carousel
+**Booking Requests**
+- [ ] Guest can submit a booking request (room, dates, number of guests, optional add-ons)
+- [ ] Guest sees an itemized price estimate before submitting (nightly × nights + cleaning fee + extra guest fees + add-ons + deposit + service fee)
+- [ ] Guest can book without an account (name, email, phone number)
+- [ ] Guest can optionally create an account to view booking history
 
-**Carousel Generation**
-- [ ] User can enter an idea (text input)
-- [ ] User can select from 5-6 design templates
-- [ ] User can select image style (Technical Annotation, Realism Notebook, White Board Diagram, Comic Strip Storyboard)
-- [ ] User can add custom image style names
-- [ ] Generation sends to n8n webhook with idea, brand info, template, and style
-- [ ] System receives carousel image URLs and post body from n8n
-- [ ] Generation deducts 1 from monthly usage allowance
+**Approval Flow**
+- [ ] Landlord receives email notification when a new booking request arrives
+- [ ] Landlord can view all pending, approved, and declined requests in an admin dashboard
+- [ ] Landlord can set the exact price when approving a booking
+- [ ] Landlord can approve or decline any booking request
+- [ ] Guest receives email when their request is approved (with price + payment link) or declined
 
-**Results & History**
-- [ ] User sees carousel preview after generation
-- [ ] User sees post body text with copy button
-- [ ] User can download carousel as individual images
-- [ ] User can download carousel as PDF
-- [ ] User can view history of all generated carousels
-- [ ] History shows original idea, brand, and outputs for each carousel
+**Payment**
+- [ ] Approved guest can pay online via Stripe
+- [ ] Guest can pay by e-transfer; landlord manually marks the booking as paid
+- [ ] Service fee (adjustable by landlord) is added to the total to cover Stripe processing costs
+- [ ] Optional deposit per booking (configurable by landlord)
 
-**Subscription & Billing**
-- [ ] Free tier: 3 carousels per month
-- [ ] Paid tier: $29.99/month for 10 carousels per month
-- [ ] Usage resets at start of each billing month
-- [ ] Stripe integration for payment processing
-- [ ] Stripe webhooks for subscription status updates
+**Availability Management**
+- [ ] Landlord can manually block and unblock specific dates per room
+- [ ] Landlord can set the global booking window (3–9 months ahead)
+- [ ] Guests cannot request dates outside the booking window or on blocked dates
 
-**Landing Page**
-- [ ] Marketing landing page with clear value proposition
-- [ ] Relume.io-inspired design: whitespace, typography, animations
-- [ ] Light theme, minimal aesthetic
-- [ ] Sign up and login entry points
-
-**Dashboard**
-- [ ] Clean, minimal dashboard for logged-in users
-- [ ] Light theme consistent with landing page
-- [ ] Brand management section
-- [ ] Carousel generation interface
-- [ ] History/gallery view
+**Room & Fee Management**
+- [ ] Landlord can add and edit room listings (photos, description, base nightly rate)
+- [ ] Landlord can configure per-room: cleaning fee, per-extra-guest nightly fee, optional one-time add-ons (e.g. sofa bed)
+- [ ] Landlord can configure global: service fee percentage, deposit amount
 
 ### Out of Scope
 
-- Direct posting to social media — users download and post manually
-- Dark theme — light theme only for v1
-- Mobile app — web-first, responsive design only
-- Real-time collaboration — single user per account
-- Video carousels — static image carousels only
+- Airbnb iCal / calendar sync — manual availability management is sufficient for this volume
+- Multi-landlord accounts — single landlord only
+- Instant booking — request-to-approve flow only
+- SMS notifications — email is sufficient
+- In-app messaging — landlord and guest communicate via email
+- Public SEO / marketing pages — site is URL-shared only
+- Recurring or long-term lease bookings — short-stay only
+- Reviews / ratings system
 
 ## Context
 
-**Existing Infrastructure:**
-- n8n workflow already exists and generates carousels
-- Currently stores outputs in Airtable — needs rewiring to Supabase
-- Images hosted on ImageBB (handled by n8n, no changes needed)
-- Template assets: 5-6 designs with front page, content pages, CTA page — need hosting solution
-
-**Tools & Skills:**
-- Frontend design Claude skill for UI implementation
-- n8n MCP for workflow modifications
-- n8n skills repository for workflow patterns
-
-**Design Reference:**
-- Relume.io aesthetic: clean whitespace, strong typography, smooth micro-animations, considered color palette
-- Landing page should immediately communicate value to LinkedIn creators
+- Landlord actively runs Airbnb listings alongside this site; availability must be manually kept in sync
+- Site URL is given to guests after Airbnb stays (Airbnb prohibits discussing off-platform bookings during a stay)
+- Word-of-mouth sharing to trusted people is also expected
+- 1–2 properties, 5–10 rooms total
+- Room listings are fairly static (photos/descriptions set up once); availability changes frequently
+- Exact nightly price is set by landlord per booking, using Airbnb rates as a reference
+- Low booking volume expected — manual processes are acceptable
 
 ## Constraints
 
-- **Tech Stack**: Supabase (auth + database), Stripe (payments), n8n (carousel generation), Vercel (hosting), GitHub (version control)
-- **Design**: Light theme only, relume.io-inspired minimal aesthetic with animations
-- **Integration**: Must work with existing n8n workflow structure (modify storage, not generation logic)
-- **Pricing**: Two tiers only — free (3/month) and paid ($29.99/month, 10/month)
+- **Single landlord**: No multi-tenancy, no team accounts — one admin user only
+- **Semi-private**: No public listing directories, no SEO optimization needed
+- **Payment**: Stripe for online payment; e-transfer as manual fallback
+- **Availability**: Manual date blocking only (no Airbnb API / iCal sync in v1)
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Supabase for auth + database | Multi-tenant SaaS needs, user mentioned preference | — Pending |
-| n8n for carousel generation | Workflow already exists and works | — Pending |
-| ImageBB for image hosting | Free, already integrated with n8n workflow | — Pending |
-| Stripe for payments | Industry standard, webhook support | — Pending |
-| Light theme only | User preference, matches relume.io aesthetic | — Pending |
-| Credit system (usage count) | Simple model: 1 carousel = 1 credit, no complexity | — Pending |
+| Request-to-book (not instant) | Landlord wants to vet each booking and set exact price | — Pending |
+| Optional guest accounts | Reduces friction; repeat guests benefit from history | — Pending |
+| Manual Airbnb sync | Low volume makes automation unnecessary for v1 | — Pending |
+| Global booking window (not per-room) | Simpler; landlord confirmed either works | — Pending |
+| Dual payment (Stripe + e-transfer) | Covers automated and offline preferences | — Pending |
+| Adjustable service fee | Allows landlord to offset Stripe costs; can be 0 for e-transfer | — Pending |
 
 ---
-*Last updated: 2026-01-23 after initialization*
+*Last updated: 2026-03-25 after initialization*

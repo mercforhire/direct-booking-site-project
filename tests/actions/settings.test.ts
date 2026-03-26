@@ -5,13 +5,17 @@ import { mockPrisma } from "../lib/prisma-mock"
 // Mock next/cache before importing the action
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 
-// Mock auth
-vi.mock("@/lib/auth", () => ({ auth: vi.fn() }))
+// Mock Supabase server client
+const mockGetUser = vi.fn()
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: vi.fn(() =>
+    Promise.resolve({
+      auth: { getUser: mockGetUser },
+    })
+  ),
+}))
 
 import { upsertSettings } from "@/actions/settings"
-import { auth } from "@/lib/auth"
-
-const mockAuth = vi.mocked(auth)
 
 const validSettingsData = {
   serviceFeePercent: 3,
@@ -32,7 +36,7 @@ describe("settings actions", () => {
 
   describe("upsertSettings", () => {
     it("upsertSettings with valid data upserts the Settings row and returns { settings }", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", email: "admin@test.com" } } as any)
+      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
       mockPrisma.settings.upsert.mockResolvedValue(mockSettingsRecord as any)
 
       const result = await upsertSettings(validSettingsData)
@@ -45,7 +49,7 @@ describe("settings actions", () => {
     })
 
     it("upsertSettings with serviceFeePercent=0 succeeds (0% is valid)", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", email: "admin@test.com" } } as any)
+      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
       const zeroFeeRecord = { ...mockSettingsRecord, serviceFeePercent: 0 }
       mockPrisma.settings.upsert.mockResolvedValue(zeroFeeRecord as any)
 
@@ -55,7 +59,7 @@ describe("settings actions", () => {
     })
 
     it("upsertSettings with depositAmount=0 succeeds (no deposit is valid)", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", email: "admin@test.com" } } as any)
+      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
       const noDepositRecord = { ...mockSettingsRecord, depositAmount: 0 }
       mockPrisma.settings.upsert.mockResolvedValue(noDepositRecord as any)
 
@@ -65,7 +69,7 @@ describe("settings actions", () => {
     })
 
     it("upsertSettings with a negative serviceFeePercent returns { error } with field-level message", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", email: "admin@test.com" } } as any)
+      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
 
       const result = await upsertSettings({ serviceFeePercent: -1, depositAmount: 100 })
       expect(result).toHaveProperty("error")
@@ -73,7 +77,7 @@ describe("settings actions", () => {
     })
 
     it("upsertSettings with a negative depositAmount returns { error } with field-level message", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", email: "admin@test.com" } } as any)
+      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
 
       const result = await upsertSettings({ serviceFeePercent: 3, depositAmount: -50 })
       expect(result).toHaveProperty("error")
@@ -81,13 +85,13 @@ describe("settings actions", () => {
     })
 
     it("upsertSettings called without a session throws Unauthorized", async () => {
-      mockAuth.mockResolvedValue(null)
+      mockGetUser.mockResolvedValue({ data: { user: null }, error: new Error("Not authenticated") })
 
       await expect(upsertSettings(validSettingsData)).rejects.toThrow("Unauthorized")
     })
 
     it("when called twice with different values, the second call updates the existing row (upsert not create)", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", email: "admin@test.com" } } as any)
+      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
       mockPrisma.settings.upsert.mockResolvedValue(mockSettingsRecord as any)
 
       // First call

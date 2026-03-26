@@ -5,13 +5,17 @@ import { mockPrisma } from "../lib/prisma-mock"
 // Mock next/cache before importing the action
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 
-// Mock auth
-vi.mock("@/lib/auth", () => ({ auth: vi.fn() }))
+// Mock Supabase server client
+const mockGetUser = vi.fn()
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: vi.fn(() =>
+    Promise.resolve({
+      auth: { getUser: mockGetUser },
+    })
+  ),
+}))
 
 import { createRoom, updateRoom, deleteRoom } from "@/actions/room"
-import { auth } from "@/lib/auth"
-
-const mockAuth = vi.mocked(auth)
 
 const validRoomData = {
   name: "Ocean View Suite",
@@ -48,7 +52,7 @@ describe("room actions", () => {
 
   describe("createRoom", () => {
     it("createRoom with valid data creates a Room and returns { room }", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", email: "admin@test.com" } } as any)
+      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
 
       const txMock = {
         room: { create: vi.fn().mockResolvedValue(mockRoomRecord) },
@@ -62,7 +66,7 @@ describe("room actions", () => {
     })
 
     it("createRoom with add-ons creates them in the transaction", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", email: "admin@test.com" } } as any)
+      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
 
       const dataWithAddOns = {
         ...validRoomData,
@@ -82,14 +86,14 @@ describe("room actions", () => {
     })
 
     it("createRoom with missing required fields returns { error } with field-level messages", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", email: "admin@test.com" } } as any)
+      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
 
       const result = await createRoom({ name: "", description: "" })
       expect(result).toHaveProperty("error")
     })
 
     it("createRoom called without a session throws Unauthorized", async () => {
-      mockAuth.mockResolvedValue(null)
+      mockGetUser.mockResolvedValue({ data: { user: null }, error: new Error("Not authenticated") })
 
       await expect(createRoom(validRoomData)).rejects.toThrow("Unauthorized")
     })
@@ -97,7 +101,7 @@ describe("room actions", () => {
 
   describe("updateRoom", () => {
     it("updateRoom with valid data updates the Room and returns { room }", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", email: "admin@test.com" } } as any)
+      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
 
       const txMock = {
         room: { update: vi.fn().mockResolvedValue(mockRoomRecord) },
@@ -117,7 +121,7 @@ describe("room actions", () => {
     })
 
     it("updateRoom replaces add-ons via deleteMany + createMany in a transaction", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", email: "admin@test.com" } } as any)
+      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
 
       const dataWithAddOns = {
         ...validRoomData,
@@ -141,7 +145,7 @@ describe("room actions", () => {
     })
 
     it("updateRoom called without a session throws Unauthorized", async () => {
-      mockAuth.mockResolvedValue(null)
+      mockGetUser.mockResolvedValue({ data: { user: null }, error: new Error("Not authenticated") })
 
       await expect(updateRoom("room-1", validRoomData)).rejects.toThrow("Unauthorized")
     })
@@ -149,7 +153,7 @@ describe("room actions", () => {
 
   describe("deleteRoom", () => {
     it("deleteRoom removes the Room record and returns { success: true }", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1", email: "admin@test.com" } } as any)
+      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
       mockPrisma.room.delete.mockResolvedValue(mockRoomRecord as any)
 
       const result = await deleteRoom("room-1")
@@ -158,7 +162,7 @@ describe("room actions", () => {
     })
 
     it("deleteRoom called without a session throws Unauthorized", async () => {
-      mockAuth.mockResolvedValue(null)
+      mockGetUser.mockResolvedValue({ data: { user: null }, error: new Error("Not authenticated") })
 
       await expect(deleteRoom("room-1")).rejects.toThrow("Unauthorized")
     })

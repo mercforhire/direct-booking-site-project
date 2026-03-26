@@ -1,6 +1,6 @@
 "use client"
 
-import { signIn } from "next-auth/react"
+import { createClient } from "@/lib/supabase/client"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,8 +19,17 @@ export default function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    await signIn("resend", { email, redirect: false })
-    setSent(true)
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,  // admin-only: prevents auto-registration of unknown emails
+        emailRedirectTo: `${window.location.origin}/auth/confirm`,
+      },
+    })
+    if (!error) {
+      setSent(true)
+    }
   }
 
   if (sent) {

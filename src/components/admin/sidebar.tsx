@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { signOut } from "next-auth/react"
+import { createClient } from "@/lib/supabase/client"
+import { useRouter } from "next/navigation"
 import { LayoutDashboard, BedDouble, Settings, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -15,6 +16,13 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push("/login")
+  }
 
   return (
     <aside className="w-56 min-h-screen border-r bg-white flex flex-col">
@@ -45,7 +53,7 @@ export function Sidebar() {
           variant="ghost"
           size="sm"
           className="w-full justify-start gap-3 text-gray-600"
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={handleSignOut}
         >
           <LogOut className="h-4 w-4" />
           Sign Out

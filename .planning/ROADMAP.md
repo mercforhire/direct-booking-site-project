@@ -178,7 +178,7 @@ Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. P
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Room Management | 3/5 | In Progress|  |
+| 1. Foundation & Room Management | 4/5 | In Progress|  |
 | 2. Availability Management | 0/? | Not started | - |
 | 3. Guest Room Browsing | 0/? | Not started | - |
 | 4. Booking Requests | 0/? | Not started | - |

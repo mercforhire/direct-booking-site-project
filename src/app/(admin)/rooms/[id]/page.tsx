@@ -6,7 +6,7 @@ export default async function EditRoomPage({ params }: { params: Promise<{ id: s
   const { id } = await params
   const room = await prisma.room.findUnique({
     where: { id },
-    include: { addOns: true },
+    include: { addOns: true, photos: { orderBy: { position: "asc" } } },
   })
   if (!room) notFound()
   return (

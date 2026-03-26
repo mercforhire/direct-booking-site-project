@@ -4,8 +4,9 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Room, AddOn } from "@prisma/client"
+import { Room, AddOn, RoomPhoto } from "@prisma/client"
 import { Trash2, Plus } from "lucide-react"
+import { PhotoUploader } from "@/components/admin/photo-uploader"
 
 import { roomSchema, RoomFormData } from "@/lib/validations/room"
 import { createRoom, updateRoom, deleteRoom } from "@/actions/room"
@@ -23,7 +24,7 @@ import {
 } from "@/components/ui/form"
 
 interface RoomFormProps {
-  room?: Room & { addOns: AddOn[] }
+  room?: Room & { addOns: AddOn[]; photos: RoomPhoto[] }
 }
 
 export function RoomForm({ room }: RoomFormProps) {
@@ -291,13 +292,27 @@ export function RoomForm({ room }: RoomFormProps) {
           </Button>
         </div>
 
-        {/* Photo placeholder */}
-        <div className="space-y-2">
-          <h2 className="text-lg font-medium text-gray-900">Photos</h2>
-          <div className="rounded-md border-2 border-dashed border-gray-200 bg-gray-50 p-8 text-center text-sm text-gray-400">
-            Photos — coming in next plan
+        {/* Photos */}
+        {room?.id && (
+          <div className="space-y-2">
+            <h2 className="text-lg font-medium text-gray-900">Photos</h2>
+            <p className="text-sm text-gray-500">
+              Drag to reorder. First photo is the cover image.
+            </p>
+            <PhotoUploader
+              roomId={room.id}
+              initialPhotos={room.photos ?? []}
+            />
           </div>
-        </div>
+        )}
+        {!room?.id && (
+          <div className="space-y-2">
+            <h2 className="text-lg font-medium text-gray-900">Photos</h2>
+            <div className="rounded-md border border-dashed border-gray-300 p-4 text-sm text-gray-400 text-center">
+              Save the room first, then add photos on the edit page.
+            </div>
+          </div>
+        )}
 
         {/* Form Actions */}
         <div className="flex items-center justify-between pt-4 border-t">

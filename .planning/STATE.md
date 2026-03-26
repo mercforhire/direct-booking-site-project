@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 01.5-supabase-migration/01.5-02-PLAN.md
-last_updated: "2026-03-26T20:09:52.190Z"
+stopped_at: Completed 01.5-supabase-migration/01.5-03-PLAN.md
+last_updated: "2026-03-26T20:13:03.950Z"
 last_activity: 2026-03-25 — Roadmap created (9 phases, 49 requirements mapped)
 progress:
   total_phases: 10
   completed_phases: 0
   total_plans: 10
-  completed_plans: 6
+  completed_plans: 7
   percent: 0
 ---
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-foundation-room-management P04 | 10 | 2 tasks | 7 files |
 | Phase 01.5-supabase-migration P01 | 5min | 2 tasks | 2 files |
 | Phase 01.5-supabase-migration P02 | 4 | 2 tasks | 1 files |
+| Phase 01.5-supabase-migration P03 | 2min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,8 @@ Recent decisions affecting current work:
 - [Phase 01.5-supabase-migration]: Supabase chosen as managed PostgreSQL + Auth provider to replace Prisma-backed NextAuth; DATABASE_URL uses transaction pooler (port 6543 + ?pgbouncer=true), DIRECT_URL uses session pooler (port 5432)
 - [Phase 01.5-supabase-migration]: next-auth and @auth/prisma-adapter removed; TypeScript errors in auth.ts/auth-edge.ts/middleware.ts are expected and will be resolved in plans 03-04
 - [Phase 01.5-supabase-migration]: Direct connection URL (db.[ref].supabase.co:5432) used for both DATABASE_URL and DIRECT_URL — transaction pooler URL caused authentication failures
+- [Phase 01.5-supabase-migration]: Middleware inlines createServerClient directly (not shared factory) — Edge runtime requires direct access to both request and response cookies
+- [Phase 01.5-supabase-migration]: getUser() used in middleware (not getSession()) — validates JWT server-side with Supabase Auth on every request, cannot be spoofed
 
 ### Pending Todos
 
@@ -92,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T20:09:52.188Z
-Stopped at: Completed 01.5-supabase-migration/01.5-02-PLAN.md
+Last session: 2026-03-26T20:13:03.948Z
+Stopped at: Completed 01.5-supabase-migration/01.5-03-PLAN.md
 Resume file: None

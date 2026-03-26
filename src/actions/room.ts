@@ -1,14 +1,15 @@
 "use server"
 
-import { auth } from "@/lib/auth"
+import { createClient } from "@/lib/supabase/server"
 import { prisma } from "@/lib/prisma"
 import { roomSchemaCoerced } from "@/lib/validations/room"
 import { revalidatePath } from "next/cache"
 
 async function requireAuth() {
-  const session = await auth()
-  if (!session?.user) throw new Error("Unauthorized")
-  return session
+  const supabase = await createClient()
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error || !user) throw new Error("Unauthorized")
+  return user
 }
 
 export async function createRoom(data: unknown) {

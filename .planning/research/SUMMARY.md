@@ -1,437 +1,231 @@
 # Project Research Summary
 
-**Project:** Carousel Creator - LinkedIn Carousel SaaS
-**Domain:** Multi-tenant content generation SaaS with AI, subscriptions, and async webhooks
-**Researched:** 2026-01-23
+**Project:** Direct Booking Site
+**Domain:** Semi-private short-term rental booking platform (single landlord)
+**Researched:** 2026-03-25
 **Confidence:** HIGH
 
 ## Executive Summary
 
-This LinkedIn carousel creator is a modern multi-tenant SaaS application that combines AI content generation, subscription billing, and asynchronous workflows. Expert builders in this domain (2026) use **Next.js 15 with App Router** for the full-stack application, **Supabase with Row Level Security (RLS)** for database-level tenant isolation, **Stripe webhooks** for subscription lifecycle management, and **n8n in Queue Mode** for long-running AI generation tasks. The architecture is event-driven with async processing to handle 30-60 second generation workflows without blocking users.
+This is a purpose-built, semi-private booking platform for a single landlord managing 5-10 short-term rental rooms. Unlike public platforms (Airbnb, Vrbo) or generic direct-booking SaaS tools, the core design constraint is a **request-to-approve workflow**: guests browse and request, the landlord manually reviews, sets the exact price, and approves. This deliberate friction is a feature, not a bug — it lets the landlord vet guests and control pricing per booking. The entire technology and architecture strategy follows from this constraint. The recommended approach is a monolithic Next.js 16 application (App Router + Server Actions) deployed on Vercel, with a Neon PostgreSQL database via Drizzle ORM, Stripe Checkout Sessions for payment, and Resend for transactional email. The full stack can operate at zero fixed cost per month (excluding Stripe's per-transaction fee).
 
-The recommended approach leverages **Server Components and Server Actions** for optimal performance, **RLS policies** to prevent data leaks at the database layer (eliminating application-level filtering), and **webhook callback patterns** with idempotency tracking for reliable external integrations. This stack represents current best practices for production SaaS applications deployed on Vercel with Supabase as of January 2026.
+The most critical architectural element is the **booking state machine**. Research unanimously identifies implicit, scattered state management as the primary source of production bugs in booking systems. The state machine must be designed explicitly before any code is written, covering not just the happy path (pending -> approved -> paid) but all edge cases: payment expiration, Stripe webhook failures, e-transfer timeouts, and cancellation/refund paths. The second most critical element is **availability conflict prevention**: the approval action must run inside a database transaction with a conflict check to prevent the landlord from accidentally approving two bookings for the same room and dates.
 
-Key risks center on **multi-tenant data isolation** (RLS policy bypasses causing cross-user data leaks), **webhook state synchronization** (Stripe subscription vs. database state drift), and **credit deduction race conditions** (concurrent requests bypassing usage limits). These are mitigated through defense-in-depth RLS policies with explicit WHERE clauses, idempotent webhook handlers with event logging, and atomic database functions using SELECT FOR UPDATE locking.
+Key risks are concentrated in two phases: the booking engine (state machine correctness, date handling, double-booking prevention) and payment integration (Stripe webhook reliability, session expiration, refund edge cases). Both are well-understood problems with documented solutions. The recommended mitigations — transactional conflict checks, dual-check payment confirmation (webhook + redirect + periodic reconciliation), date-only string storage — are straightforward to implement if addressed from the start. Features to deliberately avoid: channel manager/iCal sync, dynamic pricing, reviews, in-app messaging, and instant booking. These are table stakes on large platforms but wrong for this use case.
 
 ## Key Findings
 
 ### Recommended Stack
 
-The 2026-standard tech stack for this domain uses Next.js 15 (App Router + Server Components) as the full-stack framework, TypeScript 5.7+ for end-to-end type safety, Supabase for PostgreSQL database with built-in authentication and RLS, Stripe for subscription billing with webhook-driven lifecycle management, n8n for async content generation workflows, and shadcn/ui for component primitives without package lock-in. All tools are actively maintained with verified January 2026 releases.
+The stack is unified around the Next.js ecosystem to minimize operational complexity. Next.js 16 with App Router provides Server Components (reduces client bundle), Server Actions (handles form submissions without custom API routes), and single-unit deployment on Vercel. Drizzle ORM is preferred over Prisma for its smaller serverless bundle and SQL-level control for date-range availability queries. Neon's serverless PostgreSQL with scale-to-zero is ideal for a low-traffic site — no cost when idle, connection pooling built in. Auth.js v5 with a Credentials provider handles the single-admin use case without OAuth complexity.
+
+For supporting services: Stripe Checkout Sessions (hosted payment page, not custom form) handles PCI compliance automatically. Resend with React Email provides type-safe email templates in the same codebase. UploadThing handles room photo uploads with Next.js-native integration, though static photos committed to the repo is a valid zero-dependency alternative. Tailwind CSS v4 + shadcn/ui provides accessible, zero-runtime components. The entire fixed infrastructure cost is $0/month.
 
 **Core technologies:**
-- **Next.js 15.5+ App Router**: Server Components reduce bundle size, Server Actions provide type-safe mutations, optimal Vercel deployment
-- **Supabase**: Managed PostgreSQL with RLS for multi-tenancy, built-in JWT auth, real-time subscriptions, storage with CDN
-- **Stripe**: Industry-standard subscription billing, webhook events for lifecycle management, built-in compliance
-- **n8n Queue Mode**: Async workflow orchestration with Redis queue, horizontal scaling for AI generation tasks
-- **shadcn/ui + Tailwind CSS**: Copy-paste components (no package lock-in), utility-first CSS for fast iteration
-- **@react-pdf/renderer**: PDF generation using React components (familiar DX, better than jsPDF for multi-slide layouts)
-- **React Hook Form + Zod**: Form state with minimal re-renders, type-safe validation reused on client and server
-
-**Critical version requirements:**
-- Node.js 18.17+ (required for Next.js 15)
-- React 19+ (required for App Router)
-- @supabase/ssr (cookie-based auth for App Router, not localStorage)
-- jsPDF >= 4.0.0 (CVE-2025-68428 fixed in v4.0.0, critical SSRF vulnerability in prior versions)
+- **Next.js 16 (App Router):** Full-stack framework — Server Components + Server Actions eliminate need for a separate backend; single Vercel deployment
+- **PostgreSQL via Neon:** Primary database — relational model fits rooms/bookings/dates naturally; date-range exclusion constraints; scale-to-zero free tier
+- **Drizzle ORM:** Data access — smaller serverless bundle than Prisma; SQL-level control for availability queries; no generation step friction
+- **Auth.js v5:** Admin authentication — standard Next.js auth library; Credentials provider sufficient for single-admin use case
+- **Stripe Checkout Sessions:** Payments — hosted page handles PCI compliance, 3D Secure, mobile; webhook-driven confirmation
+- **Resend + React Email:** Transactional email — React-native DX; JSX email templates in same codebase; 3K emails/month free
+- **Tailwind CSS v4 + shadcn/ui:** UI — zero-runtime; copy-paste components with Radix accessibility primitives; 2026 Next.js standard
+- **Zod + React Hook Form:** Validation — shared schemas between client and server; type inference from schema
 
 ### Expected Features
 
-The LinkedIn carousel generation space in 2026 is dominated by AI-powered tools with template libraries and brand customization. **Critical technical constraint**: LinkedIn removed native multi-image carousels — PDFs are now the ONLY format for swipeable carousels (1080x1080px or 1080x1350px).
+The feature set is defined by the request-to-approve model and the semi-private audience (repeat guests who found the site via direct URL, not search). Every table-stakes feature must be present before launch. The differentiators are what make this site worth building instead of using an existing platform.
 
 **Must have (table stakes):**
-- AI content generation from ideas — 97% of marketers use AI tools, expected in 2026
-- Template library (10-15 for MVP) — all competitors offer 50+ templates
-- Brand customization (colors, fonts, logo) — consistent brand identity is baseline expectation
-- PDF export (LinkedIn carousel format) — only format LinkedIn accepts, critical requirement
-- Download as images (PNG/JPG) — backup format for other platforms
-- Authentication — signup, login, email verification standard for SaaS
-- Usage limits (freemium model) — Free tier (3/month), Paid tier ($29.99/month, 10/month) aligns with 95% of competitors
-- Preview before download — users need to review generated content
-- Multi-slide support (5-10 slides) — sweet spot for engagement without swipe fatigue
+- Room listings with photos, descriptions, and base rates — foundation of any booking site
+- Availability calendar per room with blocked date display — core guest-facing UI element
+- Itemized price breakdown before checkout — transparent pricing is the #1 conversion factor
+- Mobile-responsive design — 73% of vacation rental browsing starts on mobile
+- Secure online payment via Stripe — PCI-compliant, recognizable checkout flow builds trust
+- Email notifications at every booking lifecycle stage — primary communication channel
+- Admin dashboard for booking management (pending/approved/declined/paid views)
+- Date blocking / availability management — manual Airbnb sync mechanism
+- Guest checkout without mandatory account creation — account creation kills conversion
+- HTTPS/SSL — non-negotiable with any payment flow
 
-**Should have (competitive differentiators):**
-- Multi-brand management — creators manage multiple personal brands/clients (missing from most competitors)
-- Brand voice management — AI generates content matching user's tone (Jasper/HubSpot-style enforcement)
-- Post copy generation — complete LinkedIn caption with hashtags + CTA (not just carousel slides)
-- Generation history — access and regenerate previous carousels
-- Style selection — image style presets (photography, illustration, abstract)
+**Should have (differentiators):**
+- Request-to-approve flow with manual price-setting per booking — core product differentiator
+- E-transfer payment fallback with "Mark as Paid" admin toggle — reduces friction for trusted repeat guests
+- Configurable fee structure per room (cleaning fee, extra-guest fee, add-ons)
+- Adjustable service fee percentage for Stripe cost recovery
+- Configurable booking window (landlord controls how far ahead guests can book)
+- Optional guest accounts with booking history — value for repeat guests, not required for launch
 
-**Defer (v2+):**
-- Content repurposing (URLs/blogs → carousels) — high complexity, needs URL parsing and video transcription
-- Custom template creation — power user feature, not needed for validation
-- Batch generation — agency feature, not personal brand builder need
-- A/B testing suggestions — requires ML model training on engagement data
-- Direct social posting — out of scope, requires OAuth/rate limits/compliance risk
-- Analytics dashboard — post-publishing tracking, not pre-publishing creation tool
+**Defer to v2+:**
+- Optional guest accounts — launch with email-only identity; add accounts later
+- Configurable booking window — default to 6 months, make configurable in fast follow
+- Booking request add-ons (sofa bed, airport pickup) — launch with flat room pricing first
+- Partial refund support — full refunds sufficient for v1
+- Booking expiration TTL automation — initially handle manually via admin dashboard
+
+**Explicit anti-features (do not build):**
+- Channel manager / iCal sync — manual date blocking is sufficient at this volume
+- Dynamic/algorithmic pricing — contradicts landlord's model
+- Reviews/ratings — semi-private site, trust established via Airbnb relationship
+- In-app messaging — email and phone are sufficient
+- SMS notifications — email only
+- Instant booking — contradicts the approval model
 
 ### Architecture Approach
 
-Multi-tenant SaaS with external webhooks follows a **layered, event-driven architecture**: Next.js handles frontend and API routes, Supabase enforces tenant isolation via RLS policies at the database level, n8n processes long-running AI workflows asynchronously in Queue Mode (Redis + workers), and Stripe manages subscription lifecycle through webhook events. Critical pattern: **async job queue** for generation (user submits → job queued → n8n processes → webhook callback → frontend polls status) prevents Vercel function timeouts and enables horizontal scaling.
+The system is a single-tenant Next.js monolith with no microservices, message queues, or distributed components. The architecture is organized around two independent "engines" — the fee calculator (pure function, no DB access) and the availability checker (single SQL query) — and one central orchestrator: the booking state machine. Everything else (guest pages, admin dashboard, payment flows, email notifications) is a consumer of these three components. The correct deployment is Vercel (zero-config Next.js) + Neon (managed PostgreSQL), with Stripe and Resend as external services called via API routes and Server Actions.
 
 **Major components:**
-1. **Frontend (Next.js App Router)** — Server Components for initial data loading, Client Components for forms/polling, no direct external API calls (proxied through Next.js routes)
-2. **API Layer (Next.js routes)** — RESTful endpoints with tenant-aware authentication, webhook receivers with signature verification, rate limiting
-3. **Business Logic** — Auth service (RLS policy application), Usage Tracking (quota enforcement), Generation Service (job orchestration), Subscription Service (Stripe integration)
-4. **Data Persistence (Supabase PostgreSQL)** — RLS policies on ALL tables with user data, shared schema with user_id column (not schema-per-tenant), composite indexes on (user_id, created_at)
-5. **External: n8n Queue Mode** — Webhook receiver → Redis queue → Workers (LLM + image generation) → callback to Next.js with results
-6. **External: Stripe** — Subscription API for checkout, webhooks for lifecycle events (invoice.paid, subscription.deleted, etc.)
+1. **Booking State Machine** — central orchestrator enforcing all status transitions with guards, side effects, and audit trail; every state change flows through one function
+2. **Fee Calculator** — pure function mapping (dates, guests, room config, add-ons, global settings) to itemized price breakdown; used identically for guest estimates and landlord approval
+3. **Availability Checker** — single SQL query detecting overlaps across DateBlocks and active Bookings; called on calendar display, booking submission, and approval
+4. **Guest Pages** — room listings, availability calendar, booking request form, payment completion; Server Components for fast mobile load
+5. **Admin Dashboard** — booking management, room/fee CRUD, availability blocking, settings; protected by Auth.js session
+6. **Stripe Webhook Handler** — payment confirmation via `checkout.session.completed`; idempotent; signature-verified
+7. **Email Notification Service** — triggered by state machine side effects; templates in React Email
 
-**Critical patterns:**
-- **Row Level Security (RLS)** for multi-tenancy — database-level isolation, defense-in-depth with explicit WHERE clauses
-- **Idempotent webhook handlers** — log event IDs, check before processing, return 200 after verification but before heavy processing
-- **Async job status polling** — frontend polls generation status every 3-5 seconds, alternative: Supabase Realtime subscriptions
-- **Atomic credit deduction** — PostgreSQL stored procedures with SELECT FOR UPDATE to prevent race conditions
+**Key architectural patterns to enforce:**
+- Snapshot pricing on approval (copy all fee components to Booking row; never reference Room rates after approval)
+- Webhook-driven payment confirmation with dual-check (webhook + redirect verification + periodic reconciliation)
+- Date-only string storage (YYYY-MM-DD, never timestamps) to eliminate timezone bugs
+- Centralized state machine (all transitions via one function, not scattered if/else)
+- Server-side availability re-validation on every booking submission (never trust client-side calendar state)
 
 ### Critical Pitfalls
 
-Top 5 mistakes that cause rewrites, security breaches, or billing failures in this domain:
+1. **Double-booking via race condition on approval** — two guests have pending requests for the same dates; landlord approves both. Prevention: run a transactional conflict check inside the approval action; auto-decline conflicting pending requests after approval; show visual overlap warnings in admin dashboard. Must be solved in the booking engine, not patched later.
 
-1. **RLS Policy Bypass Through Missing WHERE Clauses** — Developers assume RLS eliminates need for explicit WHERE clauses. A single query without filtering exposes ALL tenant data despite RLS being enabled. **Prevention**: Defense-in-depth (RLS policies AND explicit WHERE user_id clauses), add indexes on tenant columns, audit queries regularly, test with multiple users. **Phase impact**: Foundation (Phase 1) — RLS architecture must be correct from start, retrofitting requires full table rewrites.
+2. **Incomplete booking state machine** — missing transitions leave bookings in limbo states forever (approved with no payment timeout, payment_pending after Stripe session expires, no path from paid to refunded). Prevention: draw the full state diagram before writing any code; every state needs at least one exit path; add TTL-based auto-transitions for payment expiration.
 
-2. **Stripe Webhook State Desynchronization** — Webhook processes successfully but database write fails, Stripe marks event delivered (200 sent too early), subscription status now out of sync. User pays for Pro but app shows Free tier limits. **Prevention**: Idempotency tracking (store event IDs), signature verification ALWAYS, return 200 immediately then queue processing, handle event ordering (events may arrive out of order). **Phase impact**: Payments (Phase 2) — implement from first webhook, retroactive fixes require manual reconciliation.
+3. **Stripe webhook unreliability** — webhook fails during server deployment; guest is charged but booking stays in "awaiting_payment." Prevention: dual-check (webhook + success URL verification via Stripe API query); store Session ID on booking; build admin "Check Payment Status" that queries Stripe directly; process webhooks idempotently with event ID deduplication.
 
-3. **Race Conditions in Credit Deduction** — User double-clicks "Generate", both requests read credits_remaining = 1 before either updates, both succeed. **Prevention**: Atomic database operations (PostgreSQL SELECT FOR UPDATE), application-level idempotency keys, UI debouncing (disable button after click). **Phase impact**: Usage Limits (Phase 4) — must implement atomic operations from start, retroactive fixes require data reconciliation.
+4. **Timezone and off-by-one date bugs** — JavaScript Date timezone conversions corrupt check-in/check-out dates at every API boundary. Prevention: store all dates as YYYY-MM-DD strings in PostgreSQL `date` columns; define check-out semantics explicitly (departure date = available for new check-in); use date-fns with string inputs; write timezone boundary unit tests. Must be established as a convention in the first database schema commit.
 
-4. **n8n Webhook Timeout Cascade Failure** — Generation takes 45s, Vercel function times out at 60s, app shows failure but n8n STILL completes, user retries creating duplicate generation. **Prevention**: Async webhook pattern (return generation_id immediately, poll for completion), enable Fluid Compute for webhook receivers (300s timeout), n8n calls back when complete. **Phase impact**: Generation Pipeline (Phase 3) — architectural decision shapes entire product, cannot migrate sync→async post-launch.
-
-5. **Multi-Brand Context Switching Vulnerability** — User switches from Brand A to Brand B in UI, API requests use stale brand ID, carousel saved to wrong brand profile. Worst case: RLS bypass shows ALL brands across ALL users. **Prevention**: Server-side brand ownership verification on EVERY endpoint accepting brandId, RLS policies for brand ownership (brands.user_id = auth.uid()), verified brand context middleware. **Phase impact**: Foundation (Phase 1) — multi-brand architecture must enforce ownership from start.
-
-**Additional critical gotcha:** PDF generation SSRF vulnerability (CVE-2025-68428 in jsPDF <4.0.0) — user input with malicious URLs can read AWS metadata endpoints, local files, or internal services. **Prevention**: Upgrade to jsPDF 4.0.0+, sanitize input with DOMPurify, disable local file access, run PDF service in isolated container with network restrictions.
+5. **Price estimate vs. final price mismatch** — guest sees $450 estimate, landlord approves at $500, guest feels misled. Prevention: shared fee calculator function used for both estimate and final invoice; only variable the landlord changes is nightly rate; display full itemized breakdown at every step.
 
 ## Implications for Roadmap
 
-Based on combined research, the optimal phase structure follows **dependency chains** identified in architecture analysis: Database → Auth → Data Entities → Generations → Usage → Billing. Critical finding: **cannot build generations without ideas/brands/templates existing first**, and **cannot enforce quotas without usage tracking and billing webhooks**.
+The ARCHITECTURE.md build order (7 layers) aligns with the feature dependency tree from FEATURES.md and the phase warnings from PITFALLS.md. The suggested phase structure maps research directly to deliverable increments.
 
-### Phase 1: Foundation
-**Rationale:** Everything depends on authentication and database schema. RLS policies must be correct from day one (retrofitting is expensive and risky). This phase establishes the architectural foundation that all other phases build upon.
+### Phase 1: Foundation — Schema, Auth, Room Management
 
-**Delivers:**
-- Next.js 15 project with App Router, TypeScript, Tailwind CSS
-- Supabase integration (database + auth)
-- Database schema with RLS policies enabled on ALL tables
-- Authentication flow (signup, login, email verification)
-- Landing page (marketing site)
-- Basic dashboard UI structure
+**Rationale:** Everything downstream depends on the database schema and room data existing. Auth protects all admin actions. The date-as-string convention and state machine design must be established here before any code builds on them. This phase has no external service dependencies.
+**Delivers:** Running Next.js app with database, admin login, room CRUD (create/edit rooms with photos, fees, add-ons), and SiteSettings configuration.
+**Addresses:** Room listings with photos and descriptions (table stake); fee structure configuration (differentiator); admin authentication.
+**Avoids:** Pitfall 4 (timezone bugs) — establish date-only string convention in the first schema migration. Pitfall 2 (state machine gaps) — design and document the full state diagram before writing any booking code.
+**Stack elements:** Next.js 16, Drizzle ORM, Neon PostgreSQL, Auth.js v5, UploadThing, Tailwind + shadcn/ui.
 
-**Stack elements:**
-- Next.js 15.5+ App Router
-- Supabase (@supabase/ssr for cookie-based auth)
-- TypeScript 5.7+
-- Tailwind CSS 4.x + shadcn/ui
-- React Hook Form + Zod
+### Phase 2: Guest-Facing Listings and Availability
 
-**Avoids:**
-- Pitfall 1 (RLS bypass) — implement defense-in-depth from start
-- Pitfall 5 (multi-brand context vulnerability) — server-side ownership verification in schema
-- Pitfall 11 (service role key exposure) — establish key management practices immediately
+**Rationale:** Guests need to browse rooms and see availability before they can book. The availability checker is an independent engine that feeds the calendar UI and later the booking engine. Building it standalone allows thorough testing before any booking logic depends on it.
+**Delivers:** Public room listing page, individual room pages with photo gallery, availability calendar showing blocked/available dates, server-side availability check API.
+**Addresses:** Availability calendar per room (table stake); mobile-responsive design (table stake); configurable booking window (differentiator).
+**Avoids:** Pitfall 12 (booking window + blocked date interaction) — implement the three-condition availability check (window + DateBlocks + active Bookings) as a single reusable function from the start.
+**Stack elements:** React DayPicker, date-fns, Next.js Server Components.
 
-**Research flag:** Standard patterns, well-documented by Supabase/Next.js. **Skip phase-specific research.**
+### Phase 3: Booking Request Flow and State Machine
 
----
+**Rationale:** This is the core of the product. The state machine is the highest-risk component and must be built deliberately. The fee calculator and booking request form depend on rooms and availability (Phase 2). Admin approval depends on having pending requests. This phase closes the loop from guest request to landlord action.
+**Delivers:** Guest booking request form with itemized price estimate, booking submission creating a Guest record and Booking in PENDING state, admin dashboard showing pending requests, approve/decline actions with price-setting, email notifications at each state change (request received, approved, declined).
+**Addresses:** Booking request form (table stake); itemized price breakdown (table stake); admin dashboard (table stake); email notifications (table stake); request-to-approve flow (core differentiator); landlord sets exact price on approval (differentiator).
+**Avoids:** Pitfall 1 (double-booking) — transactional conflict check on approval; auto-decline conflicting requests. Pitfall 2 (state machine gaps) — implement centralized transitionBooking() function. Pitfall 8 (price mismatch) — shared fee calculator, consistent formula.
+**Stack elements:** Zod, React Hook Form, next-safe-action, Resend + React Email, date-fns.
 
-### Phase 2: Data Management & Brand Profiles
-**Rationale:** Generations require brands, templates, and styles to exist first. This phase creates the content entities that the generation service consumes. Multi-brand management is a differentiator (missing from most competitors), so include early.
+### Phase 4: Payment Integration
 
-**Delivers:**
-- Brand profile CRUD (create, edit, delete brands)
-- Brand attributes: name, colors, logo, brand voice, product description, audience, CTA
-- Template library (seed 10-15 templates)
-- Image styles (seed data: photography, illustration, abstract, etc.)
-- Ideas CRUD (create carousel ideas with selected brand/template/style)
-- Multi-brand switching UI
+**Rationale:** Payment is a leaf node — it depends on approved bookings but nothing else depends on it. Isolating it in its own phase prevents payment complexity from contaminating the booking engine. All three payment failure modes (webhook failure, session expiration, e-transfer tracking) must be handled in this phase, not as afterthoughts.
+**Delivers:** Stripe Checkout Session creation and redirect, webhook handler for payment confirmation (idempotent, signature-verified), e-transfer flow with "Mark as Paid" admin action, Payment record tracking, payment confirmation emails, booking expiration for unpaid sessions.
+**Addresses:** Secure online payment (table stake); e-transfer fallback (differentiator).
+**Avoids:** Pitfall 3 (webhook unreliability) — dual-check implementation; Pitfall 5 (refund edge cases) — full refund path built at launch; Pitfall 6 (session expiration) — handle checkout.session.expired webhook; Pitfall 7 (e-transfer black hole) — same state machine with timeout reminders.
+**Stack elements:** Stripe SDK, stripe.webhooks.constructEvent(), Stripe Checkout Sessions.
 
-**Stack elements:**
-- Server Actions for mutations (type-safe, no API routes needed for simple CRUD)
-- Supabase Storage (for brand logos and template preview images)
-- Zod schemas for validation (shared client/server)
+### Phase 5: Admin Dashboard Polish and Operational Tooling
 
-**Addresses:**
-- Feature: Multi-brand management (differentiator)
-- Feature: Brand customization (table stakes)
-- Feature: Template library (table stakes)
+**Rationale:** The core system is functional after Phase 4. This phase makes it operationally safe for a landlord with no technical support. Admin escape hatches, booking audit logs, and email delivery tracking are not polish — they are operational necessities when things go wrong.
+**Delivers:** Booking history/audit log (all state transitions with timestamps), manual status override capabilities, "Sync with Stripe" payment status check, email delivery status tracking, overlapping-request visual warnings, admin dashboard filters and search.
+**Addresses:** Admin dashboard refinements (table stake); admin recovery paths (Pitfall 11); email deliverability visibility (Pitfall 10).
+**Avoids:** Pitfall 11 (no recovery path) — every booking state has a manual override.
+**Stack elements:** TanStack Table for admin data tables.
 
-**Avoids:**
-- Pitfall 5 (brand context switching) — server-side verification on every brand operation
+### Phase 6: Guest Accounts and Repeat-Guest Experience (V2)
 
-**Research flag:** Standard CRUD patterns. **Skip phase-specific research.**
-
----
-
-### Phase 3: AI Generation Pipeline
-**Rationale:** Core value proposition ("idea to carousel in one click"). Must be async from start to avoid timeout issues. This is the most complex phase architecturally but most valuable for users.
-
-**Delivers:**
-- n8n webhook integration (trigger generation workflows)
-- Generation job records (status tracking: pending, processing, completed, failed)
-- Async generation flow: submit → queue → n8n processes → callback → update status
-- n8n workflow (LLM for copy, AI for images, callback with results)
-- Webhook callback handler (receive results, update database, increment usage)
-- Frontend status polling (every 3-5 seconds) or Supabase Realtime subscription
-- Preview interface (display generated carousel + post copy)
-
-**Stack elements:**
-- n8n Queue Mode (Redis + workers)
-- Next.js API routes for webhooks
-- Webhook signature verification (HMAC)
-- Idempotency tracking (prevent duplicate processing)
-
-**Addresses:**
-- Feature: AI content generation (table stakes)
-- Feature: Post copy generation (differentiator)
-- Feature: Preview before download (table stakes)
-
-**Avoids:**
-- Pitfall 4 (n8n timeout cascade) — async pattern from start, no blocking requests
-- Pitfall 10 (n8n webhook authentication) — HMAC verification from first implementation
-
-**Research flag:** **NEEDS DEEPER RESEARCH** during planning. Specific LLM APIs (OpenAI, Claude), image generation APIs (DALL-E, Midjourney, Stable Diffusion), n8n workflow design patterns, prompt engineering for brand voice enforcement. Research after roadmap approved, before Phase 3 begins.
-
----
-
-### Phase 4: Usage Tracking & Limits
-**Rationale:** Must track usage before billing (Phase 5) can reset allowances. Quota enforcement is critical for freemium business model — prevents abuse and drives upgrades. Atomic operations prevent race conditions that cause revenue loss.
-
-**Delivers:**
-- Usage tracking table (period-based, not reset-based)
-- PostgreSQL stored procedures (atomic credit deduction with SELECT FOR UPDATE)
-- Quota enforcement (check before generation, reject if exceeded)
-- Usage dashboard (credits used, credits remaining, reset date)
-- Real-time credit display (Supabase Realtime or polling)
-- Pre-generation credit warnings ("This is your last credit!")
-
-**Stack elements:**
-- PostgreSQL stored procedures (prevent race conditions)
-- Supabase RPC (call stored procedures from API)
-- TanStack Query (optional, for client-side credit caching with refetch)
-
-**Addresses:**
-- Feature: Usage limits (freemium model) — table stakes
-- Business model: Free tier (3/month), Paid tier (10/month)
-
-**Avoids:**
-- Pitfall 3 (credit deduction race conditions) — atomic operations from start
-- Pitfall 6 (monthly credit reset race) — period-based tracking, not resets
-- Pitfall 9 (inadequate usage visibility) — real-time display, proactive warnings
-
-**Research flag:** Standard usage tracking patterns. **Skip phase-specific research.**
-
----
-
-### Phase 5: Stripe Subscription Billing
-**Rationale:** Enables monetization. Depends on usage tracking (Phase 4) to reset allowances correctly. Webhook complexity requires careful implementation — state desync is common failure mode.
-
-**Delivers:**
-- Stripe Checkout integration (create subscription sessions)
-- Stripe Customer Portal (manage subscriptions, update payment methods)
-- Subscriptions table (store plan, status, Stripe IDs)
-- Stripe webhook handler (signature verification, idempotency, event processing)
-- Critical webhook events: invoice.paid (reset credits), subscription.deleted (revoke access), subscription.updated (plan changes)
-- Plan-based feature gates (free vs. pro: 3/month vs. 10/month, single brand vs. unlimited brands)
-- Subscription schedule handling (downgrades effective at period end, not immediately)
-
-**Stack elements:**
-- Stripe SDK (@stripe/stripe-js, @stripe/react-stripe-js)
-- Webhook signature verification (stripe.webhooks.constructEvent)
-- Idempotency tracking table (webhook_events)
-
-**Addresses:**
-- Business model: Subscription billing
-- Feature: Premium access (unlimited brands, priority generation, unlimited history)
-
-**Avoids:**
-- Pitfall 2 (Stripe webhook desynchronization) — idempotency, queue processing, event logging
-- Pitfall 8 (subscription downgrade timing) — subscription schedules, period-aware credit calculation
-
-**Research flag:** **MAY NEED RESEARCH** for advanced scenarios: Stripe Tax (sales tax automation), dunning management (failed payment recovery), proration handling (mid-cycle upgrades). Start with basic implementation, research advanced topics if needed during planning.
-
----
-
-### Phase 6: Download & Export
-**Rationale:** Final user-facing feature to complete "idea → download" flow. PDF generation has security implications (SSRF vulnerability) so must be implemented carefully.
-
-**Delivers:**
-- PDF export (multi-slide carousel, 1080x1080px or 1080x1350px format)
-- Individual slide PNG export
-- Image optimization (compression for web display)
-- Generation history page (list previous carousels)
-- Regenerate from history (one-click regenerate with new template/style)
-
-**Stack elements:**
-- @react-pdf/renderer 4.3+ (React components → PDF)
-- Supabase Storage (store generated images, PDF files)
-- Signed URLs (temporary access to private files)
-
-**Addresses:**
-- Feature: PDF export (table stakes, critical for LinkedIn)
-- Feature: Download as images (table stakes)
-- Feature: Generation history (differentiator)
-
-**Avoids:**
-- Pitfall 7 (PDF generation SSRF) — upgrade jsPDF to 4.0.0+, input sanitization (DOMPurify), disable local file access, network restrictions
-
-**Research flag:** **MAY NEED RESEARCH** for specific PDF layout requirements (LinkedIn carousel formatting, text positioning, font embedding). Basic @react-pdf patterns are well-documented, but custom carousel layouts may need experimentation.
-
----
-
-### Phase 7: Polish & Optimization
-**Rationale:** Core functionality complete (Phases 1-6), now focus on UX refinement and performance. This is the "make it delightful" phase.
-
-**Delivers:**
-- Error handling (user-friendly messages, retry logic)
-- Loading states (skeleton screens, progress indicators)
-- Animations (Framer Motion for transitions, microinteractions)
-- Toast notifications (success, error, warning)
-- Empty states ("No carousels yet, create your first!")
-- Onboarding flow (first-time user experience)
-- Performance optimization (image lazy loading, route prefetching)
-- SEO optimization (meta tags, sitemap, robots.txt)
-
-**Stack elements:**
-- Framer Motion 12.x (animations)
-- Vercel Analytics + Speed Insights (performance monitoring)
-- Sentry (optional, for error tracking)
-
-**Avoids:**
-- Pitfall 12 (Vercel Hobby plan limits) — monitor function duration, async processing already implemented
-
-**Research flag:** Standard UX patterns. **Skip phase-specific research.**
-
----
+**Rationale:** Optional guest accounts add meaningful value for repeat guests (the primary audience) but are not required for launch. Deferring eliminates auth complexity from the MVP. After launch, the Guest record (created at booking time) already exists as the foundation for account creation.
+**Delivers:** Guest account creation (convert existing Guest record to account with password), login flow, booking history page.
+**Addresses:** Optional guest accounts (differentiator, deferred).
+**Stack elements:** Auth.js v5 Credentials provider extended for guests.
 
 ### Phase Ordering Rationale
 
-**Dependency chain enforced:**
-1. **Foundation** must come first — auth and database are foundational
-2. **Data Management** before **Generation** — cannot generate without brands/templates/ideas
-3. **Generation** before **Usage Tracking** — cannot track what doesn't exist yet
-4. **Usage Tracking** before **Billing** — billing resets usage allowances
-5. **Billing** before **Polish** — monetization enables before optimization
-6. **Download/Export** can be developed in parallel with **Billing** (no dependency)
-
-**Architecture patterns followed:**
-- RLS policies implemented in Phase 1, preventing Phase 3 data leaks
-- Async webhook pattern (Phase 3) prevents timeout issues before they occur
-- Atomic credit operations (Phase 4) prevent race conditions before first user
-- Idempotent webhooks (Phase 5) prevent state desync from day one
-
-**Pitfall avoidance prioritized:**
-- Critical pitfalls (1, 2, 3, 4, 5) addressed in architectural phases (1, 2, 3, 4)
-- Security vulnerabilities (7, 10, 11) built into implementation from start
-- Moderate pitfalls (6, 8, 9) handled with correct design patterns
-- Minor pitfalls (12) avoided via architecture decisions (async processing)
-
-**Business value sequenced:**
-- Phases 1-3 deliver **MVP** (idea → carousel generation)
-- Phase 4 adds **usage limits** (freemium business model)
-- Phase 5 adds **monetization** (paid subscriptions)
-- Phases 6-7 add **polish and retention** (export, history, UX)
+- **Foundation first:** Database schema, date conventions, and state machine design must be locked before any feature code is written. Retrofitting these is the most expensive mistake in booking systems.
+- **Engines before consumers:** Fee calculator and availability checker are independent engines with no external dependencies. Building and testing them before the booking flow means the booking flow can trust them.
+- **Happy path before edge cases:** The booking request flow (Phase 3) establishes the happy path. Payment (Phase 4) handles the full payment lifecycle including all failure modes. Edge cases are handled as part of each phase, not deferred.
+- **Operational tooling before launch:** Phase 5 must complete before any real guests use the system. The landlord needs manual override capabilities from day one.
+- **Guest accounts last:** The only deferred feature. Every other feature delivers guest-visible or operational value before it.
 
 ### Research Flags
 
-**Phases needing deeper research during planning:**
+Phases likely needing deeper research during planning:
+- **Phase 3 (Booking State Machine):** The state machine design is well-understood in theory but implementation details (next-safe-action integration, Server Action error handling, optimistic UI for status changes) may need per-task research.
+- **Phase 4 (Stripe Integration):** Stripe's Checkout Session lifecycle and webhook retry behavior are well-documented but the dual-check implementation pattern (webhook + redirect verification) may need specific API reference lookup during implementation.
 
-- **Phase 3 (Generation Pipeline):** Complex integration with multiple unknowns. Needs research into:
-  - Specific LLM API selection (OpenAI GPT-4, Claude 3.5 Sonnet, other)
-  - Image generation API (DALL-E 3, Midjourney, Stable Diffusion, or custom models)
-  - n8n workflow design patterns for multi-step AI workflows
-  - Prompt engineering for brand voice enforcement
-  - Error handling patterns for AI API failures
-  - Cost optimization for AI API usage
-
-- **Phase 5 (Billing):** May need research for advanced features:
-  - Stripe Tax configuration (sales tax automation, required for multi-state/country)
-  - Dunning management (automated failed payment recovery)
-  - Proration handling (mid-cycle upgrades/downgrades)
-  - Metered billing (if transitioning from credit-based to usage-based)
-
-- **Phase 6 (Download):** May need research for custom requirements:
-  - LinkedIn carousel PDF format specifications (exact dimensions, compression, embedded fonts)
-  - @react-pdf layout patterns for multi-slide carousels
-  - Image optimization (Sharp vs. built-in Next.js Image Optimization)
-
-**Phases with standard patterns (skip research):**
-
-- **Phase 1 (Foundation):** Next.js + Supabase setup is extensively documented (official quickstarts, 50+ tutorials)
-- **Phase 2 (Data Management):** CRUD patterns with Server Actions are standard Next.js 15 patterns
-- **Phase 4 (Usage Tracking):** Credit systems and quota enforcement have established patterns (documented in SaaS guides)
-- **Phase 7 (Polish):** UX patterns, animations, and optimization are well-documented in ecosystem
-
-**Recommendation:** Start with Phase 1 immediately (no research needed). Queue Phase 3 research after roadmap approval but before implementation begins. Phase 5 and 6 research can be just-in-time during planning.
+Phases with standard patterns (skip research-phase):
+- **Phase 1 (Foundation):** Next.js + Drizzle + Neon + Auth.js setup is thoroughly documented with official guides and community examples. No novel patterns.
+- **Phase 2 (Availability Calendar):** React DayPicker + availability query patterns are standard. The SQL overlap detection query is textbook.
+- **Phase 5 (Admin Polish):** TanStack Table, audit logging patterns, and Stripe API status queries are all well-documented.
+- **Phase 6 (Guest Accounts):** Extending an existing Auth.js setup for a second user type is documented in Auth.js v5 guides.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | **HIGH** | Verified with official docs (Next.js 15.5, Supabase, Stripe), Context7 searches, January 2026 release notes, active maintenance confirmed |
-| Features | **MEDIUM** | Based on competitive analysis (WebSearch of 5+ platforms), market standards verified, but no access to proprietary feature analytics or user research |
-| Architecture | **HIGH** | Patterns verified with official Supabase RLS docs, Stripe webhook best practices, n8n production guides, multi-tenant SaaS architecture references |
-| Pitfalls | **HIGH** | Security vulnerabilities verified (CVE-2025-68428), failure modes documented in post-mortems, prevention patterns from official docs (Stripe, Supabase) |
+| Stack | HIGH | Every technology choice backed by official docs and multiple community sources. Version numbers verified against current releases. Alternatives explicitly compared and dismissed with rationale. |
+| Features | HIGH | Feature set derived from analysis of 8+ direct booking platform comparisons. Table stakes are consistent across all sources. Anti-features are well-reasoned against the specific use case. |
+| Architecture | HIGH | State machine, availability query, and payment flow patterns sourced from Stripe official docs and established system design references. Data models follow standard relational booking patterns. |
+| Pitfalls | HIGH | Pitfalls sourced from Stripe official docs, production incident retrospectives, and booking system design literature. All critical pitfalls have specific, actionable preventions. |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-Areas where research was inconclusive or needs validation during implementation:
-
-- **Brand voice AI enforcement:** Research identified Jasper/HubSpot-style voice management as differentiator, but specific implementation approach (fine-tuning vs. prompt engineering, voice profile capture method) requires deeper investigation during Phase 3 planning. **Action:** Research voice management APIs and prompt strategies before Phase 3 begins.
-
-- **LinkedIn carousel format edge cases:** PDF dimensions verified (1080x1080px, 1080x1350px), but specific requirements around embedded fonts, image compression ratios, file size limits for uploads need validation. **Action:** Test sample PDFs on LinkedIn during Phase 6 to validate format compliance.
-
-- **n8n Queue Mode scaling limits:** Research confirmed horizontal scaling capability (add workers for capacity), but specific throughput limits (max concurrent jobs, Redis queue depth, worker memory requirements) not quantified. **Action:** Load test n8n setup during Phase 3 with simulated traffic to determine scaling thresholds.
-
-- **Supabase RLS performance at scale:** RLS policies verified as correct approach, but query performance with 10K+ users and complex brand ownership checks needs validation. **Action:** Index optimization and query profiling during Phase 1 schema design, stress test before public launch.
-
-- **Stripe webhook event ordering guarantees:** Research confirmed events may arrive out of order, but specific scenarios (subscription.updated before invoice.paid, delayed cancellation events) not fully characterized. **Action:** Test webhook ordering with Stripe test mode during Phase 5, implement timestamp-based conflict resolution.
+- **UploadThing vs. static photos:** If the landlord wants to upload/change room photos without developer involvement, UploadThing is required. If photos are set once by the developer, committing them to `/public` eliminates the dependency entirely. Resolve this before Phase 1 based on landlord's preference.
+- **E-transfer timeout duration:** The research recommends a timeout for unpaid e-transfer bookings but does not specify the exact duration. This is a product decision (landlord preference), not a technical one. Suggest 5-7 business days as a default, configurable in SiteSettings.
+- **Partial refunds in v1:** Research suggests deferring partial refunds, but if the landlord has a standard cancellation policy (e.g., 50% refund within 48 hours), the refund calculator should be built in Phase 4 with that policy in mind. Validate with landlord before Phase 4 planning.
+- **Guest account email-based deduplication:** The architecture uses email as the natural key for Guest records. If two guests share an email address (unlikely but possible), deduplication logic needs a resolution strategy. Flag for Phase 3 planning.
+- **Booking window default:** Research recommends 3-9 months as the configurable range. Validate with landlord what their actual planning horizon is before Phase 2 (calendar display depends on this value).
 
 ## Sources
 
 ### Primary (HIGH confidence)
-
-**Official Documentation:**
-- [Next.js 15.5 Release Notes](https://nextjs.org/blog/next-15-5) — App Router features, Turbopack improvements, TypeScript enhancements
-- [Supabase Next.js Quickstart](https://supabase.com/docs/guides/getting-started/quickstarts/nextjs) — Auth integration, RLS setup
-- [Supabase Auth with Next.js App Router](https://supabase.com/docs/guides/auth/server-side/nextjs) — Cookie-based sessions, @supabase/ssr
-- [Stripe Webhook Best Practices](https://docs.stripe.com/webhooks) — Signature verification, idempotency, event handling
-- [Stripe Subscription Webhooks](https://docs.stripe.com/billing/subscriptions/webhooks) — Lifecycle events, webhook payloads
-- [Vercel Serverless Function Timeouts](https://vercel.com/docs/functions/configuring-functions/duration) — Duration limits, Fluid Compute
-- [shadcn/ui Documentation](https://ui.shadcn.com/docs) — Component setup, customization patterns
-- [TanStack Query v5 Documentation](https://tanstack.com/query/v5) — Client-side data fetching, caching
-- [n8n Webhook Documentation](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/) — Webhook setup, error handling
-
-**Context7 / Recent Technical Sources:**
-- [Multi-Tenant Applications with RLS on Supabase](https://www.antstack.com/blog/multi-tenant-applications-with-rls-on-supabase-postgress/) — February 2025 — RLS patterns, performance optimization
-- [Next.js Form Validation with Zod](https://dev.to/bookercodes/nextjs-form-validation-on-the-client-and-server-with-zod-lbc) — December 2025 — Server Action validation patterns
-- [Type-Safe Form Validation in Next.js 15](https://www.abstractapi.com/guides/email-validation/type-safe-form-validation-in-next-js-15-with-zod-and-react-hook-form) — January 2026 — React Hook Form + Zod integration
-- [Prettier and ESLint Configuration in Next.js 15](https://github.com/danielalves96/eslint-prettier-next-15) — November 2025 — Flat config format
-- [@react-pdf/renderer npm](https://www.npmjs.com/package/@react-pdf/renderer) — v4.3.2, January 2026 — Recent release verification
-- [Critical jsPDF Vulnerability CVE-2025-68428](https://securityboulevard.com/2026/01/critical-jspdf-vulnerability-enables-arbitrary-file-read-in-node-js-cve-2025-68428/) — January 2026 — Security advisory
+- [Next.js 16 releases (GitHub)](https://github.com/vercel/next.js/releases) — version confirmation, App Router, Server Actions
+- [Drizzle ORM releases (GitHub)](https://github.com/drizzle-team/drizzle-orm/releases) — v0.45.x stable
+- [Tailwind CSS v4.2 release](https://tailwindcss.com/blog/tailwindcss-v4) — Oxide engine, CSS-first config
+- [shadcn/ui Next.js installation](https://ui.shadcn.com/docs/installation/next) — Tailwind v4 and React 19 compatibility
+- [Auth.js v5 migration guide](https://authjs.dev/getting-started/migrating-to-v5) — App Router support
+- [Stripe: Checkout Sessions vs Payment Intents](https://docs.stripe.com/payments/checkout-sessions-and-payment-intents-comparison) — architectural decision
+- [Stripe: How Checkout works](https://docs.stripe.com/payments/checkout/how-checkout-works) — session lifecycle
+- [Stripe: Refund and Cancel Payments](https://docs.stripe.com/refunds) — refund edge cases
+- [Stripe: Expire a Checkout Session](https://docs.stripe.com/api/checkout/sessions/expire) — session expiration handling
+- [Stripe: Idempotent Requests](https://docs.stripe.com/api/idempotent_requests) — webhook deduplication
 
 ### Secondary (MEDIUM confidence)
+- [Makerkit: Drizzle vs Prisma 2026](https://makerkit.dev/blog/tutorials/drizzle-vs-prisma) — bundle size and DX comparison
+- [Bytebase: Drizzle vs Prisma](https://www.bytebase.com/blog/drizzle-vs-prisma/) — performance comparison
+- [Bytebase: Neon vs Supabase](https://www.bytebase.com/blog/neon-vs-supabase/) — free tier comparison
+- [Neon pricing 2026 (Vela/Simplyblock)](https://vela.simplyblock.io/articles/neon-serverless-postgres-pricing-2026/) — doubled free compute confirmation
+- [DEV: Stripe + Next.js 2026 guide](https://dev.to/sameer_saleem/the-ultimate-guide-to-stripe-nextjs-2026-edition-2f33) — Server Actions pattern
+- [DEV: Resend vs SendGrid 2026](https://dev.to/theawesomeblog/resend-vs-sendgrid-2026-which-email-api-actually-ships-faster-dg8) — DX comparison
+- [System Design Handbook: Hotel Booking](https://www.systemdesignhandbook.com/guides/design-hotel-booking-system/) — availability and booking patterns
+- [ByteByteGo: Hotel Reservation System](https://bytebytego.com/courses/system-design-interview/hotel-reservation-system) — race condition handling
+- [Stigg: Stripe Webhooks Best Practices](https://www.stigg.io/blog-posts/best-practices-i-wish-we-knew-when-integrating-stripe-webhooks) — production webhook reliability
+- [Zeevou: Direct Booking Website Comparison 2025](https://zeevou.com/blog/direct-booking-website-comparison/) — feature landscape
+- [Lodgify: How to Build a Direct Booking Website](https://www.lodgify.com/guides/direct-booking-website/) — table stakes features
+- [Hostaway: Direct Booking Websites Full Breakdown](https://www.hostaway.com/blog/vacation-rental-direct-booking-websites-a-full-breakdown/) — platform feature analysis
+- [Hostfully: How to Avoid Double Bookings](https://www.hostfully.com/blog/how-to-avoid-double-bookings/) — double-booking prevention
 
-**Community Resources (December 2025 - January 2026):**
-- [8 Best LinkedIn Carousel Generators for 2026](https://www.supergrow.ai/blog/linkedin-carousel-generators) — Competitive feature analysis
-- [LinkedIn Carousel Posts Complete Guide for 2026](https://nealschaffer.com/linkedin-carousel/) — Format requirements, best practices
-- [SaaS Architecture Patterns with Next.js](https://vladimirsiedykh.com/blog/saas-architecture-patterns-nextjs) — Multi-tenant patterns
-- [Building a Scalable SaaS Platform with Next.js 14, Supabase, and Cloudflare](https://medium.com/@gg.code.latam/multi-tenant-app-with-next-js-14-app-router-supabase-vercel-cloudflare-2024-3bbbb42ee914) — Architecture case study
-- [n8n as a SaaS Backend: Strategic Guide](https://medium.com/@tuguidragos/n8n-as-a-saas-backend-a-strategic-guide-from-mvp-to-enterprise-scale-be13823f36c1) — Queue Mode architecture
-- [Best practices for integrating Stripe webhooks](https://www.stigg.io/blog-posts/best-practices-i-wish-we-knew-when-integrating-stripe-webhooks) — Production lessons learned
-- [Stripe Webhooks Guide with Event Examples](https://www.magicbell.com/blog/stripe-webhooks-guide) — Implementation patterns
-- [SaaS Credits System Guide 2026](https://colorwhistle.com/saas-credits-system-guide/) — Billing models, quota tracking
-- [Date-fns vs Dayjs Comparison](https://www.dhiwise.com/post/date-fns-vs-dayjs-the-battle-of-javascript-date-libraries) — December 2025
-- [Exploiting PDF Generators: SSRF Guide](https://www.intigriti.com/researchers/blog/hacking-tools/exploiting-pdf-generators-a-complete-guide-to-finding-ssrf-vulnerabilities-in-pdf-generators) — Security research
-
-**Post-Mortems and Failure Analysis:**
-- [Race Condition Vulnerabilities in Financial Systems](https://www.sourcery.ai/vulnerabilities/race-condition-financial-transactions) — Credit deduction race conditions
-- [Hacking Banks With Race Conditions](https://vickieli.dev/hacking/race-conditions/) — Exploitation techniques
-- [Why n8n Webhooks Fail in Production](https://prosperasoft.com/blog/automation-tools/n8n/n8n-webhook-failures-production/) — Common failure modes
-
-### Tertiary (LOW confidence)
-
-- Competitor pricing research (aiCarousels, Taplio, Contentdrips) — Based on public pricing pages, not validated
-- Market adoption percentages ("97% of marketers use AI") — Cited from marketing sources, not primary research
-- Engagement metrics ("5-10 slides = sweet spot") — Community consensus, not validated with LinkedIn analytics
+### Tertiary (MEDIUM-LOW confidence)
+- [Medium: Race Conditions and Double Bookings](https://medium.com/@get2vikasjha/debugging-real-time-bookings-fixing-hidden-race-conditions-cache-issues-and-double-bookings-98328bc52192) — concurrency patterns
+- [Medium: Handling Payment Webhooks Reliably](https://medium.com/@sohail_saifii/handling-payment-webhooks-reliably-idempotency-retries-validation-69b762720bf5) — webhook idempotency
+- [Jasonsy: Deployment Platforms Comparison 2025](https://www.jasonsy.dev/blog/comparing-deployment-platforms-2025) — Vercel vs alternatives
 
 ---
-
-*Research completed: 2026-01-23*
+*Research completed: 2026-03-25*
 *Ready for roadmap: yes*

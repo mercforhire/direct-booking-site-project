@@ -1,1332 +1,223 @@
-# Domain Pitfalls: SaaS LinkedIn Carousel Creator
+# Domain Pitfalls
 
-**Domain:** Content generation SaaS with Supabase auth, Stripe payments, n8n webhooks
-**Researched:** 2026-01-23
-**Confidence:** HIGH (verified with official documentation + recent sources)
-
-## Executive Summary
-
-SaaS platforms combining Supabase multi-tenancy, Stripe subscription webhooks, and external content generation face three critical failure modes:
-
-1. **Data isolation failures** (authentication boundary violations in multi-brand scenarios)
-2. **State synchronization drift** (Stripe subscription state vs. database state mismatches)
-3. **Webhook reliability cascades** (external generation timeouts trigger duplicate processing)
-
-This document catalogues domain-specific pitfalls that cause rewrites, data breaches, or billing failures in production.
-
----
+**Domain:** Semi-private direct booking site for short-term rentals
+**Researched:** 2026-03-25
 
 ## Critical Pitfalls
 
-Mistakes that cause rewrites, security breaches, or major billing failures.
+Mistakes that cause rewrites, lost revenue, or broken trust with guests.
 
-### Pitfall 1: RLS Policy Bypass Through Missing WHERE Clauses
+### Pitfall 1: Double-Booking via Race Condition on Pending Requests
 
-**What goes wrong:**
-Developers assume RLS policies eliminate the need for explicit WHERE clauses in queries. A single query without `WHERE user_id = auth.uid()` can leak all tenant data despite RLS being enabled. In multi-brand scenarios, querying `brands` table without filtering exposes ALL brands across ALL users.
+**What goes wrong:** Two guests submit booking requests for overlapping dates on the same room. The landlord approves both because the system does not prevent approving conflicting dates. One guest pays, the other pays, and now you have two confirmed bookings for the same room on the same nights.
 
-**Why it happens:**
-- RLS policies create false sense of security ("database handles authorization")
-- Framework ORMs abstract SQL, making it unclear which queries run
-- Performance optimization guides recommend reducing WHERE clauses
-- Testing with single user doesn't surface cross-tenant data leaks
+**Why it happens:** The request-to-approve flow creates a window where multiple pending requests can exist for the same dates. Unlike instant-book systems where availability is locked at submission, an approval-based flow means availability is only "consumed" at approval time -- but the approval action itself has no conflict check.
 
-**Consequences:**
-- **Data breach:** User A sees User B's brand profiles, carousel history, API keys
-- **Regulatory violation:** GDPR/CCPA violations for unauthorized data access
-- **Performance degradation:** Full table scans without WHERE clauses are 50-100x slower
-- **Silent failure:** Application appears functional while leaking data
+**Consequences:** Landlord must cancel one guest, issue a refund, and damage trust. For a semi-private site built on personal relationships, this is devastating.
 
 **Prevention:**
-```typescript
-// WRONG: Relies solely on RLS
-const brands = await supabase.from('brands').select('*')
+- Enforce a database-level constraint: when landlord approves a booking, run a conflict check inside a transaction that locks the room's date range. If dates are already booked, reject the approval with a clear error.
+- Show visual warnings in the admin dashboard when pending requests overlap with each other or with approved bookings.
+- After approving a booking, auto-decline all other pending requests that conflict with the newly approved dates.
 
-// RIGHT: Explicit WHERE + RLS defense-in-depth
-const brands = await supabase
-  .from('brands')
-  .select('*')
-  .eq('user_id', user.id)
-```
+**Detection:** Test by creating two pending requests for the same room and dates, then approve both rapidly. If both succeed, you have this bug.
 
-1. **Enable RLS from day one** - Never prototype without it
-2. **Add indexes on RLS columns** - Index `user_id`, `brand_id` on ALL multi-tenant tables
-3. **Defense-in-depth:** RLS policies AND explicit WHERE clauses in application code
-4. **Audit queries regularly** - Use Supabase dashboard to identify missing filters
+**Phase:** Must be solved in the core booking/approval engine (Phase 1-2). Not something to patch later.
 
-**Detection:**
-- Run queries as different users in test environment
-- Check PostgreSQL execution plans for sequential scans
-- Monitor query response times (slow queries = missing indexes)
-- Automated test: "User A should see 0 results from User B's data"
+### Pitfall 2: Booking State Machine with Missing or Impossible Transitions
 
-**Phase impact:** Phase 1 (Foundation) - RLS architecture must be correct from start. Retrofitting RLS to existing schema requires full table rewrites.
+**What goes wrong:** The booking lifecycle (requested -> approved -> payment_sent -> paid -> checked_in -> completed / cancelled) has gaps. Examples: a guest pays but the webhook fails, leaving the booking in "approved" forever. Or: the landlord wants to cancel after payment, but there is no "refund + cancel" transition. Or: a Checkout Session expires but the booking stays in "awaiting_payment" with no timeout.
 
-**Sources:**
-- [Supabase RLS Documentation](https://supabase.com/docs/guides/database/postgres/row-level-security)
-- [Supabase RLS Best Practices](https://www.leanware.co/insights/supabase-best-practices)
-- [Multi-Tenant RLS Architecture](https://dev.to/blackie360/-enforcing-row-level-security-in-supabase-a-deep-dive-into-lockins-multi-tenant-architecture-4hd2)
+**Why it happens:** Developers model the happy path (request -> approve -> pay -> done) and bolt on edge cases reactively. The state machine is implicit in if/else checks scattered across handlers rather than defined explicitly.
 
----
-
-### Pitfall 2: Stripe Webhook State Desynchronization
-
-**What goes wrong:**
-Stripe webhook processes `customer.subscription.updated` successfully, but database write fails due to network timeout or constraint violation. Stripe marks event as delivered (200 response sent too early), but user's subscription status in Supabase is now out of sync. User pays for Pro but application still shows Free tier with 3 carousel limit.
-
-**Why it happens:**
-- Returning HTTP 200 BEFORE completing database writes
-- No idempotency key tracking (processing same event multiple times)
-- Event ordering assumptions (events arrive out of order)
-- No retry logic for failed database operations
-- Signature verification skipped or implemented incorrectly
-
-**Consequences:**
-- **Revenue loss:** Paid users locked out due to incorrect credit limits
-- **Overage without payment:** Free users bypass limits if downgrade webhook fails
-- **Customer support burden:** "I paid but nothing changed" tickets
-- **Data corruption:** Duplicate entries from processing same webhook twice
-- **Security vulnerability:** Unverified webhooks enable malicious credit injections
+**Consequences:** Bookings get stuck in limbo states. The landlord sees "awaiting payment" for a booking where the guest gave up days ago. Or worse, a paid booking has no path to "refunded" because nobody built that transition.
 
 **Prevention:**
+- Define the state machine explicitly upfront as a first-class model. Every state, every transition, every trigger. Put it in a diagram before writing code.
+- Required states: `requested`, `approved`, `expired` (approval timeout), `awaiting_payment`, `payment_failed`, `paid`, `cancelled_by_guest`, `cancelled_by_landlord`, `refunded`, `completed`.
+- Every state must have at least one exit transition. No dead ends.
+- Add timeout transitions: approved -> expired (if guest does not pay within X days), awaiting_payment -> payment_failed (if Stripe session expires).
+- For e-transfer bookings: approved -> awaiting_etransfer -> paid (landlord manually confirms). This needs its own timeout too.
 
-1. **Idempotency tracking:**
-```typescript
-// Store processed event IDs
-const { data: existing } = await supabase
-  .from('webhook_events')
-  .select('id')
-  .eq('stripe_event_id', event.id)
-  .single()
+**Detection:** Draw the state machine. For every state, ask "what happens if nothing else occurs?" If the answer is "it stays here forever," you have a dead-end bug.
 
-if (existing) {
-  return res.status(200).json({ received: true }) // Already processed
-}
+**Phase:** Define in architecture/design phase. Implement as the very first backend model. Every feature (payments, cancellations, admin dashboard) depends on getting this right.
 
-// Process webhook, then save event ID atomically
-await supabase.rpc('process_subscription_webhook', {
-  event_id: event.id,
-  customer_id: event.data.object.customer,
-  subscription_status: event.data.object.status
-})
-```
+### Pitfall 3: Stripe Webhook Failures Silently Breaking Payment Confirmation
 
-2. **Signature verification (ALWAYS):**
-```typescript
-import { constructEventFromPayload } from '@stripe/stripe-js'
+**What goes wrong:** Guest completes Stripe Checkout. Stripe fires `checkout.session.completed` webhook. Your server is down, returns a 500, or takes too long. Stripe retries over 3 days, but by then the booking state is stale. The guest thinks they paid (Stripe charged their card), but the booking still shows "awaiting payment" in the landlord's dashboard.
 
-// Stripe requires RAW body - don't let middleware parse it
-const sig = req.headers['stripe-signature']
-const event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret)
-```
+**Why it happens:** Developers treat webhooks as reliable, synchronous events. They are not. Stripe webhooks can arrive out of order, be duplicated, or fail entirely during server deployments.
 
-3. **Asynchronous processing pattern:**
-```typescript
-// Return 200 immediately, process in background
-app.post('/webhooks/stripe', async (req, res) => {
-  const event = verifySignature(req) // Fast operation
-
-  res.status(200).json({ received: true }) // Respond NOW
-
-  // Queue for background processing
-  await queue.add('stripe-webhook', {
-    eventId: event.id,
-    eventType: event.type,
-    data: event.data
-  })
-})
-```
-
-4. **Event ordering handling:**
-```typescript
-// Events may arrive out of order - use created timestamp
-const latestEvent = await supabase
-  .from('subscription_events')
-  .select('created_at')
-  .eq('stripe_customer_id', customerId)
-  .order('created_at', { ascending: false })
-  .limit(1)
-
-if (event.created < latestEvent.created_at) {
-  // Ignore older events that arrived late
-  return
-}
-```
-
-**Detection:**
-- Monitor Stripe Dashboard webhook delivery success rate (should be >99%)
-- Compare subscription count in Stripe vs. Supabase daily
-- Alert on webhook events in `webhook_events` table without corresponding `subscriptions` update
-- Automated test: Simulate webhook failure, verify retry creates correct state
-
-**Phase impact:**
-- Phase 2 (Payments) - Implement idempotency and queueing from first webhook
-- Phase 4 (Credits) - Usage limit enforcement depends on accurate subscription state
-
-**Official Stripe guidance:** "Quickly returns a successful status code (2xx) prior to any complex logic that might cause a timeout. For example, you must return a 200 response before updating a customer's invoice as paid in your accounting system."
-
-**Sources:**
-- [Stripe Webhook Best Practices](https://docs.stripe.com/webhooks)
-- [Handling Payment Webhooks Reliably](https://medium.com/@sohail_saifii/handling-payment-webhooks-reliably-idempotency-retries-validation-69b762720bf5)
-- [Stripe Webhooks Integration Guide](https://www.magicbell.com/blog/stripe-webhooks-guide)
-
----
-
-### Pitfall 3: Race Conditions in Credit Deduction
-
-**What goes wrong:**
-User clicks "Generate Carousel" twice in rapid succession (impatient double-click). Both requests read `credits_remaining = 1` before either updates it. Both requests succeed, generating 2 carousels when user only had 1 credit. Over time, negative credit balances accumulate, or users bypass Free tier limits entirely.
-
-**Why it happens:**
-- No database-level locking on credit deduction
-- Check-then-act race window (read balance → validate → deduct)
-- Optimistic concurrency without retry logic
-- Missing unique constraints on generation requests
-
-**Consequences:**
-- **Revenue loss:** Users consume more carousels than paid for
-- **Business model breakdown:** Free tier "unlimited" via rapid clicking
-- **Database inconsistency:** Negative credit balances require manual cleanup
-- **Customer complaints:** "I had 5 credits, only generated 2, now showing 0"
+**Consequences:** Guest is charged but booking is not confirmed. Landlord does not know the guest paid. Guest shows up; landlord has no record. For a small operation without a support team, this is a crisis.
 
 **Prevention:**
+- Never rely solely on webhooks for payment confirmation. Use a dual-check approach: (1) listen for webhooks, AND (2) when the guest is redirected back to your success URL, verify the Checkout Session status via the Stripe API.
+- Store the Stripe Checkout Session ID on the booking record. Build an admin action "Check Payment Status" that queries Stripe directly.
+- Process webhooks idempotently: store processed event IDs, skip duplicates.
+- Verify webhook signatures to prevent spoofing.
+- Return HTTP 200 immediately on webhook receipt, then process asynchronously.
+- Build a background job that periodically checks all bookings in "awaiting_payment" state against Stripe to catch any missed webhooks.
 
-1. **Atomic credit deduction with PostgreSQL:**
-```sql
--- Stored procedure with row-level locking
-CREATE OR REPLACE FUNCTION deduct_credit(
-  p_user_id UUID,
-  p_brand_id UUID
-) RETURNS BOOLEAN AS $$
-DECLARE
-  credits_available INTEGER;
-BEGIN
-  -- SELECT FOR UPDATE locks the row
-  SELECT credits_remaining INTO credits_available
-  FROM user_credits
-  WHERE user_id = p_user_id
-  FOR UPDATE;
+**Detection:** Deploy your webhook handler, then test by (1) completing a payment while the webhook endpoint returns 500, and (2) checking whether your system eventually reconciles.
 
-  IF credits_available < 1 THEN
-    RETURN FALSE; -- Insufficient credits
-  END IF;
+**Phase:** Payment integration phase. This is not a polish item -- it is core payment reliability.
 
-  UPDATE user_credits
-  SET credits_remaining = credits_remaining - 1,
-      updated_at = NOW()
-  WHERE user_id = p_user_id;
+### Pitfall 4: Timezone and Off-by-One Date Bugs in Calendar and Booking Logic
 
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql;
-```
+**What goes wrong:** A guest in Vancouver (UTC-8) selects March 15-17. The server stores this as UTC, which shifts the dates. The landlord (in the same timezone as the property) sees March 14-17 or March 15-18 in their dashboard. Blocked dates display incorrectly. Availability checks pass when they should fail, or fail when they should pass.
 
-2. **Application-level deduplication:**
-```typescript
-// Generate idempotency key from request
-const idempotencyKey = `${userId}-${brandId}-${Date.now()}`
+**Why it happens:** JavaScript Date objects are timezone-aware. The server may be in UTC. The database stores timestamps. Dates get converted at every boundary (browser -> API -> database -> API -> browser), and each conversion is an opportunity for an off-by-one-day error. Additionally, check-in/check-out semantics are confusing: if a guest books March 15-17, do they check out on March 17 (meaning March 17 is available for a new check-in) or is March 17 blocked?
 
-// Check for duplicate request within 60 seconds
-const { data: existing } = await supabase
-  .from('carousel_generations')
-  .select('id')
-  .eq('idempotency_key', idempotencyKey)
-  .gte('created_at', new Date(Date.now() - 60000).toISOString())
-  .single()
-
-if (existing) {
-  return res.status(409).json({ error: 'Duplicate request' })
-}
-```
-
-3. **UI debouncing:**
-```typescript
-// Disable generate button after first click
-const [isGenerating, setIsGenerating] = useState(false)
-
-const handleGenerate = async () => {
-  if (isGenerating) return // Prevent double-click
-  setIsGenerating(true)
-
-  try {
-    await generateCarousel()
-  } finally {
-    setIsGenerating(false)
-  }
-}
-```
-
-**Detection:**
-- Monitor for negative credit balances in database
-- Alert on users generating >10 carousels/minute (impossible legitimate usage)
-- Track generation count vs. credit deductions (should always match)
-- Load test with concurrent requests to same user account
-
-**Phase impact:** Phase 4 (Credits & Usage Limits) - Must implement atomic operations from start. Retroactive fixes require data reconciliation.
-
-**Sources:**
-- [Race Condition Vulnerabilities in Financial Systems](https://www.sourcery.ai/vulnerabilities/race-condition-financial-transactions)
-- [Hacking Banks With Race Conditions](https://vickieli.dev/hacking/race-conditions/)
-- [Exploiting & Testing Race Conditions](https://danger-team.org/exploiting-testing-race-conditions/)
-
----
-
-### Pitfall 4: n8n Webhook Timeout Cascade Failure
-
-**What goes wrong:**
-User generates carousel → app calls n8n webhook → n8n takes 45 seconds to generate images → Vercel function times out at 60s (Hobby plan) → app shows "Generation failed" → n8n STILL completes and sends response → response hits dead webhook → user tries again → duplicate generation → credits deducted twice.
-
-**Why it happens:**
-- Synchronous webhook pattern (waiting for immediate response)
-- No timeout handling for external services
-- Vercel serverless function duration limits (10-60s default, max 5-15 min)
-- n8n workflow complexity causes unpredictable execution time
-- No retry/resume mechanism for long-running tasks
-
-**Consequences:**
-- **Poor UX:** Users see failures even when generation succeeds
-- **Wasted compute:** Duplicate generations consume n8n credits and API costs
-- **Credit inconsistency:** User charged multiple times for same carousel
-- **Scaling failure:** Cannot increase timeout to 5 minutes on Hobby plan
+**Consequences:** Double bookings due to off-by-one overlap. Guests blocked from booking dates that are actually available. Landlord's dashboard shows wrong dates. Trust erodes as guests and landlord see different information.
 
 **Prevention:**
+- Store all booking dates as date-only strings (YYYY-MM-DD), not timestamps. A booking for "March 15-17" means the date string "2026-03-15" to "2026-03-17". No timezone conversion ever applies.
+- Define check-in/check-out semantics explicitly and document them: "check-out date is the departure date; a new guest can check in on the same day." This means a booking for March 15-17 occupies nights of March 15 and March 16. March 17 is available for new check-in.
+- In the calendar UI, use a library that works with date strings, not Date objects. Or normalize all Date objects to noon UTC to avoid midnight-boundary issues.
+- Write unit tests for: booking on Dec 31 spanning into Jan 1, DST transition dates, and guests in UTC+12 / UTC-12 timezones.
 
-1. **Async webhook pattern with status polling:**
-```typescript
-// Step 1: Initiate generation, return immediately
-app.post('/api/generate', async (req, res) => {
-  const generationId = uuid()
+**Detection:** Set your browser timezone to UTC+12 (New Zealand). Select dates in the calendar. Check if the API receives the same dates you selected.
 
-  // Create pending generation record
-  await supabase.from('generations').insert({
-    id: generationId,
-    user_id: req.userId,
-    status: 'pending'
-  })
-
-  // Trigger n8n webhook (fire-and-forget)
-  await fetch(n8nWebhookUrl, {
-    method: 'POST',
-    body: JSON.stringify({
-      generationId,
-      callbackUrl: `${baseUrl}/webhooks/n8n-complete`,
-      ...generationParams
-    })
-  })
-
-  // Return immediately with generation ID
-  res.json({ generationId, status: 'pending' })
-})
-
-// Step 2: n8n calls back when complete
-app.post('/webhooks/n8n-complete', async (req, res) => {
-  const { generationId, images, status } = req.body
-
-  await supabase.from('generations').update({
-    status: status,
-    images: images,
-    completed_at: new Date()
-  }).eq('id', generationId)
-
-  res.status(200).json({ received: true })
-})
-
-// Step 3: Frontend polls for completion
-async function pollGenerationStatus(generationId) {
-  const { data } = await supabase
-    .from('generations')
-    .select('status, images')
-    .eq('id', generationId)
-    .single()
-
-  if (data.status === 'completed') {
-    return data.images
-  }
-
-  // Poll every 2 seconds
-  await sleep(2000)
-  return pollGenerationStatus(generationId)
-}
-```
-
-2. **Enable Fluid Compute for webhook receivers:**
-```typescript
-// vercel.json
-{
-  "functions": {
-    "api/generate.ts": {
-      "maxDuration": 60 // Fluid Compute: only charged for active processing
-    }
-  }
-}
-```
-
-3. **n8n workflow configuration:**
-- Set explicit timeout in n8n workflow (e.g., 120 seconds)
-- Implement retry logic within n8n
-- Use n8n's built-in error handling to call error webhook
-
-4. **Timeout monitoring:**
-```typescript
-// Track generation time distribution
-await analytics.track('generation_duration', {
-  generationId,
-  durationMs: Date.now() - startTime,
-  status: 'completed'
-})
-
-// Alert if p95 > 45 seconds (approaching timeout)
-```
-
-**Detection:**
-- Monitor `generations` table for stuck "pending" status >5 minutes
-- Alert on Vercel function timeout errors (function exceeded duration)
-- Track n8n workflow execution time (n8n dashboard)
-- Compare generation attempts vs. completions (large gap = timeout issues)
-
-**Phase impact:** Phase 3 (Generation Pipeline) - Architecture decision shapes entire product. Cannot easily migrate from sync to async post-launch.
-
-**Vercel official limits:**
-- Hobby: 60s max (with Fluid Compute: 300s)
-- Pro: 300s max (with Fluid Compute: 800s)
-
-**Sources:**
-- [Vercel Serverless Function Timeouts](https://vercel.com/docs/functions/configuring-functions/duration)
-- [n8n Webhook Error Handling](https://community.n8n.io/t/webhook-error-handling/11471)
-- [Why n8n Webhooks Fail in Production](https://prosperasoft.com/blog/automation-tools/n8n/n8n-webhook-failures-production/)
-
----
-
-### Pitfall 5: Multi-Brand Context Switching Vulnerability
-
-**What goes wrong:**
-User switches from "Brand A" to "Brand B" in UI dropdown. Frontend updates `selectedBrandId` in React state, but API requests still use stale brand ID from previous selection. User generates carousel for Brand B using Brand A's profile data. In worst case: User A switches to "Add new brand" which shows dropdown of ALL brands (including User B's brands due to RLS bypass), creates data isolation breach.
-
-**Why it happens:**
-- Client-side brand context not synchronized with server-side validation
-- API endpoints trust `brandId` from request body without verification
-- RLS policies verify `user_id` but not `brand_id` ownership
-- Race conditions between context switch and in-flight API requests
-
-**Consequences:**
-- **Data contamination:** Carousels saved to wrong brand profile
-- **Cross-tenant leak:** User A generates content with User B's brand guidelines
-- **Compliance violation:** User data mixed across organizational boundaries
-- **Silent corruption:** No error thrown, data quietly goes to wrong account
-
-**Prevention:**
-
-1. **Server-side brand ownership verification:**
-```typescript
-// EVERY API endpoint that accepts brandId
-app.post('/api/generate', async (req, res) => {
-  const { brandId } = req.body
-
-  // Verify user owns this brand
-  const { data: brand } = await supabase
-    .from('brands')
-    .select('id')
-    .eq('id', brandId)
-    .eq('user_id', req.userId)
-    .single()
-
-  if (!brand) {
-    return res.status(403).json({ error: 'Brand not found or access denied' })
-  }
-
-  // Proceed with generation...
-})
-```
-
-2. **RLS policies for brand ownership:**
-```sql
--- Brands table RLS
-CREATE POLICY "Users can only access their own brands"
-ON brands
-FOR ALL
-USING (user_id = auth.uid());
-
--- Carousels table RLS (verify brand ownership transitively)
-CREATE POLICY "Users can only access carousels for their brands"
-ON carousels
-FOR ALL
-USING (
-  brand_id IN (
-    SELECT id FROM brands WHERE user_id = auth.uid()
-  )
-);
-```
-
-3. **Frontend brand context validation:**
-```typescript
-// Verify brand exists before allowing selection
-const switchBrand = async (brandId: string) => {
-  const { data: brand } = await supabase
-    .from('brands')
-    .select('id, name')
-    .eq('id', brandId)
-    .single()
-
-  if (!brand) {
-    toast.error('Invalid brand selection')
-    return
-  }
-
-  setSelectedBrand(brand)
-}
-```
-
-4. **API request brand context middleware:**
-```typescript
-// Attach verified brand to request object
-async function brandContextMiddleware(req, res, next) {
-  const { brandId } = req.body
-
-  const { data: brand } = await supabase
-    .from('brands')
-    .select('*')
-    .eq('id', brandId)
-    .eq('user_id', req.userId)
-    .single()
-
-  if (!brand) {
-    return res.status(403).json({ error: 'Invalid brand' })
-  }
-
-  req.brand = brand // Verified brand object
-  next()
-}
-```
-
-**Detection:**
-- Audit log: Track all carousel generations with `(user_id, brand_id)` pairs
-- Alert on any carousel where `carousel.brand_id NOT IN (SELECT id FROM brands WHERE user_id = carousel.user_id)`
-- Automated test: "User A cannot generate carousel for User B's brand"
-- Monitor API 403 errors (should be rare in normal usage)
-
-**Phase impact:** Phase 1 (Foundation) - Multi-brand architecture must enforce ownership from start. Retrofitting security to production data requires forensic audit.
-
-**Sources:**
-- [Tenant Isolation in Multi-Tenant Systems](https://workos.com/blog/tenant-isolation-in-multi-tenant-systems)
-- [Multi-Tenant Security Best Practices](https://qrvey.com/blog/multi-tenant-security/)
-- [Tenant Data Isolation Patterns](https://propelius.ai/blogs/tenant-data-isolation-patterns-and-anti-patterns)
-
----
+**Phase:** Must be established as a convention in the earliest backend work. Retrofitting date handling is painful.
 
 ## Moderate Pitfalls
 
-Mistakes that cause delays, technical debt, or customer support burden.
+### Pitfall 5: Stripe Refund Edge Cases
 
-### Pitfall 6: Monthly Credit Reset Race Condition
-
-**What goes wrong:**
-User's billing cycle resets at midnight UTC on the 15th. User generates carousel at 11:59:58 PM on the 14th. Credit deduction writes at 00:00:01 AM on the 15th (after network delay). Reset cron job runs at 00:00:00 AM, setting `credits_remaining = 10`. Credit deduction overwrites it to 9. User starts month with 9 credits instead of 10.
-
-**Why it happens:**
-- Reset cron job and credit deduction run concurrently
-- Cron timing assumes instantaneous writes
-- No transactional isolation between reset and deduction
-- Different processes modifying same row
+**What goes wrong:** Landlord cancels a booking and expects an instant refund. But: (a) the guest's card has been closed or expired, and the refund fails; (b) the refund takes 5-10 business days to appear, and the guest demands immediate confirmation; (c) the landlord partially refunds (e.g., keeps a cancellation fee) but the math is wrong because the service fee should or should not be included.
 
 **Prevention:**
+- Handle the `refund.failed` webhook. Display a clear message to the landlord: "Refund failed -- guest's card could not process it. Contact guest for alternative refund method."
+- Define the refund policy in code: what gets refunded (room cost, cleaning fee, service fee, deposit)? Build a refund calculator that shows the breakdown before the landlord confirms.
+- For partial refunds, always show the landlord exactly what amount will be refunded and what will be retained, with line items.
+- Store the refund ID and status on the booking. Display refund status (pending, succeeded, failed) in the dashboard.
 
-1. **Atomic reset with generation tracking:**
-```sql
--- Track generations per billing period
-CREATE TABLE credit_usage (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES users(id),
-  billing_period DATE, -- e.g., '2026-01-15'
-  credits_used INTEGER DEFAULT 0,
-  credits_allocated INTEGER DEFAULT 10
-);
+**Detection:** Test refund flow with Stripe's test cards that simulate refund failures.
 
--- Deduct credits by incrementing usage
-CREATE OR REPLACE FUNCTION deduct_credit_v2(
-  p_user_id UUID
-) RETURNS BOOLEAN AS $$
-DECLARE
-  current_period DATE;
-  usage INTEGER;
-  limit INTEGER;
-BEGIN
-  current_period := date_trunc('month', CURRENT_DATE);
+**Phase:** Payment phase, but can be a fast-follow after initial Stripe integration. The first version can support full refunds only, with partial refunds added later.
 
-  SELECT credits_used, credits_allocated
-  INTO usage, limit
-  FROM credit_usage
-  WHERE user_id = p_user_id
-    AND billing_period = current_period
-  FOR UPDATE;
+### Pitfall 6: Checkout Session Expiration Leaving Bookings in Limbo
 
-  IF usage >= limit THEN
-    RETURN FALSE;
-  END IF;
-
-  UPDATE credit_usage
-  SET credits_used = credits_used + 1
-  WHERE user_id = p_user_id
-    AND billing_period = current_period;
-
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql;
-```
-
-2. **Cron job creates new period instead of resetting:**
-```typescript
-// Monthly cron: Create new billing period for all active users
-app.post('/cron/reset-credits', async (req, res) => {
-  const newPeriod = startOfMonth(new Date())
-
-  const { data: activeUsers } = await supabase
-    .from('subscriptions')
-    .select('user_id, plan')
-    .eq('status', 'active')
-
-  for (const user of activeUsers) {
-    await supabase.from('credit_usage').insert({
-      user_id: user.user_id,
-      billing_period: newPeriod,
-      credits_used: 0,
-      credits_allocated: PLAN_LIMITS[user.plan]
-    })
-  }
-
-  res.json({ reset: activeUsers.length })
-})
-```
-
-3. **User-specific billing cycle:**
-```typescript
-// Reset based on Stripe subscription anchor, not global midnight
-const billingAnchor = subscription.billing_cycle_anchor // Unix timestamp
-const nextReset = new Date(billingAnchor * 1000)
-
-// Check if current generation crosses billing period
-if (isAfter(new Date(), nextReset)) {
-  // Create new period before deducting
-  await createNewBillingPeriod(userId, nextReset)
-}
-```
-
-**Detection:**
-- Monitor credit balance distribution after reset (all users should have expected limit)
-- Alert on users with `credits_remaining != credits_allocated` after reset window
-- Track generations within 1 minute of reset time (high risk window)
-
-**Phase impact:** Phase 4 (Credits) - Design credit tracking schema to avoid resets. Period-based tracking prevents race conditions.
-
-**Sources:**
-- [Billing Cycle Reset Timing](https://docs.stripe.com/billing/subscriptions/billing-cycle)
-- [Usage-Based Billing Best Practices](https://www.m3ter.com/guides/saas-credit-pricing)
-
----
-
-### Pitfall 7: PDF Generation SSRF Vulnerability
-
-**What goes wrong:**
-User inputs custom carousel idea: "Check out our services at http://169.254.169.254/latest/meta-data/". PDF generator processes this as HTML, makes HTTP request to AWS metadata endpoint, retrieves EC2 instance credentials, embeds them in PDF. User downloads PDF containing AWS secret keys.
-
-**Why it happens:**
-- PDF generators (Puppeteer, jsPDF, wkhtmltopdf) execute HTML/CSS, including external resources
-- User input concatenated directly into HTML template
-- No input sanitization for URLs
-- Local file system access enabled
-- Server-Side Request Forgery (SSRF) not considered
-
-**Consequences:**
-- **Credential exposure:** AWS/GCP metadata endpoints leak API keys
-- **Internal network access:** PDF generator can probe internal services
-- **Local file read:** Access `/etc/passwd`, `.env` files, SSH keys
-- **XSS in PDFs:** Malicious JavaScript executes when PDF opened
+**What goes wrong:** Landlord approves a booking and sends the payment link. The guest opens Stripe Checkout but abandons it (closes the tab, gets distracted). The Checkout Session expires after 24 hours by default. The booking remains in "awaiting_payment" state indefinitely because nobody handles the `checkout.session.expired` event.
 
 **Prevention:**
+- Set a custom `expires_at` on the Checkout Session (e.g., 48 hours -- long enough for the guest to come back, short enough to not block dates forever).
+- Listen for the `checkout.session.expired` webhook and transition the booking to a `payment_expired` state.
+- Allow the landlord to re-send a payment link (create a new Checkout Session) for the same booking.
+- In the admin dashboard, visually distinguish "awaiting payment" bookings that are approaching expiration.
+- Build a daily background check: any booking in "awaiting_payment" for more than 3 days should be flagged or auto-expired.
 
-1. **Disable local file access:**
-```typescript
-// Puppeteer
-const browser = await puppeteer.launch({
-  args: [
-    '--disable-local-file-access',
-    '--no-sandbox',
-    '--disable-setuid-sandbox'
-  ]
-})
-```
+**Detection:** Create a booking, get it approved, and then do not pay. Wait 24+ hours. Check if the system handles the expiration gracefully.
 
-2. **Input sanitization:**
-```typescript
-import DOMPurify from 'isomorphic-dompurify'
+**Phase:** Payment phase. Must be handled alongside the initial Stripe Checkout integration, not as an afterthought.
 
-const sanitizedIdea = DOMPurify.sanitize(userInput, {
-  ALLOWED_TAGS: ['b', 'i', 'em', 'strong'],
-  ALLOWED_ATTR: [] // No attributes = no href, src
-})
-```
+### Pitfall 7: E-Transfer Payment Tracking Becomes a Black Hole
 
-3. **HTML template with safe interpolation:**
-```typescript
-// Use template with escaping, not string concatenation
-const html = `
-  <div class="carousel-slide">
-    <h1>${escapeHtml(slide.title)}</h1>
-    <p>${escapeHtml(slide.content)}</p>
-  </div>
-`
-```
-
-4. **Network restrictions for PDF service:**
-- Run PDF generation in isolated container
-- Firewall rules blocking private IP ranges (169.254.0.0/16, 10.0.0.0/8, 192.168.0.0/16)
-- No outbound internet access from PDF generation process
-
-**Detection:**
-- Monitor outbound HTTP requests from PDF generation service
-- Alert on requests to private IP ranges or metadata endpoints
-- Security audit: Input test cases with SSRF payloads
-- Dependency scanning for vulnerable PDF libraries (CVE-2025-68428 in jsPDF < 4.0.0)
-
-**Phase impact:** Phase 5 (PDF Export) - Must sanitize from first implementation. Post-launch fixes may miss existing malicious content.
-
-**Critical 2026 vulnerability:** jsPDF CVE-2025-68428 (CVSS 9.2) allows arbitrary file read in Node.js deployments prior to v4.0.0.
-
-**Sources:**
-- [Critical jsPDF Vulnerability CVE-2025-68428](https://securityboulevard.com/2026/01/critical-jspdf-vulnerability-enables-arbitrary-file-read-in-node-js-cve-2025-68428/)
-- [Exploiting PDF Generators: SSRF Guide](https://www.intigriti.com/researchers/blog/hacking-tools/exploiting-pdf-generators-a-complete-guide-to-finding-ssrf-vulnerabilities-in-pdf-generators)
-- [Server-Side XSS in PDFs](https://book.hacktricks.xyz/pentesting-web/xss-cross-site-scripting/server-side-xss-dynamic-pdf)
-
----
-
-### Pitfall 8: Stripe Subscription Downgrade Timing Mismatch
-
-**What goes wrong:**
-User downgrades from Pro ($29.99/month, 10 carousels) to Free (3 carousels) on January 15th. Stripe schedules downgrade for end of billing period (February 15th). Application immediately reduces `credits_allocated` to 3 on January 15th. User already used 8 carousels, now shows -5 credits remaining. Cannot generate more carousels despite having paid through February 15th.
-
-**Why it happens:**
-- Webhook `customer.subscription.updated` fires immediately on downgrade request
-- Application doesn't check `subscription_schedule` for future changes
-- No distinction between immediate changes and end-of-period changes
-- Credits calculated from current plan, not active period plan
+**What goes wrong:** Landlord approves a booking and the guest says they will e-transfer. The landlord forgets to mark it as paid. Or the landlord marks it as paid but the e-transfer never actually arrives. There is no audit trail, no confirmation, and no timeout.
 
 **Prevention:**
+- E-transfer bookings should have the same state machine as Stripe bookings, just with manual transitions. State: approved -> awaiting_etransfer -> paid (manual) or expired.
+- Add a "Mark as Paid" button in the admin dashboard with a confirmation dialog and optional notes field (e.g., "received e-transfer March 15 ref#12345").
+- Set a timeout: if the e-transfer is not confirmed within X days, send the landlord a reminder email. After Y days, auto-expire the booking.
+- Store a timestamp for when "Mark as Paid" was clicked, for the landlord's own records.
 
-1. **Parse subscription schedule from webhook:**
-```typescript
-app.post('/webhooks/stripe', async (req, res) => {
-  const event = stripe.webhooks.constructEvent(...)
+**Detection:** Create an e-transfer booking and leave it. Does the system ever remind or expire it?
 
-  if (event.type === 'customer.subscription.updated') {
-    const subscription = event.data.object
+**Phase:** Payment phase. Must be designed alongside Stripe flow, not bolted on after.
 
-    // Check if change is scheduled for future
-    if (subscription.schedule) {
-      const schedule = await stripe.subscriptionSchedules.retrieve(
-        subscription.schedule
-      )
+### Pitfall 8: Price Calculation Disagreements Between Estimate and Final Price
 
-      // Find future phase
-      const futurePhase = schedule.phases.find(
-        phase => phase.start_date > Date.now() / 1000
-      )
-
-      if (futurePhase) {
-        // Store pending downgrade, don't apply yet
-        await supabase.from('pending_downgrades').insert({
-          user_id: userId,
-          current_plan: subscription.items.data[0].price.id,
-          future_plan: futurePhase.items[0].price,
-          effective_date: new Date(futurePhase.start_date * 1000)
-        })
-        return res.json({ received: true })
-      }
-    }
-
-    // Immediate change - apply now
-    await updateUserPlan(userId, subscription)
-  }
-})
-```
-
-2. **Webhook for schedule transitions:**
-```typescript
-// Listen for subscription_schedule.updated
-if (event.type === 'subscription_schedule.updated') {
-  const schedule = event.data.object
-
-  if (schedule.status === 'active' && schedule.current_phase) {
-    // Apply the scheduled change NOW
-    await applyScheduledDowngrade(schedule)
-  }
-}
-```
-
-3. **Credit calculation aware of billing period:**
-```typescript
-function calculateCreditsRemaining(user) {
-  const periodEnd = new Date(user.current_period_end)
-  const now = new Date()
-
-  // Use CURRENT plan's limits until period ends
-  if (isBefore(now, periodEnd)) {
-    return user.credits_allocated - user.credits_used
-  }
-
-  // After period end, use future plan's limits
-  return user.future_credits_allocated - user.credits_used
-}
-```
-
-**Detection:**
-- Alert on negative credit balances
-- Monitor "User paid but can't generate" support tickets
-- Automated test: Downgrade subscription, verify credits unchanged until period end
-- Track time between downgrade request and actual plan change
-
-**Phase impact:** Phase 4 (Credits) - Implement schedule-aware logic from start. Retroactive fixes require manual credit adjustments.
-
-**Sources:**
-- [Stripe Subscription Schedules](https://docs.stripe.com/billing/subscriptions/subscription-schedules)
-- [Stripe Prorations](https://docs.stripe.com/billing/subscriptions/prorations)
-
----
-
-### Pitfall 9: Inadequate Usage Tracking Visibility
-
-**What goes wrong:**
-User on Free tier (3 carousels/month) generates 2 carousels. UI shows "3 remaining" instead of "1 remaining". User attempts 3rd generation, fails with "Quota exceeded". User confused: "I only made 2, why can't I make 3?"
-
-**Why it happens:**
-- Frontend caches initial credit count, doesn't refresh after each generation
-- Webhook credit deduction doesn't invalidate frontend cache
-- Credits displayed in header, not near generation button
-- No proactive warning before hitting limit
-- Counting logic inconsistent between frontend and backend
+**What goes wrong:** Guest sees an estimated price of $450 when submitting a request. Landlord approves with an exact price of $500. Guest feels misled. Or: the itemized breakdown on the payment page does not match what the landlord set. Or: the service fee percentage is applied to the wrong subtotal (before or after cleaning fee? before or after deposit?).
 
 **Prevention:**
+- Define the price formula explicitly and use it everywhere: `total = (nightly_rate * nights) + cleaning_fee + (extra_guest_fee * extra_guests * nights) + add_ons + service_fee`. The service fee is `service_fee_pct * (all_of_the_above)`. The deposit is a separate hold or deducted from total, not added on top.
+- The guest estimate and the landlord's final price should use the same formula. The only variable the landlord changes is the nightly rate.
+- Display the full itemized breakdown at every step: request submission, approval email, payment page.
+- Write a shared price calculator function used by both frontend estimate and backend invoice. Never calculate price in two different places.
 
-1. **Real-time credit display with Supabase subscriptions:**
-```typescript
-// Subscribe to credit changes
-useEffect(() => {
-  const channel = supabase
-    .channel('credit-updates')
-    .on(
-      'postgres_changes',
-      {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'credit_usage',
-        filter: `user_id=eq.${userId}`
-      },
-      (payload) => {
-        setCreditsRemaining(
-          payload.new.credits_allocated - payload.new.credits_used
-        )
-      }
-    )
-    .subscribe()
+**Detection:** Submit a booking request, note the estimate. Approve it with a different nightly rate. Compare the payment page breakdown against manual calculation. Do they match?
 
-  return () => supabase.removeChannel(channel)
-}, [userId])
-```
-
-2. **Pre-generation credit check:**
-```typescript
-const handleGenerate = async () => {
-  // Fetch current credits from source of truth
-  const { data: credits } = await supabase
-    .from('credit_usage')
-    .select('credits_used, credits_allocated')
-    .eq('user_id', userId)
-    .single()
-
-  const remaining = credits.credits_allocated - credits.credits_used
-
-  if (remaining < 1) {
-    toast.error('No credits remaining. Upgrade to Pro for more carousels.')
-    return
-  }
-
-  if (remaining === 1) {
-    toast.warning('This is your last credit this month!')
-  }
-
-  await generate()
-}
-```
-
-3. **Usage progress indicator:**
-```tsx
-<div className="credit-indicator">
-  <span>{creditsRemaining} / {creditsAllocated} carousels remaining</span>
-  <ProgressBar
-    value={creditsUsed}
-    max={creditsAllocated}
-    className={creditsRemaining <= 1 ? 'warning' : ''}
-  />
-  {creditsRemaining === 0 && (
-    <Button onClick={upgradeModal}>Upgrade to Pro</Button>
-  )}
-</div>
-```
-
-4. **Billing cycle transparency:**
-```typescript
-// Show when credits reset
-const nextReset = new Date(user.current_period_end)
-const daysUntilReset = differenceInDays(nextReset, new Date())
-
-<p className="text-sm text-gray-500">
-  Resets in {daysUntilReset} days ({format(nextReset, 'MMM dd')})
-</p>
-```
-
-**Detection:**
-- Track "quota exceeded" errors vs. actual credit usage (should correlate)
-- Monitor support tickets mentioning credits/limits
-- A/B test credit visibility placement (header vs. inline)
-
-**Phase impact:** Phase 4 (Credits) - User education prevents support burden. Add visibility before users hit limits.
-
-**Sources:**
-- [SaaS Credits System Guide](https://colorwhistle.com/saas-credits-system-guide/)
-- [Credit-Based Pricing Best Practices](https://schematichq.com/blog/is-a-credit-based-system-the-right-fit-for-your-saas-pricing)
-
----
+**Phase:** Core booking logic, same phase as the booking engine. The price calculator must exist before the approval flow.
 
 ## Minor Pitfalls
 
-Mistakes that cause annoyance or technical debt but are fixable.
+### Pitfall 9: Calendar UI Showing Stale Availability
 
-### Pitfall 10: n8n Webhook Authentication Weakness
-
-**What goes wrong:**
-n8n webhook URL is predictable (e.g., `https://yourapp.com/webhooks/n8n-complete`). Attacker discovers URL, sends fake completion webhooks with manipulated image URLs. Application marks generations as complete with attacker-controlled content. User downloads malicious PDF or inappropriate images.
-
-**Why it happens:**
-- Webhook URL has no authentication
-- No HMAC signature verification from n8n
-- Trust assumption: "Only n8n knows this URL"
-- Security through obscurity
+**What goes wrong:** Guest loads the room page, sees March 20-22 is available. While they fill out the booking form, the landlord blocks March 20-22 in the admin dashboard. Guest submits and gets an error, or worse, the request goes through for blocked dates.
 
 **Prevention:**
+- Re-validate availability on the server when a booking request is submitted. Never trust the client's view of availability.
+- For the calendar UI, keep it simple: fetch availability on page load and on date selection. Do not cache aggressively. For a low-traffic site, a fresh API call on every interaction is fine.
+- Return a clear, friendly error if dates became unavailable between page load and submission: "Sorry, these dates are no longer available. Please select different dates."
 
-1. **HMAC signature verification:**
-```typescript
-// Configure n8n to include HMAC signature
-// In n8n webhook: Set header "X-N8N-Signature" = {{ $crypto.hmac('sha256', $json, 'your-secret') }}
+**Phase:** Calendar/availability phase. Server-side validation is the key protection.
 
-app.post('/webhooks/n8n-complete', async (req, res) => {
-  const signature = req.headers['x-n8n-signature']
-  const payload = JSON.stringify(req.body)
+### Pitfall 10: Email Deliverability and Notification Failures
 
-  const expectedSignature = crypto
-    .createHmac('sha256', process.env.N8N_WEBHOOK_SECRET)
-    .update(payload)
-    .digest('hex')
-
-  if (!crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
-  )) {
-    return res.status(401).json({ error: 'Invalid signature' })
-  }
-
-  // Process webhook...
-})
-```
-
-2. **Generation ID validation:**
-```typescript
-// Verify generation exists and is pending
-const { data: generation } = await supabase
-  .from('generations')
-  .select('status, user_id')
-  .eq('id', req.body.generationId)
-  .single()
-
-if (!generation) {
-  return res.status(404).json({ error: 'Generation not found' })
-}
-
-if (generation.status !== 'pending') {
-  return res.status(409).json({ error: 'Generation already completed' })
-}
-```
-
-3. **Image URL validation:**
-```typescript
-// Only accept images from trusted domains
-const allowedDomains = [
-  'your-n8n-instance.com',
-  'your-cdn.com',
-  'storage.googleapis.com'
-]
-
-const imageUrls = req.body.images
-for (const url of imageUrls) {
-  const domain = new URL(url).hostname
-  if (!allowedDomains.includes(domain)) {
-    return res.status(400).json({ error: 'Invalid image source' })
-  }
-}
-```
-
-**Detection:**
-- Monitor webhook requests without valid signatures
-- Alert on generation completions from unexpected IPs
-- Rate limit webhook endpoint (max 100/minute per generation)
-
-**Phase impact:** Phase 3 (Generation Pipeline) - Add authentication before public launch. Harder to add retroactively if URL leaked.
-
-**Sources:**
-- [Webhook Security Best Practices](https://stytch.com/blog/webhooks-security-best-practices/)
-- [HMAC Webhook Authentication](https://prismatic.io/blog/how-secure-webhook-endpoints-hmac/)
-
----
-
-### Pitfall 11: Service Role Key Exposure
-
-**What goes wrong:**
-Developer hardcodes Supabase `service_role` key in frontend code to bypass RLS during debugging. Key committed to Git. Public repository makes key accessible to anyone. Attacker uses service_role key to dump entire database (all users, brands, API keys, payment history).
-
-**Why it happens:**
-- Confusion between `anon` key (safe for frontend) and `service_role` key (backend only)
-- Convenience during development ("RLS is blocking my query")
-- Accidentally committing `.env` file
-- Copying keys from Supabase dashboard into code
-
-**Consequences:**
-- **Total data breach:** Attacker bypasses all RLS policies
-- **Database manipulation:** Delete tables, drop policies, insert malicious data
-- **Unrecoverable:** Cannot rotate key without updating all backend services
+**What goes wrong:** Booking confirmation emails land in spam. The landlord never gets the "new request" notification. The guest never gets the payment link. For a system where email is the primary communication channel (no in-app messaging, no SMS), email failure means total communication breakdown.
 
 **Prevention:**
+- Use a transactional email service (SendGrid, Resend, Postmark) rather than sending from your own server. These services have established sender reputation.
+- Set up SPF, DKIM, and DMARC records for your sending domain.
+- In the admin dashboard, show the notification status for each booking (sent, delivered, bounced). Use the email service's webhook to track delivery.
+- Always display critical information (payment links, booking details) in the admin dashboard as well, so the landlord is never solely dependent on email.
+- For the payment link specifically: show it in the admin dashboard so the landlord can manually share it if email fails.
 
-1. **Never use service_role in frontend:**
-```typescript
-// WRONG - service_role in browser code
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // NEVER DO THIS
-)
+**Phase:** Notification system phase. But domain/DNS setup should happen early to build sender reputation.
 
-// RIGHT - anon key in frontend
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-)
-```
+### Pitfall 11: No Admin Recovery Path for Edge Cases
 
-2. **Environment variable naming:**
-```bash
-# .env (backend only, not committed)
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...  # No NEXT_PUBLIC prefix
-
-# .env.local (frontend, safe to commit template)
-NEXT_PUBLIC_SUPABASE_URL=https://...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...  # Public anon key
-```
-
-3. **Git safeguards:**
-```bash
-# .gitignore
-.env
-.env.local
-.env.*.local
-```
-
-4. **Code scanning:**
-```bash
-# Use tools like git-secrets or trufflehog
-npm install -g trufflehog
-trufflehog git file://. --regex --entropy=False
-```
-
-**Detection:**
-- Scan public repositories for exposed keys
-- Monitor Supabase audit logs for service_role usage patterns
-- Alert on service_role queries from unexpected IPs
-
-**Phase impact:** Phase 1 (Foundation) - Establish key management practices immediately. Exposure requires full database rotation.
-
-**Sources:**
-- [Supabase RLS Best Practices](https://www.leanware.co/insights/supabase-best-practices)
-
----
-
-### Pitfall 12: Vercel Hobby Plan Hidden Limits
-
-**What goes wrong:**
-Application works perfectly in development. Deployed to Vercel Hobby plan. After initial launch tweet, 50 concurrent users hit site. Vercel scales to 50 concurrent function invocations. Works for 10 seconds, then all functions start timing out. Users see "Generation failed". Twitter thread: "This site is broken, don't use it."
-
-**Why it happens:**
-- Hobby plan has 60-second timeout (vs. 300s on Pro)
-- Fluid Compute defaults to 300s on Hobby, but only for network I/O
-- No awareness of concurrent execution limits
-- Development testing with single user doesn't expose limits
-- Long-running tasks (n8n webhooks, PDF generation) exceed limits
+**What goes wrong:** Something unexpected happens (Stripe webhook lost, booking in a weird state, guest paid twice, landlord approved by accident). There is no way for the landlord to manually fix things in the admin dashboard. They have to contact the developer.
 
 **Prevention:**
+- Build admin "escape hatches" from day one: manually change booking status, manually mark as paid, manually trigger refund, manually re-send emails.
+- Log all state transitions with timestamps. Show a booking history/audit log in the admin dashboard.
+- Add a "Sync with Stripe" button that fetches the current payment status from Stripe for any booking.
 
-1. **Enable Fluid Compute explicitly:**
-```json
-// vercel.json
-{
-  "functions": {
-    "api/**/*.ts": {
-      "maxDuration": 300
-    }
-  }
-}
-```
+**Phase:** Admin dashboard phase. These are not polish features -- they are operational necessities for a single landlord with no support team.
 
-2. **Async processing for long tasks:**
-```typescript
-// Don't wait for n8n webhook response
-app.post('/api/generate', async (req, res) => {
-  // Queue the job
-  await queue.add('generate-carousel', { userId, brandId })
+### Pitfall 12: Booking Window and Blocked Date Interaction Bugs
 
-  // Return immediately (< 1 second)
-  res.json({ status: 'queued', generationId })
-})
-```
-
-3. **Monitoring for timeouts:**
-```typescript
-// Track function execution time
-const start = Date.now()
-try {
-  await longRunningTask()
-} finally {
-  const duration = Date.now() - start
-  if (duration > 50000) { // 50 seconds = warning threshold
-    console.warn('Function approaching timeout', { duration })
-  }
-}
-```
-
-4. **Load testing before launch:**
-```bash
-# Use Artillery or k6 to simulate concurrent users
-artillery quick --count 50 --num 10 https://yourapp.com/api/generate
-```
-
-**Detection:**
-- Vercel dashboard shows function timeouts
-- Monitor p95/p99 function duration
-- Alert when >5% of requests timeout
-
-**Phase impact:** Phase 3 (Generation Pipeline) - Architect for async from start. Hobby plan viable if async; otherwise requires Pro.
-
-**Official limits:**
-- Hobby: 60s default, 300s with Fluid Compute
-- Pro: 15s default, 300s max (800s with Fluid Compute)
-
-**Sources:**
-- [Vercel Serverless Function Timeouts](https://vercel.com/docs/functions/configuring-functions/duration)
-- [Solving Vercel's Timeout Limits](https://medium.com/@kolbysisk/case-study-solving-vercels-10-second-limit-with-qstash-2bceeb35d29b)
-
----
-
-## Integration-Specific Gotchas
-
-### Supabase + Stripe Integration
-
-**Gotcha:** Stripe `customer.id` is NOT the same as Supabase `auth.uid()`. Must create explicit mapping.
-
-```typescript
-// Store mapping when user subscribes
-await supabase.from('stripe_customers').insert({
-  user_id: supabase.auth.user().id,
-  stripe_customer_id: customer.id
-})
-
-// Look up user from webhook
-const { data } = await supabase
-  .from('stripe_customers')
-  .select('user_id')
-  .eq('stripe_customer_id', event.data.object.customer)
-  .single()
-```
-
-**Official solution:** Use [Supabase Stripe Sync Engine](https://supabase.com/blog/stripe-sync-engine-integration) for automatic synchronization.
-
-**Phase impact:** Phase 2 (Payments) - Create mapping table before first subscription.
-
----
-
-### n8n + Vercel Integration
-
-**Gotcha:** n8n workflow URL changes when workflow updated. Hardcoded URL in Vercel app breaks silently.
+**What goes wrong:** The landlord sets a 6-month booking window (guests can book up to 6 months ahead). They also block specific dates within that window. Edge case: the booking window rolls forward daily, but blocked dates from the past are never cleaned up. Or: the calendar shows dates outside the booking window as available because the frontend only checks blocked dates, not the window boundary.
 
 **Prevention:**
-```typescript
-// Store n8n webhook URL in database, not environment variable
-const { data: config } = await supabase
-  .from('app_config')
-  .select('n8n_webhook_url')
-  .single()
+- Availability logic must check three things: (1) date is within the booking window, (2) date is not blocked, (3) date is not already booked. All three checks must happen both in the calendar UI and on the server.
+- Past blocked dates should be ignored (or cleaned up periodically) so they do not clutter the admin interface.
+- The booking window should be enforced server-side, not just in the calendar UI.
 
-// n8n workflow includes version number in response
-if (response.workflowVersion !== expectedVersion) {
-  await alertSlack('n8n workflow version mismatch')
-}
-```
+**Phase:** Availability management phase. Define the availability check as a single reusable function that handles all three conditions.
 
-**Phase impact:** Phase 3 (Generation Pipeline) - Make webhook URLs configurable from start.
+## Phase-Specific Warnings
 
----
-
-## Security Checklist
-
-Before launching each phase:
-
-### Phase 1: Foundation
-- [ ] RLS enabled on ALL tables
-- [ ] Indexes on `user_id` columns
-- [ ] Service role key NEVER in frontend code
-- [ ] `.env` in `.gitignore`
-
-### Phase 2: Payments
-- [ ] Stripe webhook signature verification implemented
-- [ ] Idempotency tracking for all webhooks
-- [ ] Customer ID mapping (Stripe ↔ Supabase) created
-- [ ] Test downgrade flow (doesn't reduce credits early)
-
-### Phase 3: Generation Pipeline
-- [ ] n8n webhook HMAC authentication
-- [ ] Generation ID validation
-- [ ] Async processing (return before n8n completes)
-- [ ] Timeout monitoring
-
-### Phase 4: Credits & Usage
-- [ ] Atomic credit deduction (SELECT FOR UPDATE)
-- [ ] Period-based tracking (no resets)
-- [ ] Pre-generation credit check
-- [ ] Real-time credit display
-
-### Phase 5: PDF Export
-- [ ] Input sanitization (DOMPurify)
-- [ ] PDF library updated (jsPDF >= 4.0.0)
-- [ ] Local file access disabled
-- [ ] Network restrictions on PDF service
-
----
-
-## Testing Strategy
-
-### Multi-Tenancy Testing
-```typescript
-describe('Multi-brand isolation', () => {
-  it('User A cannot access User B brands', async () => {
-    const userA = await createUser()
-    const userB = await createUser()
-    const brandB = await createBrand(userB.id)
-
-    const { data, error } = await supabase
-      .auth.setAuth(userA.token)
-      .from('brands')
-      .select('*')
-      .eq('id', brandB.id)
-
-    expect(data).toHaveLength(0)
-  })
-})
-```
-
-### Race Condition Testing
-```typescript
-describe('Concurrent credit deduction', () => {
-  it('prevents double-deduction', async () => {
-    const user = await createUser({ credits: 1 })
-
-    // Trigger 10 concurrent generations
-    const results = await Promise.allSettled(
-      Array(10).fill(null).map(() => generateCarousel(user.id))
-    )
-
-    const successful = results.filter(r => r.status === 'fulfilled')
-    expect(successful).toHaveLength(1) // Only 1 should succeed
-
-    const { data: credits } = await getCredits(user.id)
-    expect(credits.remaining).toBe(0)
-  })
-})
-```
-
-### Webhook Reliability Testing
-```typescript
-describe('Stripe webhook idempotency', () => {
-  it('handles duplicate events', async () => {
-    const event = createStripeEvent('customer.subscription.updated')
-
-    // Send same event twice
-    await handleWebhook(event)
-    await handleWebhook(event)
-
-    const subscriptions = await getSubscriptions(event.data.object.customer)
-    expect(subscriptions).toHaveLength(1) // Not duplicated
-  })
-})
-```
-
----
-
-## Monitoring & Alerting
-
-### Critical Metrics
-
-1. **Credit consistency:**
-   ```sql
-   -- Alert if ANY user has negative credits
-   SELECT user_id, credits_remaining
-   FROM credit_usage
-   WHERE credits_remaining < 0
-   ```
-
-2. **Webhook delivery rate:**
-   - Stripe dashboard: Webhook success rate should be >99%
-   - Alert if <95% for 5 consecutive minutes
-
-3. **Generation timeout rate:**
-   ```sql
-   -- Alert if >5% of generations stuck in pending
-   SELECT COUNT(*) FILTER (WHERE status = 'pending' AND created_at < NOW() - INTERVAL '5 minutes') / COUNT(*)::float AS stuck_rate
-   FROM generations
-   WHERE created_at > NOW() - INTERVAL '1 hour'
-   ```
-
-4. **RLS policy violations:**
-   - Monitor Supabase logs for RLS policy rejections
-   - Alert on any 403 errors in production
-
----
-
-## Appendix: Failure Mode Matrix
-
-| Failure | Symptom | Detection | Phase |
-|---------|---------|-----------|-------|
-| RLS bypass | User sees another user's brands | Cross-user data audit | 1 |
-| Webhook desync | Paid user shows Free limits | Stripe vs. DB subscription count | 2 |
-| Credit race | Negative balances | Daily credit balance check | 4 |
-| n8n timeout | Stuck "pending" generations | Pending >5min count | 3 |
-| Brand context | Carousel saved to wrong brand | Audit log mismatch | 1 |
-| PDF SSRF | AWS credentials in PDF | Outbound request monitoring | 5 |
-| Reset race | User starts month with wrong credits | Post-reset balance distribution | 4 |
-| Subscription timing | Downgrade applies early | Support tickets "can't generate" | 4 |
-
----
+| Phase Topic | Likely Pitfall | Mitigation |
+|-------------|---------------|------------|
+| Database schema design | Date storage as timestamps instead of date strings | Establish date-as-string convention in schema design |
+| Booking state machine | Missing transitions, dead-end states | Draw full state diagram before coding; review all edge cases |
+| Stripe integration | Webhook-only payment confirmation | Dual-check: webhook + redirect verification + periodic reconciliation |
+| Stripe integration | Checkout Session expiration not handled | Listen for `checkout.session.expired`, implement booking expiration |
+| Approval flow | Approving conflicting bookings | Transaction-level conflict check on approval |
+| Price calculation | Estimate vs. final price mismatch | Shared calculator function, consistent formula |
+| E-transfer flow | No timeout, no audit trail | Same state machine as Stripe, with manual transition + reminders |
+| Calendar UI | Timezone-induced off-by-one errors | Date-only strings, no timestamp conversion |
+| Admin dashboard | No manual override capabilities | Build escape hatches for every booking state |
+| Email notifications | Emails landing in spam or not delivered | Transactional email service + dashboard fallback for critical info |
 
 ## Sources
 
-This research synthesizes findings from:
-
-- Official documentation: Supabase RLS, Stripe Webhooks, Vercel Functions
-- Security advisories: CVE-2025-68428 (jsPDF), SSRF in PDF generators
-- Community post-mortems: n8n webhook failures, race condition exploits
-- SaaS billing patterns: Credit systems, usage-based pricing implementations
-
-All findings verified against January 2026 documentation and recent security disclosures.
+- [Debugging Real-Time Bookings: Race Conditions and Double Bookings](https://medium.com/@get2vikasjha/debugging-real-time-bookings-fixing-hidden-race-conditions-cache-issues-and-double-bookings-98328bc52192)
+- [Building a Ticketing System: Concurrency, Locks, and Race Conditions](https://codefarm0.medium.com/building-a-ticketing-system-concurrency-locks-and-race-conditions-182e0932d962)
+- [Solving Double Booking at Scale: System Design Patterns](https://itnext.io/solving-double-booking-at-scale-system-design-patterns-from-top-tech-companies-4c5a3311d8ea)
+- [Hotel Reservation System Design (ByteByteGo)](https://bytebytego.com/courses/system-design-interview/hotel-reservation-system)
+- [Saga Pattern for Resilient Booking Workflows](https://dzone.com/articles/saga-state-machine-flight-booking)
+- [Stripe: Refund and Cancel Payments](https://docs.stripe.com/refunds)
+- [Stripe: Payment Capture Strategies](https://stripe.com/resources/more/payment-capture-strategies-timing-risks-and-what-businesses-need-to-know)
+- [Stripe: Place a Hold on a Payment Method](https://docs.stripe.com/payments/place-a-hold-on-a-payment-method)
+- [Stripe: Expire a Checkout Session](https://docs.stripe.com/api/checkout/sessions/expire)
+- [Stripe: Recover Abandoned Carts](https://docs.stripe.com/payments/checkout/abandoned-carts)
+- [Stripe: Idempotent Requests](https://docs.stripe.com/api/idempotent_requests)
+- [Best Practices for Stripe Webhooks (Stigg)](https://www.stigg.io/blog-posts/best-practices-i-wish-we-knew-when-integrating-stripe-webhooks)
+- [Handling Payment Webhooks Reliably](https://medium.com/@sohail_saifii/handling-payment-webhooks-reliably-idempotency-retries-validation-69b762720bf5)
+- [DatePickers: Working with Timezones](https://nezspencer.medium.com/datepickers-working-with-timezones-c0e342904aa4)
+- [How to Avoid Double Bookings (Hostfully)](https://www.hostfully.com/blog/how-to-avoid-double-bookings/)
+- [Common Mistakes for Vacation Rental Hosts (Hospitable)](https://hospitable.com/mistakes-to-avoid-vacation-rental-hosts)

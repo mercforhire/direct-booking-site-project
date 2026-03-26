@@ -1,1406 +1,639 @@
-# Architecture Patterns for Multi-Tenant SaaS Content Generation Platform
+# Architecture Patterns
 
-**Domain:** SaaS LinkedIn Carousel Creator
-**Researched:** 2026-01-23
-**Overall Confidence:** HIGH
+**Domain:** Direct short-term rental booking site (semi-private, single landlord)
+**Researched:** 2026-03-25
 
-## Executive Summary
+## Recommended Architecture
 
-Multi-tenant SaaS platforms with external webhook integrations and subscription billing follow a **layered, event-driven architecture** that separates concerns across presentation, API, business logic, data persistence, and external integrations. For your LinkedIn carousel creator, the recommended architecture uses:
+### Overview
 
-1. **Next.js App Router** for frontend and API routes
-2. **Supabase** for authentication, database with Row Level Security (RLS)
-3. **n8n in Queue Mode** for async content generation workflows
-4. **Stripe webhook handlers** for subscription lifecycle management
-5. **Event-driven data flows** between components with idempotent processing
+A monolithic Next.js application with server-side rendering, API routes for backend logic, and a PostgreSQL database. The system follows a request-to-approve booking model with a clear state machine governing the booking lifecycle. Stripe Checkout Sessions handles online payments; manual e-transfer is tracked as a payment method flag.
 
-This architecture supports horizontal scaling, tenant isolation at the database level, and graceful handling of long-running AI generation tasks without blocking user interactions.
+This is a low-volume, single-tenant system. There is no need for microservices, message queues, or distributed architecture. A monolith deployed to a single platform (Vercel + managed Postgres) is the correct choice.
 
----
-
-## System Overview
+### High-Level Component Map
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         FRONTEND LAYER                          │
-│  Next.js App Router (React Server Components + Client)         │
-│  - Dashboard UI                                                 │
-│  - Carousel builder forms                                       │
-│  - Generation status polling                                    │
-└────────────────┬────────────────────────────────────────────────┘
-                 │
-                 │ HTTPS
-                 ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      API LAYER (Next.js)                        │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │ API Routes   │  │ Webhook      │  │ Server       │         │
-│  │              │  │ Handlers     │  │ Actions      │         │
-│  │ /api/ideas   │  │ /api/webhooks│  │              │         │
-│  │ /api/brands  │  │ /stripe      │  │              │         │
-│  │              │  │ /n8n         │  │              │         │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘         │
-└─────────┼──────────────────┼──────────────────┼─────────────────┘
-          │                  │                  │
-          │                  │                  │
-          ▼                  ▼                  ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    BUSINESS LOGIC LAYER                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │ Auth Service │  │ Usage        │  │ Generation   │         │
-│  │              │  │ Tracking     │  │ Service      │         │
-│  │ - RLS policy │  │              │  │              │         │
-│  │ - JWT claims │  │ - Quota mgmt │  │ - Job status │         │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘         │
-└─────────┼──────────────────┼──────────────────┼─────────────────┘
-          │                  │                  │
-          ▼                  ▼                  ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   DATA PERSISTENCE LAYER                        │
-│                     Supabase (PostgreSQL)                       │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │ Users        │  │ Brands       │  │ Ideas        │         │
-│  │ Subscriptions│  │ Templates    │  │ Generations  │         │
-│  │              │  │ ImageStyles  │  │ UsageTracking│         │
-│  └──────────────┘  └──────────────┘  └──────────────┘         │
-│                                                                 │
-│  Row Level Security (RLS) enforces tenant isolation            │
-└────────────────┬────────────────────────────────────────────────┘
-                 │
-                 │
-    ┌────────────┴────────────┐
-    │                         │
-    ▼                         ▼
-┌─────────────────┐    ┌─────────────────┐
-│ EXTERNAL:       │    │ EXTERNAL:       │
-│ n8n Queue Mode  │    │ Stripe API      │
-│                 │    │                 │
-│ ┌─────────────┐ │    │ - Subscriptions │
-│ │ Webhook     │ │    │ - Customers     │
-│ │ Receiver    │ │    │ - Invoices      │
-│ └─────┬───────┘ │    │                 │
-│       │         │    │ Webhooks:       │
-│       ▼         │    │ - payment       │
-│ ┌─────────────┐ │    │ - subscription  │
-│ │   Redis     │ │    │   lifecycle     │
-│ │   Queue     │ │    └─────────────────┘
-│ └─────┬───────┘ │
-│       │         │
-│       ▼         │
-│ ┌─────────────┐ │
-│ │  Workers    │ │
-│ │  (AI/Image) │ │
-│ └─────────────┘ │
-└─────────────────┘
++--------------------------------------------------+
+|                   NEXT.JS APP                     |
+|                                                   |
+|  +-------------+  +---------------------------+   |
+|  | Guest Pages |  |    Admin Dashboard        |   |
+|  | - Room list |  | - Booking management      |   |
+|  | - Room view |  | - Room/fee management     |   |
+|  | - Booking   |  | - Availability calendar   |   |
+|  |   request   |  | - Settings                |   |
+|  | - Payment   |  +---------------------------+   |
+|  +-------------+                                  |
+|         |                    |                     |
+|  +----------------------------------------------+ |
+|  |            API ROUTES / SERVER ACTIONS        | |
+|  |  - Booking lifecycle     - Room CRUD          | |
+|  |  - Fee calculation       - Availability CRUD  | |
+|  |  - Payment orchestration - Auth (admin only)  | |
+|  +----------------------------------------------+ |
+|         |                    |                     |
+|  +----------------+  +---------------------+      |
+|  | Fee Calculator |  | Booking State       |      |
+|  | (pure function)|  | Machine (core logic)|      |
+|  +----------------+  +---------------------+      |
++--------------------------------------------------+
+          |                          |
+   +-------------+          +----------------+
+   |  PostgreSQL |          | Stripe API     |
+   |  (Neon/     |          | (Checkout      |
+   |   Supabase) |          |  Sessions)     |
+   +-------------+          +----------------+
+          |                          |
+   +-------------+          +----------------+
+   |  Blob Store |          | Email Service  |
+   |  (photos)   |          | (Resend/SES)   |
+   +-------------+          +----------------+
 ```
 
----
-
-## Component Boundaries
-
-### Frontend Layer: Next.js App Router
-
-| Responsibility | Technologies | Communicates With |
-|----------------|--------------|-------------------|
-| User interface rendering | React Server Components, Client Components | API Layer (Next.js routes), Supabase (direct for reads) |
-| Form handling and validation | React Hook Form, Zod | API routes for mutations |
-| Real-time status updates | Polling or Supabase Realtime | Supabase (generations table) |
-| Authentication UI | Supabase Auth UI | Supabase Auth service |
-| Client-side state | React Context, Zustand, or TanStack Query | Internal state management |
-
-**Key Characteristics:**
-- Server Components for data fetching (tenant-aware via Supabase client)
-- Client Components for interactive forms and status polling
-- No direct external API calls (proxied through Next.js API routes)
-
-### API Layer: Next.js API Routes
-
-| Responsibility | Technologies | Communicates With |
-|----------------|--------------|-------------------|
-| RESTful API endpoints | Next.js App Router route handlers | Business Logic, Supabase |
-| Webhook receivers | Webhook signature verification | Stripe, n8n, Business Logic |
-| Request validation | Zod, middleware | Frontend, External services |
-| Authentication middleware | Supabase Auth, JWT verification | Supabase Auth |
-| Rate limiting | Upstash Rate Limit or custom | Usage Tracking service |
-
-**Structure:**
-```
-app/
-└── api/
-    ├── ideas/
-    │   ├── route.ts              # POST /api/ideas (create idea)
-    │   └── [id]/
-    │       └── route.ts          # GET/PATCH /api/ideas/:id
-    ├── generations/
-    │   ├── route.ts              # GET /api/generations (list)
-    │   └── [id]/
-    │       └── route.ts          # GET /api/generations/:id
-    ├── brands/
-    │   └── route.ts              # GET/POST /api/brands
-    ├── webhooks/
-    │   ├── stripe/
-    │   │   └── route.ts          # POST /api/webhooks/stripe
-    │   └── n8n/
-    │       └── route.ts          # POST /api/webhooks/n8n
-    └── usage/
-        └── route.ts              # GET /api/usage
-```
-
-**Key Characteristics:**
-- All routes are tenant-aware (extract user from JWT)
-- Webhook routes verify signatures before processing
-- Idempotent handlers (check for duplicate events)
-
-### Business Logic Layer
+### Component Boundaries
 
 | Component | Responsibility | Communicates With |
-|-----------|----------------|-------------------|
-| **Auth Service** | User authentication, tenant context extraction, RLS policy application | Supabase Auth, API routes |
-| **Usage Tracking Service** | Quota enforcement, usage counting, allowance reset | Supabase (usage_tracking table), Subscription service |
-| **Generation Service** | Orchestrate generation flow, job status tracking, n8n webhook triggering | n8n, Supabase (generations table) |
-| **Subscription Service** | Subscription status management, plan feature access | Stripe, Supabase (subscriptions table) |
-| **Brand Service** | Brand profile CRUD, brand-idea association | Supabase (brands table) |
+|-----------|---------------|-------------------|
+| **Guest Pages** | Room browsing, booking request submission, payment completion | API Routes (read rooms, submit requests, initiate payment) |
+| **Admin Dashboard** | Booking management, room/fee CRUD, availability blocking, settings | API Routes (full CRUD, state transitions) |
+| **API Routes / Server Actions** | Request validation, authorization, orchestration | Database, Stripe API, Email Service, Fee Calculator, Booking State Machine |
+| **Fee Calculator** | Pure function: inputs (dates, guest count, room config, add-ons, global settings) -> itemized price breakdown | Called by API routes; no external dependencies |
+| **Booking State Machine** | Enforces valid state transitions, guards, and side effects | Called by API routes; triggers email notifications |
+| **PostgreSQL** | Persistent storage for all domain data | Accessed only by API routes (via ORM) |
+| **Stripe API** | Payment processing for online payments | Called by API routes; webhooks call back into API routes |
+| **Email Service** | Transactional emails (booking notifications, payment links) | Called by API routes after state transitions |
+| **Blob Store** | Room photo storage | Accessed by Admin Dashboard (upload) and Guest Pages (display) |
 
-**Key Characteristics:**
-- Pure business logic, no direct HTTP handling
-- Services return typed results (success/error)
-- All database queries use RLS-enabled Supabase client
+## Data Models
 
-### Data Persistence Layer: Supabase PostgreSQL
+### Entity Relationship Diagram
 
-| Responsibility | Implementation | Access Pattern |
-|----------------|----------------|----------------|
-| Multi-tenant data isolation | Row Level Security (RLS) policies | Every query automatically filtered by user_id |
-| Authentication | Supabase Auth (JWT) | Auth service validates tokens |
-| Real-time subscriptions | Supabase Realtime | Frontend polls or subscribes to generation status |
-| File storage | Supabase Storage (for generated images) | Pre-signed URLs returned to frontend |
-| Audit logging | Triggers on critical tables | Automatic timestamp tracking |
+```
++-----------+       +------------------+       +-----------+
+|  Property |1----N |      Room        |1----N | RoomImage |
++-----------+       +------------------+       +-----------+
+                          |1
+                          |
+                    +-----+------+
+                    |            |
+                   N|           N|
+          +---------+--+  +-----+--------+
+          | RoomAddOn  |  | DateBlock    |
+          +------------+  +--------------+
+                    |1
+                    |
+                   N|
+          +---------+----------+
+          |      Booking       |1------N+----------------+
+          +--------------------+        | BookingAddOn   |
+                    |1                  +----------------+
+                    |
+                   N|
+          +---------+----------+
+          |      Payment       |
+          +--------------------+
 
-**Row Level Security Pattern:**
-```sql
--- Example RLS policy for ideas table
-CREATE POLICY "Users can access their own ideas"
-ON ideas
-FOR ALL
-USING (auth.uid() = user_id);
+  +-------------------+
+  | SiteSettings      |  (singleton)
+  +-------------------+
 
--- Example RLS policy for brands table
-CREATE POLICY "Users can access their own brands"
-ON brands
-FOR ALL
-USING (auth.uid() = user_id);
-
--- Example RLS policy for generations table
-CREATE POLICY "Users can access their own generations"
-ON generations
-FOR SELECT
-USING (
-  user_id = auth.uid()
-  OR
-  idea_id IN (SELECT id FROM ideas WHERE user_id = auth.uid())
-);
+  +-------------------+
+  | Guest             |  (optional account)
+  +-------------------+
+        |1
+        |
+       N|
+  +-----+----+
+  | Booking  |
+  +----------+
 ```
 
-**Key Characteristics:**
-- **Shared tables with tenant_id column** (user_id in this case)
-- RLS policies on every table with user data
-- Composite indexes on (user_id, created_at) for performance
-- No application-level tenant filtering needed (enforced at DB)
+### Core Models
 
-### External Integration: n8n Queue Mode
+#### Property
 
-| Component | Responsibility | Communicates With |
-|-----------|----------------|-------------------|
-| **Webhook Receiver** | Accept generation requests from Next.js | Next.js API, Redis Queue |
-| **Redis Queue** | Store pending jobs, handle traffic spikes | Webhook Receiver, Workers |
-| **Workers** | Execute AI generation workflows (LLM + image generation) | Redis Queue, External APIs (OpenAI, DALL-E, etc.), Next.js webhook |
+```
+Property
+  id              UUID (PK)
+  name            string
+  address         string
+  description     text
+  created_at      timestamp
+  updated_at      timestamp
+```
 
-**Data Flow:**
-1. Next.js sends POST to n8n webhook with `{idea_id, brand_id, template_id, style_id, callback_url}`
-2. n8n webhook receiver queues job in Redis (returns 202 Accepted immediately)
-3. n8n worker picks up job from queue
-4. Worker executes generation workflow (LLM for copy, AI for images)
-5. Worker POSTs result to `callback_url` (Next.js `/api/webhooks/n8n`)
-6. Next.js webhook handler updates Supabase `generations` table
+Small table (1-2 rows). Exists to group rooms and support a potential second property without schema changes.
 
-**Key Characteristics:**
-- **Asynchronous processing** (no blocking)
-- **Horizontal scaling** (add more workers for capacity)
-- **Fault tolerance** (Redis persistence, job retries)
-- **Maximum payload: 16MB** (n8n default)
+#### Room
 
-### External Integration: Stripe Subscription Billing
+```
+Room
+  id              UUID (PK)
+  property_id     UUID (FK -> Property)
+  name            string          -- "Room 3 - Garden View"
+  slug            string (unique) -- URL-friendly identifier
+  description     text
+  base_nightly_rate  decimal      -- reference rate (landlord may override per booking)
+  max_guests      integer
+  cleaning_fee    decimal
+  extra_guest_fee decimal         -- per night, per extra guest beyond base occupancy
+  base_occupancy  integer         -- guests included in base rate
+  sort_order      integer
+  is_active       boolean
+  created_at      timestamp
+  updated_at      timestamp
+```
 
-| Component | Responsibility | Communicates With |
-|-----------|----------------|-------------------|
-| **Stripe API** | Subscription creation, payment processing, invoice management | Next.js API routes |
-| **Stripe Webhooks** | Subscription lifecycle events, payment status | Next.js `/api/webhooks/stripe` |
+#### RoomImage
 
-**Critical Webhook Events:**
-- `customer.subscription.created` — Initial subscription
-- `customer.subscription.updated` — Plan change, renewal
-- `customer.subscription.deleted` — Cancellation
-- `invoice.paid` — Successful payment (reset usage allowances)
-- `invoice.payment_failed` — Failed payment (notify user, grace period)
-- `customer.subscription.trial_will_end` — 3 days before trial ends
+```
+RoomImage
+  id              UUID (PK)
+  room_id         UUID (FK -> Room)
+  url             string
+  alt_text        string
+  sort_order      integer
+  created_at      timestamp
+```
 
-**Webhook Handler Pattern:**
+#### RoomAddOn
+
+```
+RoomAddOn
+  id              UUID (PK)
+  room_id         UUID (FK -> Room)
+  name            string          -- "Sofa bed", "Parking spot"
+  price           decimal         -- one-time fee
+  description     string
+  is_active       boolean
+  created_at      timestamp
+```
+
+#### DateBlock
+
+```
+DateBlock
+  id              UUID (PK)
+  room_id         UUID (FK -> Room)
+  start_date      date
+  end_date        date            -- inclusive
+  reason          string          -- "airbnb_booking", "maintenance", "manual"
+  created_at      timestamp
+```
+
+Availability is determined by the **absence** of overlapping DateBlocks and Bookings (in non-cancelled states) for a given date range. This is simpler than maintaining per-day availability rows for a low-volume system.
+
+**Query pattern:** A room is available for [check_in, check_out) if:
+1. No DateBlock overlaps the range
+2. No Booking (status NOT IN ['cancelled', 'declined']) overlaps the range
+3. The range falls within the global booking window
+
+#### Guest
+
+```
+Guest
+  id              UUID (PK)
+  email           string (unique)
+  name            string
+  phone           string
+  password_hash   string (nullable) -- null = no account, just contact info
+  created_at      timestamp
+  updated_at      timestamp
+```
+
+Guests are created on first booking request. If they later create an account, the same row gets a password_hash. Email is the natural key for deduplication.
+
+#### Booking
+
+```
+Booking
+  id              UUID (PK)
+  room_id         UUID (FK -> Room)
+  guest_id        UUID (FK -> Guest)
+  check_in        date
+  check_out       date
+  num_guests      integer
+  status          enum             -- see state machine below
+
+  -- Price fields (set by landlord on approval)
+  nightly_rate        decimal (nullable)
+  num_nights          integer
+  cleaning_fee        decimal (nullable)
+  extra_guest_fee     decimal (nullable)  -- total extra guest charge
+  add_ons_total       decimal (nullable)
+  deposit_amount      decimal (nullable)
+  service_fee         decimal (nullable)
+  total_price         decimal (nullable)
+
+  -- Metadata
+  guest_notes         text (nullable)
+  landlord_notes      text (nullable)  -- internal, not shown to guest
+  payment_method      enum (nullable)  -- 'stripe' | 'etransfer'
+  stripe_session_id   string (nullable)
+
+  created_at      timestamp
+  updated_at      timestamp
+```
+
+Price fields are nullable because they are empty at request time and filled when the landlord approves. The landlord sets the exact nightly rate per booking (may differ from room's base rate).
+
+#### BookingAddOn
+
+```
+BookingAddOn
+  id              UUID (PK)
+  booking_id      UUID (FK -> Booking)
+  room_add_on_id  UUID (FK -> RoomAddOn)
+  name            string          -- snapshot at time of booking
+  price           decimal         -- snapshot at time of booking
+  created_at      timestamp
+```
+
+Snapshots the add-on name and price so the booking record remains accurate even if the add-on is later edited or deleted.
+
+#### Payment
+
+```
+Payment
+  id              UUID (PK)
+  booking_id      UUID (FK -> Booking)
+  amount          decimal
+  method          enum            -- 'stripe' | 'etransfer'
+  status          enum            -- 'pending' | 'completed' | 'failed' | 'refunded'
+  stripe_payment_intent_id  string (nullable)
+  notes           string (nullable)  -- for manual e-transfer tracking
+  paid_at         timestamp (nullable)
+  created_at      timestamp
+```
+
+Separate from Booking so one booking can have multiple payment attempts (failed Stripe, retry, or partial deposit + remainder).
+
+#### SiteSettings
+
+```
+SiteSettings
+  id                    integer (PK, always 1)  -- singleton
+  booking_window_months integer       -- 3-9 months ahead
+  service_fee_percent   decimal       -- e.g., 3.5
+  default_deposit       decimal       -- default deposit amount
+  site_name             string
+  contact_email         string
+  updated_at            timestamp
+```
+
+Singleton row. Global configuration that applies across all rooms and bookings.
+
+## Booking State Machine
+
+This is the most critical architectural element. The booking lifecycle is a finite state machine with explicit transitions, guards, and side effects.
+
+### States
+
+```
+PENDING -> APPROVED -> PAYMENT_PENDING -> PAID -> COMPLETED
+   |          |                |                      |
+   v          v                v                      v
+DECLINED   CANCELLED      EXPIRED               CANCELLED
+
+PENDING -> DECLINED (terminal)
+PENDING -> CANCELLED (by guest or landlord)
+APPROVED -> PAYMENT_PENDING (automatic, after landlord sets price)
+PAYMENT_PENDING -> PAID (Stripe webhook or manual mark)
+PAYMENT_PENDING -> EXPIRED (TTL exceeded, no payment received)
+PAID -> COMPLETED (after checkout date passes, or manual)
+PAID -> CANCELLED (refund scenario)
+Any non-terminal -> CANCELLED
+```
+
+### State Transition Table
+
+| From | Event | To | Guard | Side Effects |
+|------|-------|----|-------|-------------|
+| `pending` | `approve` | `approved` | Price fields set, landlord authenticated | Email guest with price + payment link; create DateBlock |
+| `pending` | `decline` | `declined` | Landlord authenticated | Email guest with decline notice |
+| `pending` | `cancel` | `cancelled` | Guest or landlord | Email other party |
+| `approved` | `select_payment` | `payment_pending` | Payment method chosen | If Stripe: create Checkout Session |
+| `payment_pending` | `payment_complete` | `paid` | Payment verified (webhook or manual) | Email guest confirmation; email landlord notification |
+| `payment_pending` | `payment_expire` | `expired` | TTL exceeded (e.g., 48h) | Release DateBlock; email guest |
+| `paid` | `complete` | `completed` | Check-out date passed | Archival; no email needed |
+| `paid` | `cancel` | `cancelled` | Landlord action | Process refund if Stripe; release DateBlock; email guest |
+| `expired` | `reactivate` | `approved` | Landlord action | Re-block dates; email guest new payment link |
+
+**Implementation note:** Encode this as a lookup table or switch statement, not scattered if/else blocks. Every transition should be a single function call: `transitionBooking(bookingId, event, payload)`.
+
+### Simplified Flow (Happy Path)
+
+```
+Guest browses rooms
+  -> Selects room, dates, guests, add-ons
+  -> Sees estimated price (fee calculator, using room defaults)
+  -> Submits booking request (status: PENDING)
+  -> Email sent to landlord
+
+Landlord reviews request
+  -> Sets exact nightly rate, confirms fees
+  -> Approves (status: APPROVED)
+  -> Dates blocked on calendar
+  -> Email sent to guest with final price
+
+Guest receives email
+  -> Chooses Stripe or e-transfer (status: PAYMENT_PENDING)
+  -> If Stripe: redirected to Stripe Checkout Session
+  -> If e-transfer: shown instructions
+
+Payment completes
+  -> Stripe webhook fires (or landlord marks paid)
+  -> Status: PAID
+  -> Confirmation emails to both parties
+
+After stay
+  -> Status: COMPLETED (automatic or manual)
+```
+
+## Data Flow
+
+### Fee Calculation Engine
+
+The fee calculator is a **pure function** with no database access. It receives all inputs and returns an itemized breakdown.
+
 ```typescript
-// Idempotent processing
-async function handleStripeWebhook(event: Stripe.Event) {
-  // 1. Verify signature (Stripe SDK)
-  const signature = headers.get('stripe-signature');
-  const event = stripe.webhooks.constructEvent(body, signature, secret);
+interface FeeCalculationInput {
+  nightlyRate: number;
+  checkIn: Date;
+  checkOut: Date;
+  numGuests: number;
+  baseOccupancy: number;
+  extraGuestFee: number;       // per night, per extra guest
+  cleaningFee: number;
+  addOns: { name: string; price: number }[];
+  serviceFeePercent: number;
+  depositAmount: number;
+}
 
-  // 2. Check for duplicate event (idempotency)
-  const existing = await supabase
-    .from('webhook_events')
-    .select('id')
-    .eq('stripe_event_id', event.id)
-    .single();
-
-  if (existing) return { received: true }; // Already processed
-
-  // 3. Process event based on type
-  switch (event.type) {
-    case 'invoice.paid':
-      await resetUsageAllowances(event.data.object.customer);
-      break;
-    case 'customer.subscription.deleted':
-      await revokeAccess(event.data.object.customer);
-      break;
-    // ...
-  }
-
-  // 4. Log event (for idempotency + audit)
-  await supabase
-    .from('webhook_events')
-    .insert({ stripe_event_id: event.id, processed_at: new Date() });
-
-  return { received: true };
+interface FeeCalculationOutput {
+  numNights: number;
+  nightlySubtotal: number;     // nightlyRate * numNights
+  extraGuestSubtotal: number;  // max(0, numGuests - baseOccupancy) * extraGuestFee * numNights
+  cleaningFee: number;
+  addOnsTotal: number;
+  subtotal: number;            // sum of above
+  serviceFee: number;          // subtotal * serviceFeePercent / 100
+  total: number;               // subtotal + serviceFee
+  depositAmount: number;       // separate line item, part of total
 }
 ```
 
-**Key Characteristics:**
-- **Asynchronous** (Stripe retries for 3 days if endpoint fails)
-- **Idempotent** (same event may be sent multiple times)
-- **Signature verification** (prevent spoofing)
-- **Event logging** (audit trail + deduplication)
+This function is used in two contexts:
+1. **Guest-facing estimate** (pre-request): Uses room's default nightly rate. Shows "estimated" label.
+2. **Landlord approval** (final price): Uses landlord-set nightly rate. This becomes the actual booking price.
 
----
-
-## Data Flows
-
-### Flow 1: User Submits Idea → Carousel Generation
-
-**Actors:** User, Next.js Frontend, Next.js API, Supabase, n8n, AI Services
+### Payment Flow (Stripe)
 
 ```
-1. User fills out carousel idea form (brand, template, style, concept)
-   └─> Frontend validates input (Zod schema)
-
-2. Frontend POSTs to /api/ideas
-   └─> API validates auth (Supabase JWT)
-   └─> API checks usage allowance (usage_tracking table)
-   └─> API creates idea record (Supabase RLS auto-filters by user_id)
-   └─> API returns idea_id
-
-3. Frontend POSTs to /api/generations with idea_id
-   └─> API creates generation record (status: 'pending')
-   └─> API triggers n8n webhook with:
-       {
-         idea_id,
-         brand_profile: {...},
-         template: {...},
-         style: {...},
-         callback_url: "https://yourapp.com/api/webhooks/n8n"
-       }
-   └─> n8n returns 202 Accepted (job queued)
-   └─> API returns generation_id
-
-4. Frontend redirects to /generations/[id] (loading state)
-   └─> Frontend polls /api/generations/[id] every 5 seconds
-   OR subscribes to Supabase Realtime (generations table)
-
-5. n8n worker picks up job from Redis queue
-   └─> Worker calls LLM API (generate post copy)
-   └─> Worker calls image generation API (create carousel slides)
-   └─> Worker uploads images to storage (S3/Cloudflare R2)
-   └─> Worker POSTs result to callback_url:
-       {
-         generation_id,
-         status: 'completed',
-         post_body: "...",
-         image_urls: ["url1", "url2", ...],
-         error: null
-       }
-
-6. Next.js webhook handler (/api/webhooks/n8n)
-   └─> Verifies webhook signature (HMAC or API key)
-   └─> Checks for duplicate (idempotency key in webhook_events table)
-   └─> Updates generation record (Supabase):
-       - status: 'completed'
-       - post_body, image_urls
-       - completed_at timestamp
-   └─> Increments usage counter (usage_tracking table)
-   └─> Returns 200 OK
-
-7. Frontend receives updated generation data (via polling or Realtime)
-   └─> Displays carousel preview + download buttons
+1. Landlord approves booking -> booking status = APPROVED
+2. Guest clicks "Pay with Stripe" -> API creates Stripe Checkout Session
+   - line_items derived from booking price breakdown
+   - success_url = /booking/{id}/confirmation
+   - cancel_url = /booking/{id}/payment
+   - metadata.booking_id = booking.id
+   - client_reference_id = booking.id
+3. Guest redirected to Stripe-hosted checkout page
+4. Guest completes payment
+5. Stripe fires checkout.session.completed webhook
+6. Webhook handler:
+   a. Verify webhook signature
+   b. Extract booking_id from metadata
+   c. Record Payment row (status: completed)
+   d. Transition booking to PAID
+   e. Send confirmation emails
 ```
 
-**Duration:** 15-60 seconds (async, non-blocking)
+**Use Stripe Checkout Sessions, not Payment Intents.** Checkout Sessions is Stripe's recommended approach -- it handles the payment UI, card validation, 3D Secure, and receipt emails. Less code, less maintenance, and Stripe handles PCI compliance for the hosted page. [Source: Stripe docs](https://docs.stripe.com/payments/checkout-sessions-and-payment-intents-comparison)
 
-**Error Handling:**
-- n8n worker failure → n8n retries job (exponential backoff)
-- Callback webhook failure → n8n retries webhook (3 attempts)
-- Timeout after 5 minutes → Update generation status to 'failed'
-
----
-
-### Flow 2: Stripe Webhook → Update Subscription Status
-
-**Actors:** Stripe, Next.js Webhook Handler, Supabase
+### Payment Flow (E-Transfer)
 
 ```
-1. Subscription event occurs (payment success, plan change, cancellation)
-   └─> Stripe sends POST to /api/webhooks/stripe
-       Headers: stripe-signature (HMAC)
-       Body: Stripe.Event JSON
-
-2. Webhook handler verifies signature
-   └─> Uses Stripe SDK: stripe.webhooks.constructEvent(body, sig, secret)
-   └─> If invalid → return 400 Bad Request (Stripe won't retry)
-
-3. Handler checks for duplicate event
-   └─> Query webhook_events table by stripe_event_id
-   └─> If exists → return 200 OK (already processed)
-
-4. Handler processes event based on type:
-
-   IF event.type === 'invoice.paid':
-     └─> Extract customer_id from event.data.object
-     └─> Query subscriptions table: WHERE stripe_customer_id = customer_id
-     └─> Reset usage_tracking allowances:
-         UPDATE usage_tracking
-         SET monthly_generations_used = 0
-         WHERE user_id = subscription.user_id
-     └─> Update subscription status = 'active'
-
-   IF event.type === 'customer.subscription.deleted':
-     └─> Extract subscription_id from event.data.object
-     └─> Update subscriptions table:
-         UPDATE subscriptions
-         SET status = 'canceled', canceled_at = now()
-         WHERE stripe_subscription_id = subscription_id
-     └─> Revoke premium features (future queries check subscription status)
-
-   IF event.type === 'invoice.payment_failed':
-     └─> Update subscription status = 'past_due'
-     └─> Queue email notification (optional: using Resend or SendGrid)
-
-5. Handler logs event for idempotency
-   └─> INSERT INTO webhook_events (stripe_event_id, type, processed_at)
-
-6. Handler returns 200 OK
-   └─> Stripe marks webhook as delivered
+1. Guest selects "Pay by e-transfer"
+2. System shows e-transfer instructions (from SiteSettings)
+3. Booking remains in PAYMENT_PENDING
+4. Guest sends e-transfer outside the system
+5. Landlord receives e-transfer, goes to admin dashboard
+6. Landlord clicks "Mark as Paid" on the booking
+7. Payment row created (method: etransfer, status: completed)
+8. Booking transitions to PAID
+9. Confirmation emails sent
 ```
 
-**Duration:** < 1 second (synchronous)
-
-**Error Handling:**
-- Signature verification fails → 400 (Stripe won't retry)
-- Database error → 500 (Stripe retries with exponential backoff, up to 3 days)
-- Idempotent design ensures duplicate events are safe
-
----
-
-### Flow 3: User Checks Usage Allowance
-
-**Actors:** User, Next.js Frontend, Next.js API, Supabase
+### Availability Check Flow
 
 ```
-1. User navigates to dashboard
-   └─> Frontend fetches /api/usage
-
-2. API extracts user_id from JWT (Supabase Auth)
-   └─> Queries usage_tracking table (RLS auto-filters):
-       SELECT monthly_generations_used, monthly_generations_limit
-       FROM usage_tracking
-       WHERE user_id = auth.uid()
-
-3. API queries subscriptions table:
-       SELECT plan_name, status
-       FROM subscriptions
-       WHERE user_id = auth.uid() AND status = 'active'
-
-4. API returns:
-   {
-     plan: "Pro",
-     used: 45,
-     limit: 100,
-     remaining: 55,
-     resets_at: "2026-02-01T00:00:00Z"
-   }
-
-5. Frontend displays usage meter
-   └─> Disables "Generate" button if remaining = 0
+1. Guest selects dates on room calendar
+2. Frontend sends: room_id, check_in, check_out
+3. Backend query:
+   - Check date range is within booking window (SiteSettings)
+   - Check no DateBlock overlaps [check_in, check_out)
+   - Check no active Booking overlaps [check_in, check_out)
+     (active = status NOT IN [cancelled, declined, expired])
+4. Return: available (true/false)
 ```
 
-**Duration:** < 100ms (simple query)
-
----
-
-## Integration Points
-
-### Supabase Integration
-
-**Authentication:**
-- **JWT-based auth** with `auth.uid()` available in RLS policies
-- Store `stripe_customer_id` in `users` table (link Stripe to Supabase)
-- Custom claims (optional): Store `subscription_tier` in JWT for client-side feature gates
-
-**Database Access:**
-- All queries use `@supabase/ssr` client (server-side) or `@supabase/auth-helpers-nextjs`
-- RLS enforced automatically (no manual tenant filtering)
-- Use `service_role` key ONLY for admin operations (bypasses RLS)
-
-**Realtime (Optional):**
-- Frontend subscribes to `generations` table:
-  ```typescript
-  supabase
-    .channel('generation-updates')
-    .on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'generations',
-      filter: `id=eq.${generationId}`
-    }, (payload) => {
-      setGenerationStatus(payload.new.status);
-    })
-    .subscribe();
-  ```
-
-**Storage:**
-- Store generated images in Supabase Storage (or external: Cloudflare R2, AWS S3)
-- Use signed URLs for private access (RLS on storage buckets)
-
-### n8n Integration
-
-**Triggering Generation:**
-```typescript
-// Next.js API route
-const response = await fetch(process.env.N8N_WEBHOOK_URL, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'X-API-Key': process.env.N8N_API_KEY // Optional auth
-  },
-  body: JSON.stringify({
-    generation_id: gen.id,
-    idea: ideaData,
-    brand: brandData,
-    template: templateData,
-    style: styleData,
-    callback_url: `${process.env.APP_URL}/api/webhooks/n8n`
-  })
-});
-
-// n8n returns 202 Accepted immediately (job queued)
-```
-
-**Receiving Callback:**
-```typescript
-// /api/webhooks/n8n/route.ts
-export async function POST(request: Request) {
-  // 1. Verify signature (HMAC or API key)
-  const apiKey = request.headers.get('x-api-key');
-  if (apiKey !== process.env.N8N_CALLBACK_SECRET) {
-    return new Response('Unauthorized', { status: 401 });
-  }
-
-  // 2. Parse payload
-  const { generation_id, status, post_body, image_urls, error } = await request.json();
-
-  // 3. Check idempotency (use generation_id + status combo)
-  const existing = await supabase
-    .from('generations')
-    .select('status')
-    .eq('id', generation_id)
-    .single();
-
-  if (existing.status === 'completed') {
-    return Response.json({ received: true }); // Already processed
-  }
-
-  // 4. Update generation record
-  await supabase
-    .from('generations')
-    .update({
-      status,
-      post_body,
-      image_urls,
-      error,
-      completed_at: new Date().toISOString()
-    })
-    .eq('id', generation_id);
-
-  // 5. Increment usage counter
-  await supabase.rpc('increment_usage', { user_id_param: generation.user_id });
-
-  return Response.json({ received: true });
-}
-```
-
-### Stripe Integration
-
-**Creating Subscription:**
-```typescript
-// Next.js API route: /api/checkout
-const session = await stripe.checkout.sessions.create({
-  customer_email: user.email,
-  client_reference_id: user.id, // Link to Supabase user
-  line_items: [{ price: 'price_xxx', quantity: 1 }],
-  mode: 'subscription',
-  success_url: `${process.env.APP_URL}/dashboard?success=true`,
-  cancel_url: `${process.env.APP_URL}/pricing`,
-});
-
-// Redirect user to session.url
-```
-
-**Webhook Signature Verification:**
-```typescript
-// /api/webhooks/stripe/route.ts
-import { headers } from 'next/headers';
-import Stripe from 'stripe';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-export async function POST(request: Request) {
-  const body = await request.text(); // RAW body required for signature verification
-  const sig = headers().get('stripe-signature');
-
-  let event: Stripe.Event;
-
-  try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
-  }
-
-  // Process event...
-  await handleSubscriptionEvent(event);
-
-  return Response.json({ received: true });
-}
-```
-
----
-
-## Project Structure (Recommended)
-
-```
-/Users/simoncoton/Desktop/vs-code-saas-project-2/
-├── app/
-│   ├── (auth)/                   # Route group (not in URL)
-│   │   ├── login/
-│   │   │   └── page.tsx
-│   │   └── signup/
-│   │       └── page.tsx
-│   ├── (dashboard)/              # Route group (authenticated)
-│   │   ├── dashboard/
-│   │   │   └── page.tsx          # Main dashboard
-│   │   ├── ideas/
-│   │   │   ├── page.tsx          # List ideas
-│   │   │   ├── new/
-│   │   │   │   └── page.tsx      # Create idea form
-│   │   │   └── [id]/
-│   │   │       └── page.tsx      # View/edit idea
-│   │   ├── generations/
-│   │   │   ├── page.tsx          # List generations
-│   │   │   └── [id]/
-│   │   │       └── page.tsx      # View generation + download
-│   │   ├── brands/
-│   │   │   └── page.tsx          # Manage brand profiles
-│   │   └── settings/
-│   │       └── page.tsx          # Account settings
-│   ├── api/
-│   │   ├── ideas/
-│   │   │   ├── route.ts          # GET (list), POST (create)
-│   │   │   └── [id]/
-│   │   │       └── route.ts      # GET, PATCH, DELETE
-│   │   ├── generations/
-│   │   │   ├── route.ts          # GET (list), POST (trigger)
-│   │   │   └── [id]/
-│   │   │       └── route.ts      # GET (status)
-│   │   ├── brands/
-│   │   │   └── route.ts          # GET, POST, PATCH, DELETE
-│   │   ├── usage/
-│   │   │   └── route.ts          # GET current usage
-│   │   ├── webhooks/
-│   │   │   ├── stripe/
-│   │   │   │   └── route.ts      # POST (Stripe events)
-│   │   │   └── n8n/
-│   │   │       └── route.ts      # POST (generation callback)
-│   │   └── checkout/
-│   │       └── route.ts          # POST (create Stripe checkout)
-│   ├── layout.tsx                # Root layout (providers)
-│   └── page.tsx                  # Landing page
-├── components/
-│   ├── ui/                       # shadcn/ui components
-│   ├── dashboard/
-│   │   ├── usage-meter.tsx
-│   │   └── generation-card.tsx
-│   └── forms/
-│       ├── idea-form.tsx
-│       └── brand-form.tsx
-├── lib/
-│   ├── supabase/
-│   │   ├── client.ts             # Browser client
-│   │   ├── server.ts             # Server client (SSR)
-│   │   └── middleware.ts         # Auth middleware
-│   ├── stripe/
-│   │   ├── client.ts             # Stripe SDK instance
-│   │   └── webhooks.ts           # Webhook handlers
-│   ├── n8n/
-│   │   ├── client.ts             # n8n webhook trigger
-│   │   └── types.ts              # n8n payload types
-│   ├── services/
-│   │   ├── auth.service.ts
-│   │   ├── usage.service.ts
-│   │   ├── generation.service.ts
-│   │   └── subscription.service.ts
-│   └── utils/
-│       ├── validators.ts         # Zod schemas
-│       └── errors.ts             # Custom error classes
-├── types/
-│   ├── database.types.ts         # Supabase generated types
-│   ├── api.types.ts              # API request/response types
-│   └── models.ts                 # Domain models
-├── supabase/
-│   ├── migrations/               # SQL migrations
-│   │   ├── 001_initial_schema.sql
-│   │   ├── 002_add_rls_policies.sql
-│   │   └── 003_add_usage_tracking.sql
-│   └── seed.sql                  # Seed data (templates, styles)
-├── .env.local                    # Environment variables
-└── middleware.ts                 # Next.js middleware (auth check)
-```
-
----
+For the calendar display, query all DateBlocks and active Bookings for the room within the booking window, and mark those dates as unavailable on the frontend calendar component.
 
 ## Patterns to Follow
 
-### Pattern 1: Row Level Security (RLS) for Multi-Tenancy
+### Pattern 1: Snapshot Pricing on Approval
 
-**What:** Enforce tenant isolation at the database level using PostgreSQL RLS policies.
+**What:** When the landlord approves a booking, copy all price components (nightly rate, cleaning fee, etc.) onto the Booking row. Do not reference the Room's current rates after approval.
 
-**When:** Every table that contains user-specific data (ideas, brands, generations, usage_tracking).
+**When:** Always, for every approved booking.
 
-**Why:**
-- Prevents tenant data leaks (even with buggy application code)
-- Simplifies application logic (no manual filtering)
-- Performance optimized (indexes on tenant column)
+**Why:** Room rates change over time. A booking approved in January at $80/night must not retroactively change if the landlord updates the room rate to $90/night in February.
 
-**Example:**
-```sql
--- Enable RLS on ideas table
-ALTER TABLE ideas ENABLE ROW LEVEL SECURITY;
-
--- Policy: Users can only see their own ideas
-CREATE POLICY "Users can access their own ideas"
-ON ideas
-FOR ALL
-USING (auth.uid() = user_id);
-
--- Add composite index for performance
-CREATE INDEX idx_ideas_user_created ON ideas(user_id, created_at DESC);
+```typescript
+// On approval, snapshot everything
+booking.nightly_rate = landlordSetRate;  // may differ from room.base_nightly_rate
+booking.cleaning_fee = room.cleaning_fee;
+booking.extra_guest_fee = calculateExtraGuestTotal(booking, room);
+booking.add_ons_total = sumSelectedAddOns(booking);
+// ... calculate all fields via fee calculator
 ```
 
-**Application Code:**
+### Pattern 2: Webhook-Driven Payment Confirmation
+
+**What:** Never trust the client-side redirect from Stripe Checkout. Always confirm payment via the `checkout.session.completed` webhook.
+
+**When:** Every Stripe payment.
+
+**Why:** The redirect URL can be visited without payment completing (browser back, network issues). The webhook is the only reliable signal.
+
 ```typescript
-// NO manual filtering needed - RLS does it automatically
-const { data: ideas } = await supabase
-  .from('ideas')
-  .select('*')
-  .order('created_at', { ascending: false });
-
-// RLS automatically adds: WHERE user_id = auth.uid()
-```
-
----
-
-### Pattern 2: Idempotent Webhook Handlers
-
-**What:** Ensure webhook handlers produce the same result when called multiple times with the same event.
-
-**When:** All webhook endpoints (Stripe, n8n callbacks).
-
-**Why:**
-- Webhooks may be delivered multiple times (network retries)
-- Prevents duplicate charges, double usage counting, etc.
-
-**Example:**
-```typescript
-export async function handleStripeWebhook(event: Stripe.Event) {
-  // 1. Check if event already processed
-  const { data: existing } = await supabase
-    .from('webhook_events')
-    .select('id')
-    .eq('stripe_event_id', event.id)
-    .single();
-
-  if (existing) {
-    console.log(`Event ${event.id} already processed, skipping`);
-    return { received: true };
+// WRONG: Mark paid when user lands on success page
+// RIGHT: Mark paid only when webhook fires
+app.post('/api/webhooks/stripe', async (req) => {
+  const event = stripe.webhooks.constructEvent(req.body, sig, secret);
+  if (event.type === 'checkout.session.completed') {
+    const bookingId = event.data.object.metadata.booking_id;
+    await transitionBooking(bookingId, 'payment_complete', { ... });
   }
-
-  // 2. Process event
-  switch (event.type) {
-    case 'invoice.paid':
-      await handleInvoicePaid(event.data.object);
-      break;
-    // ...
-  }
-
-  // 3. Log event (prevents reprocessing)
-  await supabase
-    .from('webhook_events')
-    .insert({
-      stripe_event_id: event.id,
-      type: event.type,
-      processed_at: new Date().toISOString()
-    });
-
-  return { received: true };
-}
-```
-
----
-
-### Pattern 3: Async Job Status Polling
-
-**What:** Frontend polls a status endpoint while a long-running job completes.
-
-**When:** Generation workflows (n8n processing), export jobs, reports.
-
-**Why:**
-- Serverless functions have execution time limits (Vercel: 60s max)
-- Better UX than blocking requests
-- User can navigate away and return
-
-**Example:**
-```typescript
-// Frontend: React component
-const [status, setStatus] = useState<'pending' | 'processing' | 'completed' | 'failed'>('pending');
-
-useEffect(() => {
-  if (status === 'pending' || status === 'processing') {
-    const interval = setInterval(async () => {
-      const response = await fetch(`/api/generations/${generationId}`);
-      const data = await response.json();
-      setStatus(data.status);
-
-      if (data.status === 'completed' || data.status === 'failed') {
-        clearInterval(interval);
-      }
-    }, 3000); // Poll every 3 seconds
-
-    return () => clearInterval(interval);
-  }
-}, [status, generationId]);
-```
-
-**Alternative (Supabase Realtime):**
-```typescript
-useEffect(() => {
-  const channel = supabase
-    .channel('generation-updates')
-    .on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'generations',
-      filter: `id=eq.${generationId}`
-    }, (payload) => {
-      setStatus(payload.new.status);
-    })
-    .subscribe();
-
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, [generationId]);
-```
-
----
-
-### Pattern 4: Usage Tracking with Database Functions
-
-**What:** Use PostgreSQL stored procedures for atomic usage increment/check.
-
-**When:** Incrementing generation counts, checking quotas.
-
-**Why:**
-- Prevents race conditions (concurrent requests)
-- Atomic operation (increment + check in one transaction)
-- Simplifies application code
-
-**Example:**
-```sql
--- Database function for atomic usage increment
-CREATE OR REPLACE FUNCTION increment_usage(user_id_param UUID)
-RETURNS VOID AS $$
-BEGIN
-  INSERT INTO usage_tracking (user_id, monthly_generations_used, period_start)
-  VALUES (user_id_param, 1, DATE_TRUNC('month', NOW()))
-  ON CONFLICT (user_id, period_start)
-  DO UPDATE SET
-    monthly_generations_used = usage_tracking.monthly_generations_used + 1,
-    updated_at = NOW();
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Database function to check quota
-CREATE OR REPLACE FUNCTION check_usage_quota(user_id_param UUID)
-RETURNS BOOLEAN AS $$
-DECLARE
-  used_count INT;
-  limit_count INT;
-BEGIN
-  SELECT
-    ut.monthly_generations_used,
-    s.monthly_generations_limit
-  INTO used_count, limit_count
-  FROM usage_tracking ut
-  JOIN subscriptions s ON s.user_id = ut.user_id
-  WHERE ut.user_id = user_id_param
-    AND ut.period_start = DATE_TRUNC('month', NOW())
-    AND s.status = 'active';
-
-  RETURN used_count < limit_count;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-```
-
-**Application Code:**
-```typescript
-// Check quota before generation
-const { data: hasQuota } = await supabase.rpc('check_usage_quota', {
-  user_id_param: userId
 });
-
-if (!hasQuota) {
-  return Response.json({ error: 'Monthly quota exceeded' }, { status: 403 });
-}
-
-// ... trigger generation ...
-
-// Increment usage after successful completion (in webhook handler)
-await supabase.rpc('increment_usage', { user_id_param: userId });
 ```
 
----
+### Pattern 3: Date Range Queries with Overlap Detection
 
-### Pattern 5: Webhook Signature Verification
+**What:** Use proper overlap detection for availability checks, not day-by-day iteration.
 
-**What:** Verify that webhook requests are genuinely from the claimed source.
+**When:** Every availability check.
 
-**When:** All external webhook endpoints (Stripe, n8n, any third-party).
+**Why:** Two date ranges [A_start, A_end) and [B_start, B_end) overlap if and only if A_start < B_end AND B_start < A_end. This is a single SQL query, not a loop.
 
-**Why:**
-- Prevents spoofed requests
-- Security requirement for production
-- Stripe requires verification for PCI compliance
+```sql
+-- Check if any blocking conflict exists for a room
+SELECT EXISTS (
+  SELECT 1 FROM date_blocks
+  WHERE room_id = $1
+    AND start_date < $3  -- check_out
+    AND end_date >= $2   -- check_in
+  UNION ALL
+  SELECT 1 FROM bookings
+  WHERE room_id = $1
+    AND status NOT IN ('cancelled', 'declined', 'expired')
+    AND check_in < $3
+    AND check_out > $2
+) AS has_conflict;
+```
 
-**Example (Stripe):**
+### Pattern 4: Centralized State Machine
+
+**What:** All booking status transitions go through a single function that validates the transition, applies guards, and fires side effects.
+
+**When:** Every status change.
+
+**Why:** Prevents invalid states (e.g., going from PENDING directly to PAID), ensures side effects always fire (emails, date blocking), and provides a single audit point.
+
 ```typescript
-import Stripe from 'stripe';
-import { headers } from 'next/headers';
+async function transitionBooking(
+  bookingId: string,
+  event: BookingEvent,
+  payload?: Record<string, unknown>
+): Promise<Booking> {
+  const booking = await db.booking.findUnique({ where: { id: bookingId } });
+  const nextState = resolveTransition(booking.status, event);
+  if (!nextState) throw new Error(`Invalid transition: ${booking.status} + ${event}`);
 
-export async function POST(request: Request) {
-  const body = await request.text(); // MUST use raw body, not JSON
-  const signature = headers().get('stripe-signature');
+  // Apply guards
+  await validateGuards(booking, event, payload);
 
-  let event: Stripe.Event;
+  // Update state
+  const updated = await db.booking.update({
+    where: { id: bookingId },
+    data: { status: nextState, ...payload }
+  });
 
-  try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err.message);
-    return new Response('Invalid signature', { status: 400 });
-  }
+  // Fire side effects
+  await fireSideEffects(event, updated);
 
-  // Signature verified - process event
-  await handleEvent(event);
-  return Response.json({ received: true });
+  return updated;
 }
 ```
-
-**Example (n8n with HMAC):**
-```typescript
-import crypto from 'crypto';
-
-export async function POST(request: Request) {
-  const body = await request.text();
-  const signature = request.headers.get('x-n8n-signature');
-
-  // Compute HMAC
-  const expectedSignature = crypto
-    .createHmac('sha256', process.env.N8N_WEBHOOK_SECRET)
-    .update(body)
-    .digest('hex');
-
-  // Constant-time comparison (prevents timing attacks)
-  const isValid = crypto.timingSafeEqual(
-    Buffer.from(signature, 'hex'),
-    Buffer.from(expectedSignature, 'hex')
-  );
-
-  if (!isValid) {
-    return new Response('Invalid signature', { status: 401 });
-  }
-
-  // Signature verified - process webhook
-  const payload = JSON.parse(body);
-  await handleCallback(payload);
-  return Response.json({ received: true });
-}
-```
-
----
 
 ## Anti-Patterns to Avoid
 
-### Anti-Pattern 1: Application-Level Tenant Filtering
+### Anti-Pattern 1: Per-Day Availability Rows
 
-**What goes wrong:** Manually filtering queries by `user_id` in application code instead of using RLS.
+**What:** Creating one row per room per day in an availability table.
 
-**Why bad:**
-- Easy to forget in one query → data leak
-- No defense-in-depth (bugs expose all data)
-- Repetitive code across all queries
+**Why bad:** For 10 rooms over 9 months, that is ~2,700 rows that must be created, maintained, and kept in sync. Adds complexity with no benefit at this scale. Insertions, deletions, and updates become batch operations.
 
-**Consequences:**
-- **Security vulnerability:** One missing filter = all tenant data exposed
-- **Maintenance burden:** Every query needs manual filtering logic
-- **Performance issues:** Application filters are less optimized than DB-level
+**Instead:** Use DateBlocks (date ranges) for manual blocks. Derive availability from the absence of conflicts. This is simpler and correct for low-volume use.
 
-**Instead:** Enable RLS on all tables with user data, create policies using `auth.uid()`, and let PostgreSQL handle filtering.
+### Anti-Pattern 2: Storing Calculated Totals Without Line Items
 
-```sql
--- GOOD: RLS enforces isolation
-ALTER TABLE ideas ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "tenant_isolation" ON ideas USING (user_id = auth.uid());
+**What:** Storing only `total_price` on a booking without the individual fee components.
 
--- Application code is clean
-const ideas = await supabase.from('ideas').select('*'); // Automatic filtering
-```
+**Why bad:** When a guest asks "why was I charged $X?", you cannot reconstruct the breakdown. When the landlord disputes a fee, there is no audit trail.
 
----
+**Instead:** Store every fee component on the Booking row (nightly_rate, num_nights, cleaning_fee, extra_guest_fee, add_ons_total, service_fee, deposit_amount, total_price). The total is always the sum of its parts.
 
-### Anti-Pattern 2: Synchronous Long-Running Operations
+### Anti-Pattern 3: Inline State Transitions
 
-**What goes wrong:** Calling AI generation APIs synchronously in API routes, blocking until completion.
+**What:** Scattered if/else blocks throughout API routes that check and update booking status.
 
-**Why bad:**
-- Vercel serverless functions timeout at 60 seconds (free tier: 10s)
-- Poor UX (user waits 30-60s for response)
-- Wasted resources (function running idle)
+**Why bad:** Easy to forget a guard or side effect. Multiple code paths for the same transition. Bug-prone when adding new states.
 
-**Consequences:**
-- **Timeout errors** for users
-- **Failed generations** with no retry
-- **Poor scalability** (can't queue jobs)
+**Instead:** Centralized state machine (Pattern 4 above).
 
-**Instead:** Use async job queue (n8n Queue Mode), return job ID immediately, poll for completion.
+### Anti-Pattern 4: Trusting Client-Side Price Calculations
 
-```typescript
-// BAD: Synchronous
-export async function POST(request: Request) {
-  const idea = await request.json();
-  const result = await generateCarousel(idea); // Takes 30-60s
-  return Response.json(result); // Likely times out
-}
+**What:** Accepting the price total submitted by the frontend without server-side recalculation.
 
-// GOOD: Asynchronous
-export async function POST(request: Request) {
-  const idea = await request.json();
+**Why bad:** Frontend prices are estimates. A malicious or buggy client could submit incorrect totals.
 
-  // Create job record
-  const { data: generation } = await supabase
-    .from('generations')
-    .insert({ status: 'pending', idea_id: idea.id })
-    .select()
-    .single();
-
-  // Trigger async job
-  await fetch(process.env.N8N_WEBHOOK_URL, {
-    method: 'POST',
-    body: JSON.stringify({ generation_id: generation.id, idea })
-  });
-
-  // Return immediately
-  return Response.json({ generation_id: generation.id, status: 'pending' });
-}
-```
-
----
-
-### Anti-Pattern 3: Non-Idempotent Webhook Handlers
-
-**What goes wrong:** Processing webhook events without checking for duplicates.
-
-**Why bad:**
-- Webhooks may be delivered multiple times (network retries, timeouts)
-- Results in double-charging users, duplicate records, incorrect usage counts
-
-**Consequences:**
-- **Billing issues:** User charged twice for same invoice
-- **Data corruption:** Duplicate records in database
-- **Usage inflation:** Generation count incremented multiple times
-
-**Instead:** Log event IDs, check before processing, use database transactions.
-
-```typescript
-// BAD: Non-idempotent
-export async function POST(request: Request) {
-  const event = await request.json();
-
-  // No duplicate check - will run multiple times if webhook retries
-  await resetUsageAllowances(event.customer_id);
-  return Response.json({ received: true });
-}
-
-// GOOD: Idempotent
-export async function POST(request: Request) {
-  const event = await request.json();
-
-  // Check for duplicate
-  const { data: existing } = await supabase
-    .from('webhook_events')
-    .select('id')
-    .eq('event_id', event.id)
-    .single();
-
-  if (existing) return Response.json({ received: true }); // Already processed
-
-  // Process once
-  await resetUsageAllowances(event.customer_id);
-
-  // Log event to prevent reprocessing
-  await supabase.from('webhook_events').insert({ event_id: event.id });
-  return Response.json({ received: true });
-}
-```
-
----
-
-### Anti-Pattern 4: Client-Side Quota Enforcement
-
-**What goes wrong:** Checking usage allowances in frontend code only.
-
-**Why bad:**
-- Trivially bypassed (user can modify client code)
-- No enforcement if user calls API directly
-- Security through obscurity
-
-**Consequences:**
-- **Quota bypass:** Users can generate unlimited carousels
-- **Revenue loss:** Users abuse free tier
-- **System abuse:** Unbounded resource consumption
-
-**Instead:** Always enforce quotas server-side, frontend checks are UX-only.
-
-```typescript
-// BAD: Client-side only
-// Frontend
-const remaining = userQuota.limit - userQuota.used;
-if (remaining > 0) {
-  await fetch('/api/generations', { method: 'POST', body: ... });
-}
-
-// API route has NO quota check - anyone can call it directly
-export async function POST(request: Request) {
-  // ... generate carousel ...
-}
-
-// GOOD: Server-side enforcement
-// Frontend (UX only)
-const remaining = userQuota.limit - userQuota.used;
-if (remaining > 0) {
-  await fetch('/api/generations', { method: 'POST', body: ... });
-}
-
-// API route ENFORCES quota
-export async function POST(request: Request) {
-  const userId = await getUserId(request);
-
-  const { data: hasQuota } = await supabase.rpc('check_usage_quota', {
-    user_id_param: userId
-  });
-
-  if (!hasQuota) {
-    return Response.json({ error: 'Monthly quota exceeded' }, { status: 403 });
-  }
-
-  // ... generate carousel ...
-}
-```
-
----
-
-### Anti-Pattern 5: Missing Webhook Signature Verification
-
-**What goes wrong:** Accepting webhook requests without verifying they're from the claimed source.
-
-**Why bad:**
-- Anyone can POST to your webhook endpoint
-- Attacker can fake subscription payments
-- Can manipulate user accounts
-
-**Consequences:**
-- **Security breach:** Attacker grants themselves premium access
-- **Data manipulation:** Fake events update database incorrectly
-- **Financial fraud:** Free access to paid features
-
-**Instead:** Always verify webhook signatures using the provider's SDK.
-
-```typescript
-// BAD: No verification
-export async function POST(request: Request) {
-  const event = await request.json(); // Accepts any POST request
-
-  if (event.type === 'invoice.paid') {
-    await grantPremiumAccess(event.customer_id); // Dangerous!
-  }
-
-  return Response.json({ received: true });
-}
-
-// GOOD: Signature verification
-export async function POST(request: Request) {
-  const body = await request.text();
-  const signature = request.headers.get('stripe-signature');
-
-  // Verify signature (throws if invalid)
-  const event = stripe.webhooks.constructEvent(
-    body,
-    signature,
-    process.env.STRIPE_WEBHOOK_SECRET
-  );
-
-  // Now safe to process
-  if (event.type === 'invoice.paid') {
-    await grantPremiumAccess(event.data.object.customer);
-  }
-
-  return Response.json({ received: true });
-}
-```
-
----
+**Instead:** The fee calculator runs server-side on approval. The frontend estimate is for display only.
 
 ## Scalability Considerations
 
-| Concern | At 100 Users | At 10K Users | At 1M Users |
-|---------|--------------|--------------|-------------|
-| **Database** | Single Supabase instance (free tier: 500MB) | Dedicated Supabase instance (1-4 vCPU, 1-4GB RAM) | Connection pooling (PgBouncer), read replicas, partitioning by user_id |
-| **API Routes** | Vercel free tier (100GB bandwidth) | Vercel Pro ($20/mo, 1TB bandwidth) | Edge functions, CDN caching, rate limiting per user |
-| **n8n Workers** | Single n8n instance (2GB RAM) | n8n Queue Mode (3-5 workers, Redis) | Horizontal scaling (10+ workers), dedicated Redis cluster |
-| **Storage** | Supabase Storage (1GB) | Cloudflare R2 or AWS S3 (pay-as-you-go) | CDN (Cloudflare), image optimization, compression |
-| **Webhooks** | Direct handling in API routes | Queue webhook processing (Redis + background workers) | Dedicated webhook service (EventBridge, Inngest) |
-| **Usage Tracking** | Simple table with user_id + counter | Indexed queries, monthly partitions | Timeseries database (TimescaleDB), aggregated stats |
-| **Rate Limiting** | None (trust users) | Upstash Rate Limit (Redis-based) | Edge rate limiting (Cloudflare Workers), per-IP + per-user |
+This system is designed for low volume (1-2 properties, 5-10 rooms, perhaps 5-20 bookings per month). The architecture is intentionally simple.
 
----
+| Concern | At current scale (10 rooms) | If grew to 50 rooms | If grew to 500 rooms |
+|---------|----------------------------|---------------------|---------------------|
+| Availability queries | Single SQL query, sub-ms | Still fine with indexes | Consider materialized availability view |
+| Booking throughput | No contention | No contention | Add optimistic locking on date ranges |
+| Photo storage | Blob store, <100 images | Same approach | CDN in front of blob store |
+| Admin dashboard | Single page loads all | Pagination needed | Pagination + filtering |
+| Fee calculation | Pure function, instant | Same | Same (stateless) |
+| Database | Single Postgres instance | Same | Read replicas if needed |
 
-## Build Order Recommendations
+None of the "50 rooms" or "500 rooms" scenarios are in scope. Do not over-engineer for scale that will not come.
 
-Based on dependency analysis, recommended build order for phases:
+## Suggested Build Order
 
-### Phase 1: Foundation (No dependencies)
-- **Database schema** (tables, RLS policies, indexes)
-- **Authentication** (Supabase Auth integration)
-- **Basic Next.js structure** (layouts, routing)
-- **Landing page** (marketing site)
+Based on component dependencies, the system should be built in this order:
 
-**Why first:** Everything depends on auth and database.
+### Layer 1: Foundation (no dependencies)
+1. **Database schema + ORM setup** -- Everything depends on this
+2. **SiteSettings model** -- Referenced by fee calculator and availability checks
+3. **Property and Room models** -- Core entities
 
----
+### Layer 2: Core Logic (depends on Layer 1)
+4. **Fee calculation engine** -- Pure function, can be built and tested independently
+5. **Room listing pages** -- Guest-facing, read-only, low complexity
+6. **Room image upload** -- Admin can populate rooms with photos
 
-### Phase 2: Core Data Management (Depends on: Phase 1)
-- **Brand profiles** (CRUD API + UI)
-- **Templates** (seed data + display)
-- **Image styles** (seed data + display)
-- **Ideas** (CRUD API + UI)
+### Layer 3: Availability (depends on Layer 1)
+7. **DateBlock model + CRUD** -- Admin can block/unblock dates
+8. **Availability check logic** -- Query function used by calendar and booking
+9. **Availability calendar UI** -- Guest-facing calendar component
 
-**Why second:** Generations need brands, templates, styles, and ideas to exist first.
+### Layer 4: Booking Core (depends on Layers 1-3)
+10. **Guest model** -- Created during booking request
+11. **Booking state machine** -- Central orchestrator
+12. **Booking request flow** -- Guest submits request, landlord notified
+13. **Admin booking management** -- View, approve, decline, set price
 
----
+### Layer 5: Payment (depends on Layer 4)
+14. **Stripe Checkout Session integration** -- Online payment path
+15. **Stripe webhook handler** -- Payment confirmation
+16. **E-transfer manual marking** -- Offline payment path
+17. **Payment model + tracking** -- Recording all payment activity
 
-### Phase 3: Generation Workflow (Depends on: Phase 1, 2)
-- **n8n webhook setup** (Queue Mode architecture)
-- **Generation API** (trigger webhook, create job record)
-- **n8n workflow** (LLM integration, image generation)
-- **Webhook callback handler** (receive results from n8n)
-- **Status polling/Realtime** (frontend updates)
+### Layer 6: Notifications (depends on Layers 4-5)
+18. **Email templates** -- Booking request, approval, payment confirmation
+19. **Email sending integration** -- Triggered by state machine side effects
 
-**Why third:** Core feature, but requires all data entities to be in place.
+### Layer 7: Polish
+20. **Guest optional accounts** -- Login, booking history
+21. **Booking expiration (TTL)** -- Cron/scheduled job for expired payments
+22. **Admin dashboard refinements** -- Filters, search, analytics
 
----
-
-### Phase 4: Usage Tracking (Depends on: Phase 1, 3)
-- **Usage tracking table** (schema + RLS)
-- **Database functions** (increment_usage, check_quota)
-- **Quota enforcement** (API middleware)
-- **Usage dashboard** (frontend display)
-
-**Why fourth:** Generations must work before you can track them.
-
----
-
-### Phase 5: Subscription Billing (Depends on: Phase 1, 4)
-- **Stripe integration** (checkout, customer portal)
-- **Subscriptions table** (schema + RLS)
-- **Stripe webhook handler** (subscription lifecycle)
-- **Plan-based feature gates** (free vs. pro limits)
-
-**Why fifth:** Usage tracking must exist before billing can reset allowances.
-
----
-
-### Phase 6: Polish & Optimization (Depends on: All)
-- **Error handling** (user-friendly messages)
-- **Loading states** (skeletons, spinners)
-- **Download functionality** (PDF export, ZIP images)
-- **Performance optimization** (caching, image CDN)
-
-**Why last:** Core functionality must work before optimizing UX.
-
----
-
-## Deployment Architecture
-
-### Development Environment
-```
-Localhost:
-- Next.js dev server (localhost:3000)
-- Supabase local (Docker or cloud development project)
-- n8n local (Docker or cloud development instance)
-- Stripe test mode
-```
-
-### Production Environment
-```
-Vercel:
-- Next.js app (edge functions + serverless functions)
-- Environment variables (secrets)
-- Automatic CI/CD from git push
-
-Supabase Cloud:
-- PostgreSQL database (dedicated instance)
-- Row Level Security enabled
-- Connection pooling (PgBouncer)
-- Backups (automated)
-
-n8n Queue Mode:
-- Webhook receiver (1 instance)
-- Redis (managed service: Upstash or AWS ElastiCache)
-- Workers (3-5 instances, autoscaling)
-- Deployed on: Railway, Render, or AWS ECS
-
-Stripe:
-- Production mode
-- Webhook endpoint: https://yourapp.com/api/webhooks/stripe
-- Webhook signing secret (env variable)
-
-Cloudflare R2 (or AWS S3):
-- Generated images storage
-- CDN for image delivery
-- Signed URLs for private access
-```
-
----
+**Key dependency insight:** The fee calculator and availability checker are the two independent "engines" that everything else plugs into. Build and test them early. The booking state machine is the orchestrator that connects them. Payment is a leaf node -- it depends on bookings but nothing depends on it.
 
 ## Sources
 
-### Multi-Tenant SaaS Architecture
-- [SaaS Architecture Patterns with Next.js: Complete Development Guide](https://vladimirsiedykh.com/blog/saas-architecture-patterns-nextjs)
-- [Building a Scalable SaaS Platform: Step-by-Step Guide with Next.js 14, Supabase, and Cloudflare](https://medium.com/@gg.code.latam/multi-tenant-app-with-next-js-14-app-router-supabase-vercel-cloudflare-2024-3bbbb42ee914)
-- [Multi-Tenant Architecture in Next.js: A Complete Guide](https://medium.com/@itsamanyadav/multi-tenant-architecture-in-next-js-a-complete-guide-25590c052de0)
-
-### n8n Webhook Architecture
-- [n8n as a SaaS Backend: A Strategic Guide from MVP to Enterprise Scale](https://medium.com/@tuguidragos/n8n-as-a-saas-backend-a-strategic-guide-from-mvp-to-enterprise-scale-be13823f36c1)
-- [How to self-host n8n: Setup, architecture, and pricing guide (2026)](https://northflank.com/blog/how-to-self-host-n8n-setup-architecture-and-pricing-guide)
-- [Self-Hosting n8n: A Production-Ready Architecture on Render](https://render.com/articles/self-hosting-n8n-a-production-ready-architecture-on-render)
-- [n8n Self-Hosted Requirements: 2026 Production Guide](https://thinkpeak.ai/n8n-self-hosted-requirements-2026/)
-
-### Stripe Subscription Billing
-- [Using webhooks with subscriptions - Stripe Documentation](https://docs.stripe.com/billing/subscriptions/webhooks)
-- [Best practices I wish we knew when integrating Stripe webhooks](https://www.stigg.io/blog-posts/best-practices-i-wish-we-knew-when-integrating-stripe-webhooks)
-- [Stripe Webhooks: Complete Guide with Event Examples](https://www.magicbell.com/blog/stripe-webhooks-guide)
-
-### Supabase Row Level Security
-- [Row Level Security - Supabase Docs](https://supabase.com/docs/guides/database/postgres/row-level-security)
-- [Multi-Tenant Applications with RLS on Supabase](https://www.antstack.com/blog/multi-tenant-applications-with-rls-on-supabase-postgress/)
-- [Enforcing Row Level Security in Supabase: A Deep Dive into Multi-Tenant Architecture](https://dev.to/blackie360/-enforcing-row-level-security-in-supabase-a-deep-dive-into-lockins-multi-tenant-architecture-4hd2)
-
-### Usage Tracking & Quota Management
-- [SaaS Credits System Guide 2026: Billing Models & Implementation](https://colorwhistle.com/saas-credits-system-guide/)
-- [Architecture Patterns for SaaS Platforms: Billing, RBAC, and Onboarding](https://medium.com/appfoster/architecture-patterns-for-saas-platforms-billing-rbac-and-onboarding-964ea071f571)
-
-### Next.js Project Structure
-- [Getting Started: Project Structure - Next.js](https://nextjs.org/docs/app/getting-started/project-structure)
-- [Next js Folder Structure Best Practices for Scalable Applications (2026 Guide)](https://www.codebydeep.com/blog/next-js-folder-structure-best-practices-for-scalable-applications-2026-guide)
-- [Best Practices for Organizing Your Next.js 15 2025](https://dev.to/bajrayejoon/best-practices-for-organizing-your-nextjs-15-2025-53ji)
-
-### Async Job Processing
-- [Guaranteeing webhook delivery in NextJS Application](https://dev.to/bharathvaj_ganesan/guaranteeing-webhook-delivery-in-nextjs-application-217c)
-- [Triggering tasks with webhooks in Next.js - Trigger.dev](https://trigger.dev/docs/guides/frameworks/nextjs-webhooks)
-
-### SaaS Data Architecture
-- [How To Build a SaaS Database Design: Strategic Guide 2024](https://aloa.co/blog/saas-database-design)
-- [Designing your SaaS Database for Scale with Postgres](https://www.citusdata.com/blog/2016/10/03/designing-your-saas-database-for-high-scalability/)
-
----
-
-## Summary for Roadmap Creation
-
-### Key Architectural Decisions
-
-1. **Multi-tenancy via RLS** (not separate databases) → Simplifies infrastructure, enforces isolation at DB level
-2. **Async generation with n8n Queue Mode** → Prevents timeouts, scales horizontally
-3. **Event-driven integration** (webhooks for Stripe + n8n) → Loose coupling, resilient to failures
-4. **Next.js App Router** → Modern React patterns, built-in API routes, Vercel-optimized
-
-### Critical Dependencies for Phase Planning
-
-**Database → Auth → Data Entities → Generations → Usage → Billing**
-
-Cannot build generations without ideas/brands/templates existing first.
-Cannot enforce quotas without usage tracking existing first.
-Cannot reset allowances without billing webhooks existing first.
-
-### Research Flags for Future Phases
-
-- **Phase 3 (Generations):** May need deeper research into specific LLM APIs (OpenAI, Anthropic Claude) and image generation (DALL-E, Midjourney, Stable Diffusion)
-- **Phase 5 (Billing):** May need research into Stripe Customer Portal configuration, tax handling (Stripe Tax), and dunning management
-- **Phase 6 (Polish):** May need research into PDF generation libraries (jsPDF, Puppeteer) and image optimization (Sharp, Cloudflare Image Resizing)
-
-### Recommended Phase Structure (Based on Architecture)
-
-1. **Foundation** → Auth + Database + Basic UI
-2. **Data Management** → Brands + Templates + Styles + Ideas
-3. **Core Feature** → Generation workflow (n8n + webhooks)
-4. **Monetization Prep** → Usage tracking + quota enforcement
-5. **Billing** → Stripe integration + subscription lifecycle
-6. **UX Polish** → Downloads, error handling, loading states
+- [Stripe: Checkout Sessions vs Payment Intents comparison](https://docs.stripe.com/payments/checkout-sessions-and-payment-intents-comparison) -- HIGH confidence
+- [Stripe: How Checkout works](https://docs.stripe.com/payments/checkout/how-checkout-works) -- HIGH confidence
+- [System Design Handbook: Hotel Booking System](https://www.systemdesignhandbook.com/guides/design-hotel-booking-system/) -- MEDIUM confidence
+- [Red Gate: Data Model for Hotel Room Booking System](https://www.red-gate.com/blog/designing-a-data-model-for-a-hotel-room-booking-system/) -- MEDIUM confidence
+- [GeeksforGeeks: ER Diagrams for Booking and Reservation Systems](https://www.geeksforgeeks.org/dbms/how-to-design-er-diagrams-for-booking-and-reservation-systems/) -- MEDIUM confidence
+- [Cal.com Booking Lifecycle (DeepWiki)](https://deepwiki.com/calcom/cal.com/3-api-architecture) -- MEDIUM confidence
+- [Wendell Adriel: State Machine Pattern](https://wendelladriel.com/blog/welcome-to-the-state-machine-pattern) -- MEDIUM confidence

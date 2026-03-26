@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 01.5-supabase-migration/01.5-03-PLAN.md
-last_updated: "2026-03-26T20:13:03.950Z"
+stopped_at: Completed 01.5-supabase-migration/01.5-04-PLAN.md
+last_updated: "2026-03-26T20:17:44.725Z"
 last_activity: 2026-03-25 — Roadmap created (9 phases, 49 requirements mapped)
 progress:
   total_phases: 10
   completed_phases: 0
   total_plans: 10
-  completed_plans: 7
+  completed_plans: 8
   percent: 0
 ---
 
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01.5-supabase-migration P01 | 5min | 2 tasks | 2 files |
 | Phase 01.5-supabase-migration P02 | 4 | 2 tasks | 1 files |
 | Phase 01.5-supabase-migration P03 | 2min | 2 tasks | 4 files |
+| Phase 01.5-supabase-migration P04 | 2min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,8 @@ Recent decisions affecting current work:
 - [Phase 01.5-supabase-migration]: Direct connection URL (db.[ref].supabase.co:5432) used for both DATABASE_URL and DIRECT_URL — transaction pooler URL caused authentication failures
 - [Phase 01.5-supabase-migration]: Middleware inlines createServerClient directly (not shared factory) — Edge runtime requires direct access to both request and response cookies
 - [Phase 01.5-supabase-migration]: getUser() used in middleware (not getSession()) — validates JWT server-side with Supabase Auth on every request, cannot be spoofed
+- [Phase 01.5-supabase-migration]: shouldCreateUser: false in signInWithOtp prevents auto-registration of unknown emails — admin-only access enforced at OTP level
+- [Phase 01.5-supabase-migration]: All server actions use createClient + getUser() pattern for Supabase auth guard; NextAuth fully removed
 
 ### Pending Todos
 
@@ -95,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T20:13:03.948Z
-Stopped at: Completed 01.5-supabase-migration/01.5-03-PLAN.md
+Last session: 2026-03-26T20:17:44.721Z
+Stopped at: Completed 01.5-supabase-migration/01.5-04-PLAN.md
 Resume file: None

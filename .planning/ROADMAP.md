@@ -34,11 +34,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Landlord can edit any existing room listing (all fields including photos)
   4. Landlord can configure per-room fees: cleaning fee, per-extra-guest nightly fee, and add-on options (each with name and price)
   5. Landlord can configure global settings: service fee percentage and deposit amount
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md — Project setup, Prisma schema, Auth.js magic link, admin shell layout, test scaffolding
+- [ ] 01-02-PLAN.md — Room CRUD server actions + room list table + create/edit form with fees and add-ons
+- [ ] 01-03-PLAN.md — Global settings server action and settings form page
+- [ ] 01-04-PLAN.md — Photo upload (UploadThing), drag-to-reorder (dnd-kit), and CDN deletion
+- [ ] 01-05-PLAN.md — Full test suite run + human visual verification checkpoint
 
 ### Phase 2: Availability Management
 **Goal**: Landlord can control room availability and guests can see which dates are open on a calendar
@@ -175,7 +178,7 @@ Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. P
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Room Management | 0/? | Not started | - |
+| 1. Foundation & Room Management | 0/5 | In progress | - |
 | 2. Availability Management | 0/? | Not started | - |
 | 3. Guest Room Browsing | 0/? | Not started | - |
 | 4. Booking Requests | 0/? | Not started | - |

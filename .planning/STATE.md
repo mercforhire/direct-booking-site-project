@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 01-foundation-room-management/01-04-PLAN.md
-last_updated: "2026-03-26T06:25:51.591Z"
+stopped_at: Completed 01.5-supabase-migration/01.5-01-PLAN.md
+last_updated: "2026-03-26T20:03:47.380Z"
 last_activity: 2026-03-25 — Roadmap created (9 phases, 49 requirements mapped)
 progress:
-  total_phases: 9
+  total_phases: 10
   completed_phases: 0
-  total_plans: 5
-  completed_plans: 4
+  total_plans: 10
+  completed_plans: 5
   percent: 0
 ---
 
@@ -54,6 +54,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-foundation-room-management P02 | 15 | 2 tasks | 8 files |
 | Phase 01-foundation-room-management P03 | 5min | 2 tasks | 5 files |
 | Phase 01-foundation-room-management P04 | 10 | 2 tasks | 7 files |
+| Phase 01.5-supabase-migration P01 | 5min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,8 @@ Recent decisions affecting current work:
 - [Phase 01-foundation-room-management]: addPhoto is a separate server action because UploadThing uploads are independent and must be persisted immediately per file
 - [Phase 01-foundation-room-management]: file.ufsUrl (not file.url) used for CDN URL per UploadThing v7 API
 - [Phase 01-foundation-room-management]: PhotoUploader only shown on edit form (room.id exists); create form shows placeholder text
+- [Phase 01.5-supabase-migration]: Supabase chosen as managed PostgreSQL + Auth provider to replace Prisma-backed NextAuth; DATABASE_URL uses transaction pooler (port 6543 + ?pgbouncer=true), DIRECT_URL uses session pooler (port 5432)
+- [Phase 01.5-supabase-migration]: next-auth and @auth/prisma-adapter removed; TypeScript errors in auth.ts/auth-edge.ts/middleware.ts are expected and will be resolved in plans 03-04
 
 ### Pending Todos
 
@@ -87,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T06:25:51.589Z
-Stopped at: Completed 01-foundation-room-management/01-04-PLAN.md
+Last session: 2026-03-26T20:03:47.377Z
+Stopped at: Completed 01.5-supabase-migration/01.5-01-PLAN.md
 Resume file: None

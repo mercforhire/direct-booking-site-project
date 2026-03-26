@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
+import imageCompression from "browser-image-compression"
 import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core"
 import {
   SortableContext,
@@ -9,9 +10,9 @@ import {
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { UploadDropzone } from "@/lib/uploadthing"
+import { useUploadThing } from "@/lib/uploadthing"
 import { addPhoto, savePhotoOrder, deletePhoto } from "@/actions/room-photos"
-import { X } from "lucide-react"
+import { X, Upload } from "lucide-react"
 import Image from "next/image"
 
 interface Photo {
@@ -75,6 +76,45 @@ export function PhotoUploader({ roomId, initialPhotos }: PhotoUploaderProps) {
     [...initialPhotos].sort((a, b) => a.position - b.position)
   )
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const { startUpload } = useUploadThing("roomPhotoUploader", {
+    onClientUploadComplete: async (res) => {
+      for (const file of res) {
+        const result = await addPhoto(roomId, file.ufsUrl ?? file.url, file.key)
+        if ("photo" in result && result.photo) {
+          setPhotos((prev) => [
+            ...prev,
+            { id: result.photo.id, url: result.photo.url, key: result.photo.key },
+          ])
+        }
+      }
+      setIsUploading(false)
+      setUploadStatus(null)
+    },
+    onUploadError: (error: Error) => {
+      console.error("Upload error:", error)
+      setIsUploading(false)
+      setUploadStatus("Upload failed. Please try again.")
+    },
+  })
+
+  async function handleFiles(files: FileList | null) {
+    if (!files || files.length === 0) return
+    setIsUploading(true)
+    setUploadStatus("Compressing...")
+
+    const compressed = await Promise.all(
+      Array.from(files).map((file) =>
+        imageCompression(file, { maxSizeMB: 1, maxWidthOrHeight: 1920, useWebWorker: true })
+      )
+    )
+
+    setUploadStatus("Uploading...")
+    await startUpload(compressed)
+  }
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -112,22 +152,27 @@ export function PhotoUploader({ roomId, initialPhotos }: PhotoUploaderProps) {
           </SortableContext>
         </DndContext>
       </div>
-      <UploadDropzone
-        endpoint="roomPhotoUploader"
-        onClientUploadComplete={async (res) => {
-          for (const file of res) {
-            const result = await addPhoto(roomId, file.ufsUrl ?? file.url, file.key)
-            if ("photo" in result && result.photo) {
-              setPhotos((prev) => [
-                ...prev,
-                { id: result.photo.id, url: result.photo.url, key: result.photo.key },
-              ])
-            }
-          }
-        }}
-        onUploadError={(error) => console.error("Upload error:", error)}
-        className="ut-label:text-sm ut-allowed-content:text-xs"
-      />
+      <div
+        onClick={() => !isUploading && inputRef.current?.click()}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files) }}
+        className={`flex flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed p-6 text-sm transition-colors ${isUploading ? "cursor-not-allowed border-gray-200 text-gray-300" : "cursor-pointer border-gray-300 text-gray-500 hover:border-gray-400 hover:text-gray-600"}`}
+      >
+        <Upload className="h-5 w-5" />
+        {isUploading ? (
+          <span>{uploadStatus}</span>
+        ) : (
+          <span>Click or drag photos here (compressed to 1 MB before upload)</span>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+      </div>
       {isDeleting && (
         <p className="text-xs text-gray-400">Deleting photo...</p>
       )}

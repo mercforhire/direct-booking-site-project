@@ -71,14 +71,16 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Guest can view a per-room availability calendar showing which dates are blocked and which are available
   2. Landlord can block and unblock specific dates for any room from the admin dashboard
-  3. Landlord can set the global booking window (3-9 months ahead) controlling how far out guests can see availability
+  3. Landlord can set the per-room booking window (3-9 months ahead) controlling how far out guests can see availability
   4. Landlord can set minimum and maximum stay length per room
   5. Calendar correctly enforces all constraints: blocked dates, booking window limits, and stay length rules are visually indicated
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md — Prisma schema migration (BlockedDate model + Room availability fields), validation schemas (dual-schema pattern), server actions (toggleBlockedDate, saveBlockedRange, updateRoomAvailabilitySettings), unit tests
+- [ ] 02-02-PLAN.md — Admin availability dashboard at /availability: shadcn Calendar install, sidebar nav update, room selector, admin calendar with modifiers + click/range interaction, per-room settings panel
+- [ ] 02-03-PLAN.md — Guest-facing read-only calendar stub at /rooms/[id]: public page, DayPicker disabled prop, past/beyond-window/blocked date visual states
+- [ ] 02-04-PLAN.md — End-to-end human verification: full test suite + 7-scenario manual verification of admin and guest calendar behavior
 
 ### Phase 3: Guest Room Browsing
 **Goal**: Guests can browse all available rooms and see complete information needed to decide which room to book
@@ -201,7 +203,7 @@ Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. P
 |-------|----------------|--------|-----------|
 | 1. Foundation & Room Management | 4/5 | In Progress|  |
 | 1.5. Supabase Migration | 2/5 | Complete    | 2026-03-27 |
-| 2. Availability Management | 0/? | Not started | - |
+| 2. Availability Management | 0/4 | Not started | - |
 | 3. Guest Room Browsing | 0/? | Not started | - |
 | 4. Booking Requests | 0/? | Not started | - |
 | 5. Approval Flow & Notifications | 0/? | Not started | - |

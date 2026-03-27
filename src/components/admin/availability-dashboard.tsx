@@ -175,54 +175,9 @@ export function AvailabilityDashboard({
         </div>
       )}
 
-      {/* Range action buttons */}
-      {rangeStart && rangeEnd && (
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">
-            Range selected:{" "}
-            <span className="font-medium">
-              {toLocalDateString(rangeStart <= rangeEnd ? rangeStart : rangeEnd)}
-            </span>{" "}
-            to{" "}
-            <span className="font-medium">
-              {toLocalDateString(rangeStart <= rangeEnd ? rangeEnd : rangeStart)}
-            </span>
-          </span>
-          <button
-            onClick={() => handleBlockRange(true)}
-            disabled={isSaving}
-            className="px-3 py-1.5 text-sm font-medium rounded-md bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50"
-          >
-            Block Range
-          </button>
-          <button
-            onClick={() => handleBlockRange(false)}
-            disabled={isSaving}
-            className="px-3 py-1.5 text-sm font-medium rounded-md bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50"
-          >
-            Unblock Range
-          </button>
-          <button
-            onClick={() => {
-              setRangeStart(undefined)
-              setRangeEnd(undefined)
-            }}
-            className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50"
-          >
-            Clear
-          </button>
-        </div>
-      )}
-
-      {rangeStart && !rangeEnd && (
-        <div className="text-sm text-blue-600">
-          First date selected. Click another date to set the range end.
-        </div>
-      )}
-
       {selectedRoom ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Calendar */}
+          {/* Calendar + range controls below it */}
           <div>
             <AvailabilityCalendar
               blockedDates={blockedDates}
@@ -232,6 +187,56 @@ export function AvailabilityDashboard({
               rangeEnd={rangeEnd}
               isSaving={isSaving}
             />
+
+            {/* Reserved space — always rendered so the calendar never jumps */}
+            <div className="min-h-[2rem] mt-2 text-sm text-gray-600">
+              {rangeStart && !rangeEnd && (
+                <span className="text-blue-600">
+                  First date selected. Click another date to set the range end.
+                </span>
+              )}
+              {rangeStart && rangeEnd && (
+                <span>
+                  Range selected:{" "}
+                  <span className="font-medium">
+                    {toLocalDateString(rangeStart <= rangeEnd ? rangeStart : rangeEnd)}
+                  </span>{" "}
+                  to{" "}
+                  <span className="font-medium">
+                    {toLocalDateString(rangeStart <= rangeEnd ? rangeEnd : rangeStart)}
+                  </span>
+                </span>
+              )}
+            </div>
+
+            {/* Range action buttons — rendered below the reserved space */}
+            {rangeStart && rangeEnd && (
+              <div className="flex items-center gap-2 mt-2">
+                <button
+                  onClick={() => handleBlockRange(true)}
+                  disabled={isSaving}
+                  className="px-3 py-1.5 text-sm font-medium rounded-md bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50"
+                >
+                  Block Range
+                </button>
+                <button
+                  onClick={() => handleBlockRange(false)}
+                  disabled={isSaving}
+                  className="px-3 py-1.5 text-sm font-medium rounded-md bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50"
+                >
+                  Unblock Range
+                </button>
+                <button
+                  onClick={() => {
+                    setRangeStart(undefined)
+                    setRangeEnd(undefined)
+                  }}
+                  className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Settings panel */}

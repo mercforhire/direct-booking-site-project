@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Room, AddOn, RoomPhoto } from "@prisma/client"
+import { RoomPhoto } from "@prisma/client"
 import { Trash2, Plus } from "lucide-react"
 import { PhotoUploader } from "@/components/admin/photo-uploader"
 
@@ -23,8 +23,34 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 
+interface SerializedAddOn {
+  id: string
+  name: string
+  price: number
+  roomId: string
+}
+
+interface SerializedRoom {
+  id: string
+  name: string
+  description: string
+  location: string
+  baseNightlyRate: number
+  cleaningFee: number
+  extraGuestFee: number
+  maxGuests: number
+  isActive: boolean
+  minStayNights: number
+  maxStayNights: number
+  bookingWindowMonths: number
+  createdAt: Date
+  updatedAt: Date
+  addOns: SerializedAddOn[]
+  photos: RoomPhoto[]
+}
+
 interface RoomFormProps {
-  room?: Room & { addOns: AddOn[]; photos: RoomPhoto[] }
+  room?: SerializedRoom
 }
 
 export function RoomForm({ room }: RoomFormProps) {

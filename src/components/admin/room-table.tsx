@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { Room } from "@prisma/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,8 +12,16 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+interface RoomRow {
+  id: string
+  name: string
+  location: string
+  baseNightlyRate: number
+  isActive: boolean
+}
+
 interface RoomTableProps {
-  rooms: Room[]
+  rooms: RoomRow[]
 }
 
 export function RoomTable({ rooms }: RoomTableProps) {

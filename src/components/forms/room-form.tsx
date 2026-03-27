@@ -153,7 +153,13 @@ export function RoomForm({ room }: RoomFormProps) {
                 <FormItem>
                   <FormLabel>Base Nightly Rate ($)</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" min="0" {...field} />
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -167,7 +173,12 @@ export function RoomForm({ room }: RoomFormProps) {
                 <FormItem>
                   <FormLabel>Max Guests</FormLabel>
                   <FormControl>
-                    <Input type="number" min="1" {...field} />
+                    <Input
+                      type="number"
+                      min="1"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -207,7 +218,13 @@ export function RoomForm({ room }: RoomFormProps) {
                 <FormItem>
                   <FormLabel>Cleaning Fee ($)</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" min="0" {...field} />
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -221,7 +238,13 @@ export function RoomForm({ room }: RoomFormProps) {
                 <FormItem>
                   <FormLabel>Per Extra Guest Nightly Fee ($)</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" min="0" {...field} />
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -261,7 +284,14 @@ export function RoomForm({ room }: RoomFormProps) {
                   <FormItem className="w-32">
                     <FormLabel className={index === 0 ? undefined : "sr-only"}>Price ($)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" min="0" placeholder="0.00" {...field} />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

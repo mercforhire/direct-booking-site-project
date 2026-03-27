@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 04-booking-requests-04-01-PLAN.md
-last_updated: "2026-03-27T18:59:26.055Z"
+stopped_at: Completed 04-booking-requests-04-02-PLAN.md
+last_updated: "2026-03-27T19:02:38.991Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
   completed_phases: 3
   total_plans: 23
-  completed_plans: 17
+  completed_plans: 18
   percent: 93
 ---
 
@@ -67,6 +67,7 @@ Progress: [█████████░] 93%
 | Phase 03-guest-room-browsing P03 | 1min | 1 tasks | 0 files |
 | Phase 03-guest-room-browsing P03 | 12h | 2 tasks | 0 files |
 | Phase 04-booking-requests P01 | 3min | 2 tasks | 3 files |
+| Phase 04-booking-requests P02 | 2min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -120,6 +121,7 @@ Recent decisions affecting current work:
 - [Phase 04-booking-requests]: selectedAddOnIds typed as String[] in Prisma (PostgreSQL text[] array) — never comma-joined string per project convention
 - [Phase 04-booking-requests]: accessToken has @unique constraint — used for tokenized URL access to booking status page without requiring auth
 - [Phase 04-booking-requests]: guestUserId is nullable String? — guests without Supabase accounts can still submit bookings
+- [Phase 04-booking-requests]: calculatePriceEstimate subtotal includes depositAmount — deposit collected upfront so service fee applies to it
 
 ### Pending Todos
 
@@ -133,6 +135,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T18:59:26.052Z
-Stopped at: Completed 04-booking-requests-04-01-PLAN.md
+Last session: 2026-03-27T19:02:38.989Z
+Stopped at: Completed 04-booking-requests-04-02-PLAN.md
 Resume file: None

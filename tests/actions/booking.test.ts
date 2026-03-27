@@ -8,11 +8,17 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }))
 // Mock next/navigation before importing the action
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }))
 
-// Mock Resend before importing the action
+// Mock Resend before importing the action — use vi.hoisted so the reference is available
+// in the mock factory (vi.mock calls are hoisted before variable declarations).
+// Use a regular function (not arrow) for mockImplementation so `new Resend()` works.
+const { mockEmailSend } = vi.hoisted(() => ({
+  mockEmailSend: vi.fn().mockResolvedValue({ data: { id: "email-1" }, error: null }),
+}))
 vi.mock("resend", () => ({
-  Resend: vi.fn().mockImplementation(() => ({
-    emails: { send: vi.fn().mockResolvedValue({ data: { id: "email-1" }, error: null }) },
-  })),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Resend: vi.fn().mockImplementation(function (this: any) {
+    this.emails = { send: mockEmailSend }
+  }),
 }))
 
 // Mock Supabase server client
@@ -28,7 +34,6 @@ vi.mock("@/lib/supabase/server", () => ({
 
 import { submitBooking } from "@/actions/booking"
 import { redirect } from "next/navigation"
-import { Resend } from "resend"
 
 const validBookingData = {
   roomId: "room-1",
@@ -180,9 +185,8 @@ describe("submitBooking", () => {
     } catch {
       // redirect throws
     }
-    const resendInstance = vi.mocked(Resend).mock.results[0].value
-    expect(resendInstance.emails.send).toHaveBeenCalledOnce()
-    const sendCall = resendInstance.emails.send.mock.calls[0][0]
+    expect(mockEmailSend).toHaveBeenCalledOnce()
+    const sendCall = mockEmailSend.mock.calls[0][0]
     expect(sendCall.to).toBe("jane@example.com")
     expect(sendCall.subject).toMatch(/received/i)
   })

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { bookingSchemaCoerced } from "@/lib/validations/booking"
 import { redirect } from "next/navigation"
 import { Resend } from "resend"
+import { BookingConfirmationEmail } from "@/emails/booking-confirmation"
 
 export async function submitBooking(data: unknown) {
   const parsed = bookingSchemaCoerced.safeParse(data)
@@ -62,19 +63,16 @@ export async function submitBooking(data: unknown) {
   })
 
   const resend = new Resend(process.env.RESEND_API_KEY)
-  const accessLink = `${process.env.NEXT_PUBLIC_SITE_URL}/bookings/${created.id}?token=${accessToken}`
 
   await resend.emails.send({
     from: process.env.EMAIL_FROM ?? "bookings@example.com",
     to: guestEmail,
     subject: "Your booking request was received",
-    html: `
-      <p>Hi ${guestName},</p>
-      <p>Your booking request has been received and is currently pending review.</p>
-      <p>You can track your booking status here:</p>
-      <p><a href="${accessLink}">${accessLink}</a></p>
-      <p>We'll be in touch shortly.</p>
-    `,
+    react: BookingConfirmationEmail({
+      bookingId: created.id,
+      accessToken,
+      guestName,
+    }),
   })
 
   redirect(`/bookings/${created.id}?new=1`)

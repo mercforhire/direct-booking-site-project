@@ -9,4 +9,8 @@ export default defineConfig({
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
   },
+  oxc: {
+    // Override tsconfig jsx: "preserve" so Vitest/oxc can parse JSX in .tsx files
+    jsx: { runtime: "automatic" },
+  },
 })

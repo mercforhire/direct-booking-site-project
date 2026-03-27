@@ -5,6 +5,7 @@ import { RoomPhotoGallery } from "@/components/guest/room-photo-gallery"
 import { RoomPricingTable } from "@/components/guest/room-pricing-table"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export const dynamic = "force-dynamic"
 
@@ -16,7 +17,7 @@ export default async function RoomPage({
   searchParams: Promise<{ checkin?: string; checkout?: string; guests?: string }>
 }) {
   const { id } = await params
-  const { checkin, checkout } = await searchParams
+  const { checkin, checkout, guests } = await searchParams
 
   const room = await prisma.room.findUnique({
     where: { id, isActive: true },
@@ -57,6 +58,13 @@ export default async function RoomPage({
   const blockedDateStrings = room.blockedDates.map((b) =>
     b.date.toLocaleDateString("en-CA")
   )
+
+  // Build "Request to Book" href with forwarded URL params
+  const bookParams = new URLSearchParams()
+  if (checkin) bookParams.set("checkin", checkin)
+  if (checkout) bookParams.set("checkout", checkout)
+  if (guests) bookParams.set("guests", guests)
+  const bookHref = `/rooms/${id}/book${bookParams.toString() ? "?" + bookParams.toString() : ""}`
 
   return (
     <main className="max-w-3xl mx-auto py-8">
@@ -116,9 +124,9 @@ export default async function RoomPage({
         </section>
 
         {/* Request to Book CTA */}
-        <Button disabled className="w-full mt-6">
-          Request to Book
-        </Button>
+        <Link href={bookHref} className="block w-full mt-6">
+          <Button className="w-full">Request to Book</Button>
+        </Link>
       </div>
     </main>
   )

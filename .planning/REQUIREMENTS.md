@@ -7,10 +7,10 @@
 
 ### Room Listings
 
-- [ ] **ROOM-01**: Guest can browse all rooms with photos and written description
-- [ ] **ROOM-02**: Guest can see the estimated nightly rate on each room listing
+- [x] **ROOM-01**: Guest can browse all rooms with photos and written description
+- [x] **ROOM-02**: Guest can see the estimated nightly rate on each room listing
 - [ ] **ROOM-03**: Guest can see the full fee structure on each room listing (cleaning fee, per-extra-guest fee, available add-on options with prices)
-- [ ] **ROOM-04**: Each room listing shows the maximum guest capacity
+- [x] **ROOM-04**: Each room listing shows the maximum guest capacity
 
 ### Availability
 
@@ -122,10 +122,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ROOM-01 | Phase 3 | Pending |
-| ROOM-02 | Phase 3 | Pending |
+| ROOM-01 | Phase 3 | Complete |
+| ROOM-02 | Phase 3 | Complete |
 | ROOM-03 | Phase 3 | Pending |
-| ROOM-04 | Phase 3 | Pending |
+| ROOM-04 | Phase 3 | Complete |
 | AVAIL-01 | Phase 2 | Complete |
 | AVAIL-02 | Phase 2 | Complete |
 | AVAIL-03 | Phase 2 | Complete |

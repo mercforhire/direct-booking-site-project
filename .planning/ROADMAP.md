@@ -206,7 +206,7 @@ Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. P
 | 1. Foundation & Room Management | 4/5 | In Progress|  |
 | 1.5. Supabase Migration | 2/5 | Complete    | 2026-03-27 |
 | 2. Availability Management | 4/4 | Complete   | 2026-03-27 |
-| 3. Guest Room Browsing | 0/? | Not started | - |
+| 3. Guest Room Browsing | 1/3 | In Progress|  |
 | 4. Booking Requests | 0/? | Not started | - |
 | 5. Approval Flow & Notifications | 0/? | Not started | - |
 | 6. Payment | 0/? | Not started | - |

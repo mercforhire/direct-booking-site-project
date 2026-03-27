@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 3 context gathered
-last_updated: "2026-03-27T05:01:30.193Z"
+stopped_at: Completed 03-guest-room-browsing-01-PLAN.md
+last_updated: "2026-03-27T05:20:38.911Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
   completed_phases: 2
-  total_plans: 14
-  completed_plans: 13
+  total_plans: 17
+  completed_plans: 14
   percent: 93
 ---
 
@@ -62,6 +62,7 @@ Progress: [█████████░] 93%
 | Phase 02-availability-management P01 | 3min | 2 tasks | 5 files |
 | Phase 02-availability-management P02 | 7 | 2 tasks | 9 files |
 | Phase 02-availability-management P03 | 3min | 2 tasks | 5 files |
+| Phase 03-guest-room-browsing P01 | 15min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,9 @@ Recent decisions affecting current work:
 - [Phase 02-availability-management]: toLocalDateString() instead of toISOString() for date strings — prevents timezone off-by-one for users west of UTC
 - [Phase 02-availability-management]: Decimal-to-Number coercion at RSC boundary — Prisma Decimal objects cannot be serialized as Client Component props
 - [Phase 02-availability-management]: baseGuests Int field added to Room model — represents guests included in base rate, needed for Phase 3 booking requests
+- [Phase 03-guest-room-browsing]: isRoomAvailable checks nights from checkin (inclusive) to checkout (exclusive) — checkout day is departure, not a blocked night
+- [Phase 03-guest-room-browsing]: /rooms removed from middleware admin route protection — public guest browsing requires no auth
+- [Phase 03-guest-room-browsing]: URL-param-driven filter for /rooms: checkin, checkout, guests in search params, updated via router.push
 
 ### Pending Todos
 
@@ -118,6 +122,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T05:01:30.191Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-guest-room-browsing/03-CONTEXT.md
+Last session: 2026-03-27T05:20:38.908Z
+Stopped at: Completed 03-guest-room-browsing-01-PLAN.md
+Resume file: None

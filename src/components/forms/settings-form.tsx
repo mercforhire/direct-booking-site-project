@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { settingsSchemaCoerced as settingsSchema, SettingsFormData } from "@/lib/validations/settings"
+import { settingsSchema, SettingsFormData } from "@/lib/validations/settings"
 import { upsertSettings } from "@/actions/settings"
 import {
   Form,

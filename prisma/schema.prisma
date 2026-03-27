@@ -27,6 +27,7 @@ model Room {
   addOns              AddOn[]
   photos              RoomPhoto[]
   blockedDates        BlockedDate[]
+  bookings            Booking[]
 }
 
 model RoomPhoto {
@@ -63,4 +64,37 @@ model BlockedDate {
 
   @@unique([roomId, date])
   @@index([roomId])
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  PAID
+  COMPLETED
+  CANCELLED
+}
+
+model Booking {
+  id               String        @id @default(cuid())
+  roomId           String
+  guestName        String
+  guestEmail       String
+  guestPhone       String
+  guestUserId      String?
+  checkin          DateTime      @db.Date
+  checkout         DateTime      @db.Date
+  numGuests        Int
+  selectedAddOnIds String[]
+  noteToLandlord   String?
+  estimatedTotal   Decimal       @db.Decimal(10, 2)
+  status           BookingStatus @default(PENDING)
+  accessToken      String        @unique
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  room             Room          @relation(fields: [roomId], references: [id])
+
+  @@index([guestEmail])
+  @@index([accessToken])
+  @@index([guestUserId])
 }

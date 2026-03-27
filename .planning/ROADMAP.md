@@ -109,11 +109,15 @@ Plans:
   4. Guest can submit a booking request without creating an account (name, email, phone required)
   5. Guest can optionally create an account to view booking history
   6. After submitting, guest can view a booking page showing their booking details, itemized costs, and current status
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
+- [ ] 04-01-PLAN.md — Prisma Booking model + BookingStatus enum + prisma db push + Zod validation schemas (dual-schema pattern)
+- [ ] 04-02-PLAN.md — calculatePriceEstimate pure function (TDD) + booking.test.ts stub with mock infrastructure
+- [ ] 04-03-PLAN.md — submitBooking server action (TDD): optional Supabase guest signup, Prisma booking create, Resend confirmation email, redirect
+- [ ] 04-04-PLAN.md — /rooms/[id]/book RSC shell + BookingForm client component (RHF, range picker, live pricing sidebar, add-ons, guest identity, optional account creation)
+- [ ] 04-05-PLAN.md — /bookings/[id] token-gated status page + BookingStatusView + email template + guest login page + activate CTA
+- [ ] 04-06-PLAN.md — Full test suite run + 7-scenario human verification checkpoint
 
 ### Phase 5: Approval Flow & Notifications
 **Goal**: Landlord can review, approve, or decline booking requests, and both parties receive email notifications at each step
@@ -207,7 +211,7 @@ Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. P
 | 1.5. Supabase Migration | 2/5 | Complete    | 2026-03-27 |
 | 2. Availability Management | 4/4 | Complete   | 2026-03-27 |
 | 3. Guest Room Browsing | 3/3 | Complete   | 2026-03-27 |
-| 4. Booking Requests | 0/? | Not started | - |
+| 4. Booking Requests | 0/6 | Not started | - |
 | 5. Approval Flow & Notifications | 0/? | Not started | - |
 | 6. Payment | 0/? | Not started | - |
 | 7. Booking Extensions | 0/? | Not started | - |

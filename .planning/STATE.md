@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-27T18:29:43.069Z"
+stopped_at: Completed 04-booking-requests-04-01-PLAN.md
+last_updated: "2026-03-27T18:59:26.055Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
   completed_phases: 3
-  total_plans: 17
-  completed_plans: 16
+  total_plans: 23
+  completed_plans: 17
   percent: 93
 ---
 
@@ -66,6 +66,7 @@ Progress: [█████████░] 93%
 | Phase 03-guest-room-browsing P02 | 8min | 2 tasks | 3 files |
 | Phase 03-guest-room-browsing P03 | 1min | 1 tasks | 0 files |
 | Phase 03-guest-room-browsing P03 | 12h | 2 tasks | 0 files |
+| Phase 04-booking-requests P01 | 3min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,10 @@ Recent decisions affecting current work:
 - [Phase 03-guest-room-browsing]: Radix Dialog used directly (not shadcn wrapper) for lightbox — direct Portal/Overlay/Content access gives clean full-screen layout without conflicting defaults
 - [Phase 03-guest-room-browsing]: RoomPricingTable is a Server Component — no interactivity needed; all fee calculations are deterministic from props
 - [Phase 03-guest-room-browsing]: -mx-4 sm:mx-0 wrapper on gallery gives edge-to-edge hero on mobile while keeping other sections padded within max-w-3xl
+- [Phase 04-booking-requests]: bookingSchemaCoerced uses z.coerce.number() for numGuests and estimatedTotal — server actions receive JSON-serialized values from client
+- [Phase 04-booking-requests]: selectedAddOnIds typed as String[] in Prisma (PostgreSQL text[] array) — never comma-joined string per project convention
+- [Phase 04-booking-requests]: accessToken has @unique constraint — used for tokenized URL access to booking status page without requiring auth
+- [Phase 04-booking-requests]: guestUserId is nullable String? — guests without Supabase accounts can still submit bookings
 
 ### Pending Todos
 
@@ -128,6 +133,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T18:29:43.066Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-booking-requests/04-CONTEXT.md
+Last session: 2026-03-27T18:59:26.052Z
+Stopped at: Completed 04-booking-requests-04-01-PLAN.md
+Resume file: None

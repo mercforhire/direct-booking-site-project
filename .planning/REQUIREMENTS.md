@@ -21,12 +21,12 @@
 
 ### Booking Request
 
-- [ ] **BOOK-01**: Guest can submit a booking request specifying room, check-in/check-out dates, and number of guests
-- [ ] **BOOK-02**: Guest sees a full itemized price estimate before submitting (nightly rate x nights + cleaning fee + extra guest fees + selected add-ons + deposit + service fee)
-- [ ] **BOOK-03**: Guest can select per-room add-on options at request time (e.g. parking, sofa bed — each option is free or has a fixed cost set by the landlord)
-- [ ] **BOOK-04**: Guest can include a note or message to the landlord with their request
-- [ ] **BOOK-05**: Guest can submit a booking request without creating an account (name, email, phone number required)
-- [ ] **BOOK-06**: Guest can optionally create an account to view their booking history
+- [x] **BOOK-01**: Guest can submit a booking request specifying room, check-in/check-out dates, and number of guests
+- [x] **BOOK-02**: Guest sees a full itemized price estimate before submitting (nightly rate x nights + cleaning fee + extra guest fees + selected add-ons + deposit + service fee)
+- [x] **BOOK-03**: Guest can select per-room add-on options at request time (e.g. parking, sofa bed — each option is free or has a fixed cost set by the landlord)
+- [x] **BOOK-04**: Guest can include a note or message to the landlord with their request
+- [x] **BOOK-05**: Guest can submit a booking request without creating an account (name, email, phone number required)
+- [x] **BOOK-06**: Guest can optionally create an account to view their booking history
 
 ### Approval Flow
 
@@ -130,12 +130,12 @@
 | AVAIL-02 | Phase 2 | Complete |
 | AVAIL-03 | Phase 2 | Complete |
 | AVAIL-04 | Phase 2 | Complete |
-| BOOK-01 | Phase 4 | Pending |
-| BOOK-02 | Phase 4 | Pending |
-| BOOK-03 | Phase 4 | Pending |
-| BOOK-04 | Phase 4 | Pending |
-| BOOK-05 | Phase 4 | Pending |
-| BOOK-06 | Phase 4 | Pending |
+| BOOK-01 | Phase 4 | Complete |
+| BOOK-02 | Phase 4 | Complete |
+| BOOK-03 | Phase 4 | Complete |
+| BOOK-04 | Phase 4 | Complete |
+| BOOK-05 | Phase 4 | Complete |
+| BOOK-06 | Phase 4 | Complete |
 | APPR-01 | Phase 5 | Pending |
 | APPR-02 | Phase 5 | Pending |
 | APPR-03 | Phase 5 | Pending |

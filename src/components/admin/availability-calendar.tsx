@@ -17,14 +17,12 @@ function getDatesInRange(start: Date, end: Date): Date[] {
   const from = start <= end ? start : end
   const to = start <= end ? end : start
   const dates: Date[] = []
-  // Walk from the day after `from` up to the day before `to`
-  const cursor = new Date(from)
-  cursor.setUTCDate(cursor.getUTCDate() + 1)
-  const limit = new Date(to)
-  limit.setUTCDate(limit.getUTCDate() - 1)
+  // Use local date constructor and setDate to avoid UTC-offset drift
+  const cursor = new Date(from.getFullYear(), from.getMonth(), from.getDate() + 1)
+  const limit = new Date(to.getFullYear(), to.getMonth(), to.getDate() - 1)
   while (cursor <= limit) {
     dates.push(new Date(cursor))
-    cursor.setUTCDate(cursor.getUTCDate() + 1)
+    cursor.setDate(cursor.getDate() + 1)
   }
   return dates
 }

@@ -81,12 +81,13 @@ export function AvailabilityDashboard({
   }
 
   function handleRangeSelect(start: Date, end: Date) {
+    if (start.getTime() === end.getTime()) return // single tap — let onDayClick handle it
     setMode("range")
     setError(null)
     const from = start <= end ? start : end
     const to = start <= end ? end : start
     setRangeStart(from)
-    setRangeEnd(from.getTime() === to.getTime() ? undefined : to)
+    setRangeEnd(to)
   }
 
   function exitRangeMode() {

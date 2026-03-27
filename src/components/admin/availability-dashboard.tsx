@@ -80,6 +80,15 @@ export function AvailabilityDashboard({
     setError(null)
   }
 
+  function handleRangeSelect(start: Date, end: Date) {
+    setMode("range")
+    setError(null)
+    const from = start <= end ? start : end
+    const to = start <= end ? end : start
+    setRangeStart(from)
+    setRangeEnd(from.getTime() === to.getTime() ? undefined : to)
+  }
+
   function exitRangeMode() {
     setMode("single")
     setRangeStart(undefined)
@@ -271,6 +280,7 @@ export function AvailabilityDashboard({
               blockedDates={localBlockedDates}
               occupiedDates={[]}
               onDayClick={handleDayClick}
+              onRangeSelect={handleRangeSelect}
               rangeStart={mode === "range" ? rangeStart : undefined}
               rangeEnd={mode === "range" ? rangeEnd : undefined}
               isSaving={isSaving}

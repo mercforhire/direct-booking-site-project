@@ -14,7 +14,7 @@
 
 ### Availability
 
-- [ ] **AVAIL-01**: Guest can view a room's availability calendar showing which dates are blocked or available
+- [x] **AVAIL-01**: Guest can view a room's availability calendar showing which dates are blocked or available
 - [x] **AVAIL-02**: Landlord can manually block and unblock specific dates per room from the admin dashboard
 - [x] **AVAIL-03**: Landlord can configure the global booking window (how far ahead guests can book, between 3–9 months)
 - [x] **AVAIL-04**: Landlord can set minimum and maximum stay length per room
@@ -126,7 +126,7 @@
 | ROOM-02 | Phase 3 | Pending |
 | ROOM-03 | Phase 3 | Pending |
 | ROOM-04 | Phase 3 | Pending |
-| AVAIL-01 | Phase 2 | Pending |
+| AVAIL-01 | Phase 2 | Complete |
 | AVAIL-02 | Phase 2 | Complete |
 | AVAIL-03 | Phase 2 | Complete |
 | AVAIL-04 | Phase 2 | Complete |

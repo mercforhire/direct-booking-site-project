@@ -78,5 +78,5 @@ export async function submitBooking(data: unknown) {
     // Email failure is non-fatal — booking was already created
   }
 
-  redirect(`/bookings/${created.id}?new=1`)
+  redirect(`/bookings/${created.id}?token=${accessToken}&new=1`)
 }

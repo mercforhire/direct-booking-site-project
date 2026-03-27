@@ -13,6 +13,7 @@ export const roomSchema = z.object({
   baseNightlyRate: z.number().positive("Base rate must be positive"),
   cleaningFee: z.number().min(0, "Cleaning fee must be 0 or greater"),
   extraGuestFee: z.number().min(0, "Extra guest fee must be 0 or greater"),
+  baseGuests: z.number().int().min(1, "Base guests must be at least 1"),
   maxGuests: z.number().int().min(1, "At least 1 guest required"),
   isActive: z.boolean(),
   addOns: z.array(addOnSchema),
@@ -26,6 +27,7 @@ export const roomSchemaCoerced = z.object({
   baseNightlyRate: z.coerce.number().positive("Base rate must be positive"),
   cleaningFee: z.coerce.number().min(0, "Cleaning fee must be 0 or greater"),
   extraGuestFee: z.coerce.number().min(0, "Extra guest fee must be 0 or greater"),
+  baseGuests: z.coerce.number().int().min(1, "Base guests must be at least 1").default(1),
   maxGuests: z.coerce.number().int().min(1, "At least 1 guest required"),
   isActive: z.boolean().default(true),
   addOns: z

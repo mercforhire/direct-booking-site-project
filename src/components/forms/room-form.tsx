@@ -38,6 +38,7 @@ interface SerializedRoom {
   baseNightlyRate: number
   cleaningFee: number
   extraGuestFee: number
+  baseGuests: number
   maxGuests: number
   isActive: boolean
   minStayNights: number
@@ -68,6 +69,7 @@ export function RoomForm({ room }: RoomFormProps) {
           baseNightlyRate: Number(room.baseNightlyRate),
           cleaningFee: Number(room.cleaningFee),
           extraGuestFee: Number(room.extraGuestFee),
+          baseGuests: room.baseGuests,
           maxGuests: room.maxGuests,
           isActive: room.isActive,
           addOns: room.addOns.map((a) => ({
@@ -83,6 +85,7 @@ export function RoomForm({ room }: RoomFormProps) {
           baseNightlyRate: 0,
           cleaningFee: 0,
           extraGuestFee: 0,
+          baseGuests: 1,
           maxGuests: 1,
           isActive: true,
           addOns: [],
@@ -171,46 +174,25 @@ export function RoomForm({ room }: RoomFormProps) {
             )}
           />
 
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="baseNightlyRate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Base Nightly Rate ($)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      {...field}
-                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="maxGuests"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Max Guests</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="1"
-                      {...field}
-                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="baseNightlyRate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Base Nightly Rate ($)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    {...field}
+                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}
@@ -236,18 +218,56 @@ export function RoomForm({ room }: RoomFormProps) {
         <div className="space-y-4">
           <h2 className="text-lg font-medium text-gray-900">Fees</h2>
 
-          <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="cleaningFee"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cleaning Fee ($)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    {...field}
+                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-3 gap-4">
             <FormField
               control={form.control}
-              name="cleaningFee"
+              name="baseGuests"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cleaning Fee ($)</FormLabel>
+                  <FormLabel>Base Guests (included in base rate)</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
-                      step="0.01"
-                      min="0"
+                      min="1"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="maxGuests"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Max Guests</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="1"
                       {...field}
                       onChange={(e) => field.onChange(e.target.valueAsNumber)}
                     />

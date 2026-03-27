@@ -150,14 +150,45 @@ export function AvailabilityDashboard({
     const fromStr = toLocalDateString(from)
     const toStr = toLocalDateString(to)
 
+    // Build the full list of dates in the range (inclusive of both ends)
+    const rangeDates: Date[] = []
+    const cursor = new Date(from.getFullYear(), from.getMonth(), from.getDate())
+    const limit = new Date(to.getFullYear(), to.getMonth(), to.getDate())
+    while (cursor <= limit) {
+      rangeDates.push(new Date(cursor))
+      cursor.setDate(cursor.getDate() + 1)
+    }
+
+    // Optimistic update
+    setLocalBlockedDates((prev) => {
+      if (block) {
+        const existing = new Set(prev.map((d) => toLocalDateString(d)))
+        const toAdd = rangeDates.filter((d) => !existing.has(toLocalDateString(d)))
+        return [...prev, ...toAdd]
+      } else {
+        const toRemove = new Set(rangeDates.map((d) => toLocalDateString(d)))
+        return prev.filter((d) => !toRemove.has(toLocalDateString(d)))
+      }
+    })
+
     setError(null)
     setIsSaving(true)
+    exitRangeMode()
     try {
       await saveBlockedRange(selectedRoom.id, fromStr, toStr, block)
       router.refresh()
-      // Return to single mode after range action
-      exitRangeMode()
     } catch {
+      // Revert optimistic update on error
+      setLocalBlockedDates((prev) => {
+        if (block) {
+          const toRemove = new Set(rangeDates.map((d) => toLocalDateString(d)))
+          return prev.filter((d) => !toRemove.has(toLocalDateString(d)))
+        } else {
+          const existing = new Set(prev.map((d) => toLocalDateString(d)))
+          const toAdd = rangeDates.filter((d) => !existing.has(toLocalDateString(d)))
+          return [...prev, ...toAdd]
+        }
+      })
       setError("Failed to save. Please try again.")
     } finally {
       setIsSaving(false)

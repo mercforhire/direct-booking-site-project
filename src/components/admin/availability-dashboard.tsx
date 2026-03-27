@@ -49,37 +49,71 @@ export function AvailabilityDashboard({
   blockedDateStrings,
 }: AvailabilityDashboardProps) {
   const router = useRouter()
+
+  // Interaction mode: single-click toggles in default mode; range mode is opt-in
+  const [mode, setMode] = useState<"single" | "range">("single")
+
+  // Range state — only used in range mode
   const [rangeStart, setRangeStart] = useState<Date | undefined>(undefined)
   const [rangeEnd, setRangeEnd] = useState<Date | undefined>(undefined)
+
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Optimistic local state for blocked dates — starts from server-provided list.
   // Parse each YYYY-MM-DD string as LOCAL midnight so that react-day-picker's
   // date comparisons (which operate in local time) highlight the correct day.
   // "2026-03-26T00:00:00" (no Z) is parsed as local midnight by the Date
   // constructor, which is what react-day-picker uses for comparisons.
-  const blockedDates = blockedDateStrings.map(
-    (s) => new Date(s + "T00:00:00")
+  const [localBlockedDates, setLocalBlockedDates] = useState<Date[]>(() =>
+    blockedDateStrings.map((s) => new Date(s + "T00:00:00"))
   )
 
   function handleRoomChange(value: string) {
     router.push(`/availability?roomId=${value}`)
   }
 
+  function enterRangeMode() {
+    setMode("range")
+    setRangeStart(undefined)
+    setRangeEnd(undefined)
+    setError(null)
+  }
+
+  function exitRangeMode() {
+    setMode("single")
+    setRangeStart(undefined)
+    setRangeEnd(undefined)
+    setError(null)
+  }
+
   async function handleDayClick(date: Date, isCurrentlyBlocked: boolean) {
     if (!selectedRoom) return
     const dateStr = toLocalDateString(date)
 
-    // Both range markers set — clicking resets range and toggles single date
-    if (rangeStart !== undefined && rangeEnd !== undefined) {
-      setRangeStart(undefined)
-      setRangeEnd(undefined)
+    // ── Single mode: immediate toggle ──────────────────────────────────────
+    if (mode === "single") {
+      // Optimistic update: toggle this date in local state immediately
+      const dateTime = date.getTime()
+      setLocalBlockedDates((prev) => {
+        const exists = prev.some((d) => d.getTime() === dateTime)
+        return exists
+          ? prev.filter((d) => d.getTime() !== dateTime)
+          : [...prev, date]
+      })
       setError(null)
       setIsSaving(true)
       try {
         await toggleBlockedDate(selectedRoom.id, dateStr)
         router.refresh()
       } catch {
+        // Revert optimistic update on error
+        setLocalBlockedDates((prev) => {
+          const exists = prev.some((d) => d.getTime() === dateTime)
+          return exists
+            ? prev.filter((d) => d.getTime() !== dateTime)
+            : [...prev, date]
+        })
         setError("Failed to save. Please try again.")
       } finally {
         setIsSaving(false)
@@ -87,6 +121,7 @@ export function AvailabilityDashboard({
       return
     }
 
+    // ── Range mode: two-click state machine ────────────────────────────────
     // No range start yet — set first marker
     if (rangeStart === undefined) {
       setRangeStart(date)
@@ -94,19 +129,10 @@ export function AvailabilityDashboard({
     }
 
     // rangeStart is set but rangeEnd is not
-    // Clicking the same date as rangeStart — clear range and toggle
+    // Clicking the same date as rangeStart — clear range start
     if (rangeStart.getTime() === date.getTime()) {
       setRangeStart(undefined)
       setError(null)
-      setIsSaving(true)
-      try {
-        await toggleBlockedDate(selectedRoom.id, dateStr)
-        router.refresh()
-      } catch {
-        setError("Failed to save. Please try again.")
-      } finally {
-        setIsSaving(false)
-      }
       return
     }
 
@@ -129,8 +155,8 @@ export function AvailabilityDashboard({
     try {
       await saveBlockedRange(selectedRoom.id, fromStr, toStr, block)
       router.refresh()
-      setRangeStart(undefined)
-      setRangeEnd(undefined)
+      // Return to single mode after range action
+      exitRangeMode()
     } catch {
       setError("Failed to save. Please try again.")
     } finally {
@@ -177,25 +203,56 @@ export function AvailabilityDashboard({
 
       {selectedRoom ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Calendar + range controls below it */}
+          {/* Calendar + controls */}
           <div>
+            {/* Calendar header: range mode toggle button */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm text-gray-500">
+                {mode === "single"
+                  ? "Click any date to toggle blocked / unblocked"
+                  : null}
+              </div>
+              {mode === "single" ? (
+                <button
+                  onClick={enterRangeMode}
+                  disabled={isSaving}
+                  className="px-3 py-1.5 text-sm font-medium rounded-md border border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+                >
+                  Select Range
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    Range mode active
+                  </span>
+                  <button
+                    onClick={exitRangeMode}
+                    disabled={isSaving}
+                    className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Cancel Range
+                  </button>
+                </div>
+              )}
+            </div>
+
             <AvailabilityCalendar
-              blockedDates={blockedDates}
+              blockedDates={localBlockedDates}
               occupiedDates={[]}
               onDayClick={handleDayClick}
-              rangeStart={rangeStart}
-              rangeEnd={rangeEnd}
+              rangeStart={mode === "range" ? rangeStart : undefined}
+              rangeEnd={mode === "range" ? rangeEnd : undefined}
               isSaving={isSaving}
             />
 
             {/* Reserved space — always rendered so the calendar never jumps */}
             <div className="min-h-[2rem] mt-2 text-sm text-gray-600">
-              {rangeStart && !rangeEnd && (
+              {mode === "range" && rangeStart && !rangeEnd && (
                 <span className="text-blue-600">
-                  First date selected. Click another date to set the range end.
+                  Start date selected. Click another date to set the range end.
                 </span>
               )}
-              {rangeStart && rangeEnd && (
+              {mode === "range" && rangeStart && rangeEnd && (
                 <span>
                   Range selected:{" "}
                   <span className="font-medium">
@@ -209,8 +266,8 @@ export function AvailabilityDashboard({
               )}
             </div>
 
-            {/* Range action buttons — rendered below the reserved space */}
-            {rangeStart && rangeEnd && (
+            {/* Range action buttons — only shown in range mode once both ends set */}
+            {mode === "range" && rangeStart && rangeEnd && (
               <div className="flex items-center gap-2 mt-2">
                 <button
                   onClick={() => handleBlockRange(true)}

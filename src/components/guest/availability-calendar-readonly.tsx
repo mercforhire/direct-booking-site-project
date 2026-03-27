@@ -21,7 +21,7 @@ export function AvailabilityCalendarReadonly({
   windowEnd.setMonth(windowEnd.getMonth() + bookingWindowMonths)
 
   const blockedDates = blockedDateStrings.map(
-    (s) => new Date(s + "T00:00:00.000Z")
+    (s) => new Date(s + "T00:00:00")
   )
 
   return (

@@ -43,7 +43,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/rooms/new") ||
     pathname.endsWith("/edit")
 
-  const adminPaths = ["/dashboard", "/settings"]
+  const adminPaths = ["/dashboard", "/settings", "/availability"]
   const isAdminRoute =
     adminPaths.some((p) => pathname.startsWith(p)) || isRoomsAdminRoute
 

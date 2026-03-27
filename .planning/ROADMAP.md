@@ -91,10 +91,12 @@ Plans:
   2. Each room listing displays the estimated nightly rate
   3. Each room listing displays the full fee structure: cleaning fee, per-extra-guest fee, and available add-on options with prices
   4. Each room listing displays the maximum guest capacity
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: TBD
+- [ ] 03-01-PLAN.md — Test scaffolds (availability filter + room formatters) + middleware fix + /rooms list page with filter and room tiles
+- [ ] 03-02-PLAN.md — /rooms/[id] detail page with photo gallery, pricing table, add-ons, availability calendar, disabled CTA
+- [ ] 03-03-PLAN.md — Full test suite run + human visual verification
 
 ### Phase 4: Booking Requests
 **Goal**: Guests can submit a booking request with full pricing transparency and minimal friction (no account required)

@@ -42,7 +42,9 @@ function GuestLoginForm() {
     }
 
     const next = searchParams.get("next") ?? "/"
-    router.push(next)
+    // Full navigation instead of router.push — forces the browser to send the
+    // new session cookie to the server rather than reusing a cached RSC.
+    window.location.href = next
   }
 
   return (

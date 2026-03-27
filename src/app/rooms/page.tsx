@@ -42,9 +42,9 @@ export default async function RoomsPage() {
     },
   })
 
-  const roomsForClient = rooms.map((room) => ({
-    ...coerceRoomDecimals(room),
-    blockedDateStrings: room.blockedDates.map((b) =>
+  const roomsForClient = rooms.map(({ blockedDates, ...rest }) => ({
+    ...coerceRoomDecimals(rest),
+    blockedDateStrings: blockedDates.map((b) =>
       b.date.toLocaleDateString("en-CA")
     ),
   }))

@@ -57,7 +57,7 @@ export function RoomTable({ rooms }: RoomTableProps) {
                 </TableCell>
                 <TableCell>
                   <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/rooms/${room.id}`}>Edit</Link>
+                    <Link href={`/rooms/${room.id}/edit`}>Edit</Link>
                   </Button>
                 </TableCell>
               </TableRow>

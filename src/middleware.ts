@@ -34,10 +34,18 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const adminPaths = ["/dashboard", "/rooms", "/settings"]
-  const isAdminRoute = adminPaths.some((p) =>
-    request.nextUrl.pathname.startsWith(p)
-  )
+  const { pathname } = request.nextUrl
+
+  // /rooms/[id] is the public guest page — not an admin route
+  // Admin room routes are /rooms (list), /rooms/new, and /rooms/[id]/edit
+  const isRoomsAdminRoute =
+    pathname === "/rooms" ||
+    pathname.startsWith("/rooms/new") ||
+    pathname.endsWith("/edit")
+
+  const adminPaths = ["/dashboard", "/settings"]
+  const isAdminRoute =
+    adminPaths.some((p) => pathname.startsWith(p)) || isRoomsAdminRoute
 
   if (!user && isAdminRoute) {
     const url = request.nextUrl.clone()

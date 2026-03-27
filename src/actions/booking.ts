@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { bookingSchemaCoerced } from "@/lib/validations/booking"
 import { redirect } from "next/navigation"
 import { Resend } from "resend"
+import { render } from "@react-email/render"
 import { BookingConfirmationEmail } from "@/emails/booking-confirmation"
 
 export async function submitBooking(data: unknown) {
@@ -62,18 +63,20 @@ export async function submitBooking(data: unknown) {
     },
   })
 
-  const resend = new Resend(process.env.RESEND_API_KEY)
-
-  await resend.emails.send({
-    from: process.env.EMAIL_FROM ?? "bookings@example.com",
-    to: guestEmail,
-    subject: "Your booking request was received",
-    react: BookingConfirmationEmail({
-      bookingId: created.id,
-      accessToken,
-      guestName,
-    }),
-  })
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    const html = await render(
+      BookingConfirmationEmail({ bookingId: created.id, accessToken, guestName })
+    )
+    await resend.emails.send({
+      from: process.env.EMAIL_FROM ?? "bookings@example.com",
+      to: guestEmail,
+      subject: "Your booking request was received",
+      html,
+    })
+  } catch {
+    // Email failure is non-fatal — booking was already created
+  }
 
   redirect(`/bookings/${created.id}?new=1`)
 }

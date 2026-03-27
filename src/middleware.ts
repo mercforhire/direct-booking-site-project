@@ -36,10 +36,9 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  // /rooms/[id] is the public guest page — not an admin route
-  // Admin room routes are /rooms (list), /rooms/new, and /rooms/[id]/edit
+  // /rooms is now a public guest list page — no auth required
+  // Admin room routes are /rooms/new and /rooms/[id]/edit only
   const isRoomsAdminRoute =
-    pathname === "/rooms" ||
     pathname.startsWith("/rooms/new") ||
     pathname.endsWith("/edit")
 

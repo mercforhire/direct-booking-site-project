@@ -44,8 +44,13 @@ export async function submitBooking(data: unknown) {
     })
     if (!signUpError) {
       guestUserId = authData.user?.id ?? null
+    } else {
+      // Duplicate email — look up the existing user and reuse their ID so the
+      // booking is linked to their account and accessible after sign-in.
+      const { data: listData } = await adminClient.auth.admin.listUsers()
+      const existing = listData?.users.find((u) => u.email === guestEmail)
+      if (existing) guestUserId = existing.id
     }
-    // If signUpError (e.g. duplicate email), guestUserId remains null — booking created anonymously
   }
 
   const accessToken = crypto.randomUUID()

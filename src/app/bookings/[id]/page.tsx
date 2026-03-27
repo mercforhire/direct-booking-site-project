@@ -37,7 +37,13 @@ export default async function BookingPage({
 
   if (!booking) notFound()
 
-  const hasAuth = !!(user && booking.guestUserId === user.id)
+  // Primary: session user owns this booking by ID
+  // Fallback: session user's email matches guest email (covers bookings where
+  // guestUserId was not set due to account creation failing on a duplicate email)
+  const hasAuth = !!(
+    user &&
+    (booking.guestUserId === user.id || booking.guestEmail === user.email)
+  )
   const hasToken = !!(token && token === booking.accessToken)
 
   if (!hasAuth && !hasToken) {

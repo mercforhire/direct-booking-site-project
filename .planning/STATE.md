@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 04-booking-requests-04-04-PLAN.md
-last_updated: "2026-03-27T22:17:57.503Z"
+stopped_at: Completed 04-booking-requests-04-05-PLAN.md
+last_updated: "2026-03-27T22:24:30.800Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
   completed_phases: 3
   total_plans: 23
-  completed_plans: 20
+  completed_plans: 21
   percent: 93
 ---
 
@@ -70,6 +70,7 @@ Progress: [█████████░] 93%
 | Phase 04-booking-requests P02 | 2min | 2 tasks | 3 files |
 | Phase 04-booking-requests PP03 | 4min | 2 tasks | 2 files |
 | Phase 04-booking-requests P04 | 15 | 2 tasks | 7 files |
+| Phase 04-booking-requests P05 | 10 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -128,6 +129,7 @@ Recent decisions affecting current work:
 - [Phase 04-booking-requests]: vi.hoisted() required for mock variables referenced inside vi.mock() factories — mock factories are hoisted before variable declarations
 - [Phase 04-booking-requests]: zodResolver cast to any for Zod .default() type mismatch with useForm generic
 - [Phase 04-booking-requests]: checkbox.tsx added as shadcn/ui component with @radix-ui/react-checkbox dependency
+- [Phase 04-booking-requests]: Token gate uses token === booking.accessToken (token from searchParams); useSearchParams in Suspense boundary for Next.js Client Components; oxc JSX config in vitest.config.ts for Vite 8/Vitest 4 compatibility; plain JSX email template avoids new deps
 
 ### Pending Todos
 
@@ -141,6 +143,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T22:17:57.501Z
-Stopped at: Completed 04-booking-requests-04-04-PLAN.md
+Last session: 2026-03-27T22:24:30.798Z
+Stopped at: Completed 04-booking-requests-04-05-PLAN.md
 Resume file: None

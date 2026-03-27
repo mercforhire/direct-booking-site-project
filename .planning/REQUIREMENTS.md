@@ -64,7 +64,7 @@
 
 ### Guest Booking Page
 
-- [ ] **GUEST-01**: Guest can view a current booking page showing booking details (room, dates, guests, itemized costs, status)
+- [x] **GUEST-01**: Guest can view a current booking page showing booking details (room, dates, guests, itemized costs, status)
 - [ ] **GUEST-02**: Guest can view their extension request status from the booking page
 - [ ] **GUEST-03**: Guest can submit an extension request directly from the booking page
 
@@ -158,7 +158,7 @@
 | CNCL-05 | Phase 8 | Pending |
 | CNCL-06 | Phase 8 | Pending |
 | CNCL-07 | Phase 8 | Pending |
-| GUEST-01 | Phase 4 | Pending |
+| GUEST-01 | Phase 4 | Complete |
 | GUEST-02 | Phase 7 | Pending |
 | GUEST-03 | Phase 7 | Pending |
 | MSG-01 | Phase 9 | Pending |

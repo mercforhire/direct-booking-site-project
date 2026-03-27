@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { prisma } from "@/lib/prisma"
 import { bookingSchemaCoerced } from "@/lib/validations/booking"
 import { redirect } from "next/navigation"
@@ -30,17 +30,22 @@ export async function submitBooking(data: unknown) {
   let guestUserId: string | null = null
 
   if (createAccount && password) {
-    const supabase = await createClient()
-    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+    // Use admin client so the guest account is auto-confirmed — no email verification
+    // required before sign-in, which would block guests from accessing their booking.
+    const adminClient = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: authData, error: signUpError } = await adminClient.auth.admin.createUser({
       email: guestEmail,
       password,
-      options: { data: { role: "guest" } },
+      email_confirm: true,
+      user_metadata: { role: "guest" },
     })
     if (!signUpError) {
-      // authData.user is null if email already registered (Supabase security behavior)
       guestUserId = authData.user?.id ?? null
     }
-    // If signUpError, guestUserId remains null — booking created anonymously
+    // If signUpError (e.g. duplicate email), guestUserId remains null — booking created anonymously
   }
 
   const accessToken = crypto.randomUUID()

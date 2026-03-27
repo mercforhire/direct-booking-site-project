@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-27T01:22:58.140Z"
+stopped_at: Completed 02-availability-management-02-01-PLAN.md
+last_updated: "2026-03-27T01:46:35.151Z"
 last_activity: 2026-03-25 — Roadmap created (9 phases, 49 requirements mapped)
 progress:
   total_phases: 10
   completed_phases: 1
-  total_plans: 10
-  completed_plans: 9
+  total_plans: 14
+  completed_plans: 10
   percent: 0
 ---
 
@@ -59,6 +59,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01.5-supabase-migration P03 | 2min | 2 tasks | 4 files |
 | Phase 01.5-supabase-migration P04 | 2min | 2 tasks | 11 files |
 | Phase 01.5-supabase-migration P05 | 40min | 2 tasks | 4 files |
+| Phase 02-availability-management P01 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,9 @@ Recent decisions affecting current work:
 - [Phase 01.5-supabase-migration]: roomSchemaCoerced (z.coerce.number) used in room form — HTML inputs always return strings
 - [Phase 01.5-supabase-migration]: browser-image-compression compresses to 1MB max before UploadThing upload
 - [Phase 01.5-supabase-migration]: UploadThing CDN hostnames (ufs.sh, utfs.io) added to next/image remotePatterns in next.config.ts
+- [Phase 02-availability-management]: db push used instead of migrate dev — no migration history existed, prisma migrate dev detected drift and required reset
+- [Phase 02-availability-management]: Date normalization uses dateStr + 'T00:00:00.000Z' for UTC midnight alignment with @db.Date fields
+- [Phase 02-availability-management]: saveBlockedRange uses setUTCDate for range loop to prevent DST boundary bugs
 
 ### Pending Todos
 
@@ -103,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T01:22:58.138Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-availability-management/02-CONTEXT.md
+Last session: 2026-03-27T01:46:35.148Z
+Stopped at: Completed 02-availability-management-02-01-PLAN.md
+Resume file: None

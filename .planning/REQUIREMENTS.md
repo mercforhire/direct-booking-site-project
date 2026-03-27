@@ -15,9 +15,9 @@
 ### Availability
 
 - [ ] **AVAIL-01**: Guest can view a room's availability calendar showing which dates are blocked or available
-- [ ] **AVAIL-02**: Landlord can manually block and unblock specific dates per room from the admin dashboard
-- [ ] **AVAIL-03**: Landlord can configure the global booking window (how far ahead guests can book, between 3–9 months)
-- [ ] **AVAIL-04**: Landlord can set minimum and maximum stay length per room
+- [x] **AVAIL-02**: Landlord can manually block and unblock specific dates per room from the admin dashboard
+- [x] **AVAIL-03**: Landlord can configure the global booking window (how far ahead guests can book, between 3–9 months)
+- [x] **AVAIL-04**: Landlord can set minimum and maximum stay length per room
 
 ### Booking Request
 
@@ -81,7 +81,7 @@
 - [ ] **ADMIN-01**: Landlord can view all bookings organized by status (pending, approved, payment pending, paid, completed, cancelled)
 - [x] **ADMIN-02**: Landlord can add and edit room listings (photos, name, description, property, base nightly rate, max guests)
 - [x] **ADMIN-03**: Landlord can configure per-room fees: cleaning fee, per-extra-guest nightly fee, add-on options (name, price — free or fixed)
-- [ ] **ADMIN-04**: Landlord can manage room availability: block/unblock dates, set min/max stay length, configure the booking window
+- [x] **ADMIN-04**: Landlord can manage room availability: block/unblock dates, set min/max stay length, configure the booking window
 - [x] **ADMIN-05**: Landlord can configure global settings: service fee percentage, deposit amount
 
 ## v2 Requirements
@@ -127,9 +127,9 @@
 | ROOM-03 | Phase 3 | Pending |
 | ROOM-04 | Phase 3 | Pending |
 | AVAIL-01 | Phase 2 | Pending |
-| AVAIL-02 | Phase 2 | Pending |
-| AVAIL-03 | Phase 2 | Pending |
-| AVAIL-04 | Phase 2 | Pending |
+| AVAIL-02 | Phase 2 | Complete |
+| AVAIL-03 | Phase 2 | Complete |
+| AVAIL-04 | Phase 2 | Complete |
 | BOOK-01 | Phase 4 | Pending |
 | BOOK-02 | Phase 4 | Pending |
 | BOOK-03 | Phase 4 | Pending |
@@ -169,7 +169,7 @@
 | ADMIN-01 | Phase 5 | Pending |
 | ADMIN-02 | Phase 1 | Complete |
 | ADMIN-03 | Phase 1 | Complete |
-| ADMIN-04 | Phase 2 | Pending |
+| ADMIN-04 | Phase 2 | Complete |
 | ADMIN-05 | Phase 1 | Complete |
 
 **Coverage:**

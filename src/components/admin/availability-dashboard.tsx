@@ -16,6 +16,19 @@ import {
   saveBlockedRange,
 } from "@/actions/availability"
 
+/**
+ * Format a Date to a YYYY-MM-DD string using LOCAL timezone.
+ * Using toISOString() would convert to UTC first, causing an off-by-one
+ * error for users in UTC+ timezones (e.g. midnight Mar 26 in UTC+8 is
+ * 4pm Mar 25 UTC, so toISOString gives "2026-03-25").
+ */
+function toLocalDateString(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
+}
+
 type RoomForAvailability = {
   id: string
   name: string
@@ -41,8 +54,12 @@ export function AvailabilityDashboard({
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Parse each YYYY-MM-DD string as LOCAL midnight so that react-day-picker's
+  // date comparisons (which operate in local time) highlight the correct day.
+  // "2026-03-26T00:00:00" (no Z) is parsed as local midnight by the Date
+  // constructor, which is what react-day-picker uses for comparisons.
   const blockedDates = blockedDateStrings.map(
-    (s) => new Date(s + "T00:00:00.000Z")
+    (s) => new Date(s + "T00:00:00")
   )
 
   function handleRoomChange(value: string) {
@@ -51,7 +68,7 @@ export function AvailabilityDashboard({
 
   async function handleDayClick(date: Date, isCurrentlyBlocked: boolean) {
     if (!selectedRoom) return
-    const dateStr = date.toISOString().slice(0, 10)
+    const dateStr = toLocalDateString(date)
 
     // Both range markers set — clicking resets range and toggles single date
     if (rangeStart !== undefined && rangeEnd !== undefined) {
@@ -104,8 +121,8 @@ export function AvailabilityDashboard({
     const from = rangeStart <= rangeEnd ? rangeStart : rangeEnd
     const to = rangeStart <= rangeEnd ? rangeEnd : rangeStart
 
-    const fromStr = from.toISOString().slice(0, 10)
-    const toStr = to.toISOString().slice(0, 10)
+    const fromStr = toLocalDateString(from)
+    const toStr = toLocalDateString(to)
 
     setError(null)
     setIsSaving(true)
@@ -164,15 +181,11 @@ export function AvailabilityDashboard({
           <span className="text-sm text-gray-600">
             Range selected:{" "}
             <span className="font-medium">
-              {(rangeStart <= rangeEnd ? rangeStart : rangeEnd)
-                .toISOString()
-                .slice(0, 10)}
+              {toLocalDateString(rangeStart <= rangeEnd ? rangeStart : rangeEnd)}
             </span>{" "}
             to{" "}
             <span className="font-medium">
-              {(rangeStart <= rangeEnd ? rangeEnd : rangeStart)
-                .toISOString()
-                .slice(0, 10)}
+              {toLocalDateString(rangeStart <= rangeEnd ? rangeEnd : rangeStart)}
             </span>
           </span>
           <button

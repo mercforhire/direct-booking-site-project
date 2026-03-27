@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Foundation & Room Management** - Project setup, database schema, admin auth, room/fee CRUD, and global settings
 - [x] **Phase 1.5: Supabase Migration** (INSERTED) - Replace local PostgreSQL + NextAuth with Supabase managed PostgreSQL and Supabase Auth, keeping Prisma as ORM and UploadThing for file storage (completed 2026-03-27)
-- [ ] **Phase 2: Availability Management** - Availability calendar, date blocking, booking window, and stay length constraints
+- [x] **Phase 2: Availability Management** - Availability calendar, date blocking, booking window, and stay length constraints (completed 2026-03-27)
 - [ ] **Phase 3: Guest Room Browsing** - Public room listing pages with photos, rates, fees, and capacity
 - [ ] **Phase 4: Booking Requests** - Guest booking request form with itemized pricing, add-ons, and guest identity
 - [ ] **Phase 5: Approval Flow & Notifications** - Admin booking dashboard, approve/decline actions, and email notifications
@@ -203,7 +203,7 @@ Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. P
 |-------|----------------|--------|-----------|
 | 1. Foundation & Room Management | 4/5 | In Progress|  |
 | 1.5. Supabase Migration | 2/5 | Complete    | 2026-03-27 |
-| 2. Availability Management | 2/4 | In Progress|  |
+| 2. Availability Management | 4/4 | Complete   | 2026-03-27 |
 | 3. Guest Room Browsing | 0/? | Not started | - |
 | 4. Booking Requests | 0/? | Not started | - |
 | 5. Approval Flow & Notifications | 0/? | Not started | - |

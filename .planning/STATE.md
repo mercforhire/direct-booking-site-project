@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 02-availability-management-02-03-PLAN.md
-last_updated: "2026-03-27T02:01:33.368Z"
-last_activity: 2026-03-25 — Roadmap created (9 phases, 49 requirements mapped)
+stopped_at: Completed 02-availability-management-02-04-PLAN.md
+last_updated: "2026-03-27T03:10:30.969Z"
+last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 14
-  completed_plans: 12
-  percent: 0
+  completed_plans: 13
+  percent: 93
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** Repeat guests can book a room directly with the landlord without going through Airbnb, saving both parties on platform fees.
-**Current focus:** Phase 1: Foundation & Room Management
+**Current focus:** Phase 3: Booking Requests
 
 ## Current Position
 
-Phase: 1 of 9 (Foundation & Room Management)
+Phase: 3 of 9 (Booking Requests)
 Plan: 0 of ? in current phase
 Status: Ready to plan
-Last activity: 2026-03-25 — Roadmap created (9 phases, 49 requirements mapped)
+Last activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -101,6 +101,10 @@ Recent decisions affecting current work:
 - [Phase 02-availability-management]: Admin room edit moved from /rooms/[id] to /rooms/[id]/edit — route groups resolve to same URL space
 - [Phase 02-availability-management]: Middleware updated with explicit admin rooms path matching: protects /rooms (list), /rooms/new, /rooms/[id]/edit but not bare /rooms/[id]
 - [Phase 02-availability-management]: DayPicker disabled prop array pattern: { before: today }, { after: windowEnd }, ...blockedDates for multi-condition grey-out on read-only calendar
+- [Phase 02-availability-management]: Single-click toggle default on availability calendar — range mode requires explicit button press to reduce friction
+- [Phase 02-availability-management]: toLocalDateString() instead of toISOString() for date strings — prevents timezone off-by-one for users west of UTC
+- [Phase 02-availability-management]: Decimal-to-Number coercion at RSC boundary — Prisma Decimal objects cannot be serialized as Client Component props
+- [Phase 02-availability-management]: baseGuests Int field added to Room model — represents guests included in base rate, needed for Phase 3 booking requests
 
 ### Pending Todos
 
@@ -114,6 +118,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T02:01:33.366Z
-Stopped at: Completed 02-availability-management-02-03-PLAN.md
+Last session: 2026-03-27T03:10:30.967Z
+Stopped at: Completed 02-availability-management-02-04-PLAN.md
 Resume file: None

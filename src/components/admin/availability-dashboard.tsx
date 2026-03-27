@@ -340,7 +340,7 @@ export function AvailabilityDashboard({
 
           {/* Settings panel */}
           <div>
-            <AvailabilitySettingsPanel room={selectedRoom} />
+            <AvailabilitySettingsPanel key={selectedRoom.id} room={selectedRoom} />
           </div>
         </div>
       ) : (

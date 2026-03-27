@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 04-booking-requests-04-05-PLAN.md
-last_updated: "2026-03-27T22:24:30.800Z"
+stopped_at: Completed 04-booking-requests-04-06-PLAN.md
+last_updated: "2026-03-27T23:48:21.099Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 23
-  completed_plans: 21
+  completed_plans: 22
   percent: 93
 ---
 
@@ -130,6 +130,8 @@ Recent decisions affecting current work:
 - [Phase 04-booking-requests]: zodResolver cast to any for Zod .default() type mismatch with useForm generic
 - [Phase 04-booking-requests]: checkbox.tsx added as shadcn/ui component with @radix-ui/react-checkbox dependency
 - [Phase 04-booking-requests]: Token gate uses token === booking.accessToken (token from searchParams); useSearchParams in Suspense boundary for Next.js Client Components; oxc JSX config in vitest.config.ts for Vite 8/Vitest 4 compatibility; plain JSX email template avoids new deps
+- [Phase 04-booking-requests]: window.location.href used after guest sign-in instead of router.push — router.push serves cached RSC causing login loop
+- [Phase 04-booking-requests]: admin.createUser with email_confirm: true used for guest signup — signUp() sends unactionable confirmation email in sandbox
 
 ### Pending Todos
 
@@ -143,6 +145,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T22:24:30.798Z
-Stopped at: Completed 04-booking-requests-04-05-PLAN.md
+Last session: 2026-03-27T23:48:14.726Z
+Stopped at: Completed 04-booking-requests-04-06-PLAN.md
 Resume file: None

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 03-guest-room-browsing-01-PLAN.md
-last_updated: "2026-03-27T05:20:38.911Z"
+stopped_at: Completed 03-guest-room-browsing-02-PLAN.md
+last_updated: "2026-03-27T05:24:06.806Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
   completed_phases: 2
   total_plans: 17
-  completed_plans: 14
+  completed_plans: 15
   percent: 93
 ---
 
@@ -63,6 +63,7 @@ Progress: [█████████░] 93%
 | Phase 02-availability-management P02 | 7 | 2 tasks | 9 files |
 | Phase 02-availability-management P03 | 3min | 2 tasks | 5 files |
 | Phase 03-guest-room-browsing P01 | 15min | 2 tasks | 9 files |
+| Phase 03-guest-room-browsing P02 | 8min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,9 @@ Recent decisions affecting current work:
 - [Phase 03-guest-room-browsing]: isRoomAvailable checks nights from checkin (inclusive) to checkout (exclusive) — checkout day is departure, not a blocked night
 - [Phase 03-guest-room-browsing]: /rooms removed from middleware admin route protection — public guest browsing requires no auth
 - [Phase 03-guest-room-browsing]: URL-param-driven filter for /rooms: checkin, checkout, guests in search params, updated via router.push
+- [Phase 03-guest-room-browsing]: Radix Dialog used directly (not shadcn wrapper) for lightbox — direct Portal/Overlay/Content access gives clean full-screen layout without conflicting defaults
+- [Phase 03-guest-room-browsing]: RoomPricingTable is a Server Component — no interactivity needed; all fee calculations are deterministic from props
+- [Phase 03-guest-room-browsing]: -mx-4 sm:mx-0 wrapper on gallery gives edge-to-edge hero on mobile while keeping other sections padded within max-w-3xl
 
 ### Pending Todos
 
@@ -122,6 +126,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T05:20:38.908Z
-Stopped at: Completed 03-guest-room-browsing-01-PLAN.md
+Last session: 2026-03-27T05:24:06.804Z
+Stopped at: Completed 03-guest-room-browsing-02-PLAN.md
 Resume file: None

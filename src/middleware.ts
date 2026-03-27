@@ -36,15 +36,8 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  // /rooms is now a public guest list page — no auth required
-  // Admin room routes are /rooms/new and /rooms/[id]/edit only
-  const isRoomsAdminRoute =
-    pathname.startsWith("/rooms/new") ||
-    pathname.endsWith("/edit")
-
-  const adminPaths = ["/dashboard", "/settings", "/availability"]
-  const isAdminRoute =
-    adminPaths.some((p) => pathname.startsWith(p)) || isRoomsAdminRoute
+  const adminPaths = ["/dashboard", "/settings", "/availability", "/admin/rooms"]
+  const isAdminRoute = adminPaths.some((p) => pathname.startsWith(p))
 
   if (!user && isAdminRoute) {
     const url = request.nextUrl.clone()

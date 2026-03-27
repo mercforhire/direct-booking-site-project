@@ -30,7 +30,7 @@ export function RoomTable({ rooms }: RoomTableProps) {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">Rooms</h1>
         <Button asChild>
-          <Link href="/rooms/new">New Room</Link>
+          <Link href="/admin/rooms/new">New Room</Link>
         </Button>
       </div>
       <div className="rounded-md border bg-white">
@@ -64,7 +64,7 @@ export function RoomTable({ rooms }: RoomTableProps) {
                 </TableCell>
                 <TableCell>
                   <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/rooms/${room.id}/edit`}>Edit</Link>
+                    <Link href={`/admin/rooms/${room.id}/edit`}>Edit</Link>
                   </Button>
                 </TableCell>
               </TableRow>

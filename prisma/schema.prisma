@@ -9,19 +9,23 @@ datasource db {
 }
 
 model Room {
-  id              String      @id @default(cuid())
-  name            String
-  description     String
-  location        String
-  baseNightlyRate Decimal     @db.Decimal(10, 2)
-  cleaningFee     Decimal     @default(0) @db.Decimal(10, 2)
-  extraGuestFee   Decimal     @default(0) @db.Decimal(10, 2)
-  maxGuests       Int
-  isActive        Boolean     @default(true)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  addOns          AddOn[]
-  photos          RoomPhoto[]
+  id                  String        @id @default(cuid())
+  name                String
+  description         String
+  location            String
+  baseNightlyRate     Decimal       @db.Decimal(10, 2)
+  cleaningFee         Decimal       @default(0) @db.Decimal(10, 2)
+  extraGuestFee       Decimal       @default(0) @db.Decimal(10, 2)
+  maxGuests           Int
+  isActive            Boolean       @default(true)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  bookingWindowMonths Int           @default(3)
+  minStayNights       Int           @default(1)
+  maxStayNights       Int           @default(30)
+  addOns              AddOn[]
+  photos              RoomPhoto[]
+  blockedDates        BlockedDate[]
 }
 
 model RoomPhoto {
@@ -48,4 +52,14 @@ model Settings {
   serviceFeePercent Decimal  @db.Decimal(5, 2)
   depositAmount     Decimal  @db.Decimal(10, 2)
   updatedAt         DateTime @updatedAt
+}
+
+model BlockedDate {
+  id     String   @id @default(cuid())
+  roomId String
+  date   DateTime @db.Date
+  room   Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, date])
+  @@index([roomId])
 }

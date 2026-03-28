@@ -36,6 +36,7 @@ type SerializedBooking = {
   room: { name: string }
   createdAt: string
   updatedAt: string
+  hasPendingExtension: boolean
 }
 
 const STATUS_TABS: { value: string; label: string }[] = [
@@ -105,12 +106,20 @@ function BookingsTable({ bookings }: { bookings: SerializedBooking[] }) {
         {bookings.map((b) => (
           <TableRow key={b.id}>
             <TableCell>
-              <Link
-                href={`/admin/bookings/${b.id}`}
-                className="font-medium hover:underline text-blue-600"
-              >
-                {b.guestName}
-              </Link>
+              <div className="flex items-center gap-1 flex-wrap">
+                <Link
+                  href={`/admin/bookings/${b.id}`}
+                  className="font-medium hover:underline text-blue-600"
+                >
+                  {b.guestName}
+                </Link>
+                {b.hasPendingExtension && (
+                  <Badge variant="secondary" className="ml-2 text-xs">
+                    Extension pending
+                  </Badge>
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground font-mono mt-0.5">{b.id}</div>
             </TableCell>
             <TableCell>{b.room.name}</TableCell>
             <TableCell>{format(new Date(b.checkin), "MMM d, yyyy")}</TableCell>
@@ -120,7 +129,10 @@ function BookingsTable({ bookings }: { bookings: SerializedBooking[] }) {
               {new Intl.NumberFormat("en-CA", {
                 style: "currency",
                 currency: "CAD",
-              }).format(b.estimatedTotal)}
+              }).format(b.status === "PAID" && b.confirmedPrice != null ? b.confirmedPrice : b.estimatedTotal)}
+              {b.status === "PAID" && b.confirmedPrice != null && (
+                <div className="text-xs text-muted-foreground mt-0.5">paid</div>
+              )}
             </TableCell>
             <TableCell>
               <StatusBadge status={b.status} />

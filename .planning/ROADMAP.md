@@ -166,11 +166,17 @@ Plans:
   4. Guest receives email notification of extension approval (with price and payment link) or decline
   5. Guest can pay the extension amount via Stripe or e-transfer (same flow as original payment)
   6. Guest can view extension request status from their booking page
-**Plans**: 3 plans
+**Plans**: 8 plans
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
+- [ ] 07-01-PLAN.md — BookingExtension Prisma model + prisma db push + Zod validation schemas + Wave 0 test stubs (4 files)
+- [ ] 07-02-PLAN.md — submitExtension + cancelExtension guest server actions (TDD)
+- [ ] 07-03-PLAN.md — approveExtension + declineExtension admin server actions (TDD)
+- [ ] 07-04-PLAN.md — Extension payment actions (createExtensionStripeCheckoutSession, markExtensionAsPaid) + Stripe webhook disambiguation (TDD)
+- [ ] 07-05-PLAN.md — Three extension email templates (request, approved, declined)
+- [ ] 07-06-PLAN.md — Guest UI: ExtensionSection component + BookingStatusView update + booking page RSC update + email template wiring
+- [ ] 07-07-PLAN.md — Admin UI: booking list badge + booking detail extension section (approve/decline/mark-paid)
+- [ ] 07-08-PLAN.md — Full test suite run + 7-scenario human verification checkpoint
 
 ### Phase 8: Cancellations & Refunds
 **Goal**: Landlord can cancel any booking and issue appropriate refunds through the original payment channel
@@ -178,11 +184,11 @@ Plans:
 **Requirements**: CNCL-01, CNCL-02, CNCL-03, CNCL-04, CNCL-05, CNCL-06, CNCL-07
 **Success Criteria** (what must be TRUE):
   1. Landlord can cancel any booking from the admin dashboard at any time
-  2. When cancelling, landlord enters the refund amount (case-by-case, no fixed policy)
+  2. When cancelling, landlord enters the refund amount (no fixed policy — case by case)
   3. For Stripe-paid bookings, the system automatically issues the Stripe refund for the entered amount
-  4. For e-transfer bookings, landlord manually processes the refund and marks it as refunded in the system
+  4. For e-transfer bookings, landlord manually processes the refund outside the system and marks it as refunded
   5. Deposit is automatically included in the refundable amount for pre-check-in cancellations; landlord decides for mid-stay cancellations
-  6. Guest receives a cancellation email with the refund amount and expected timeline
+  6. Guest receives an email on cancellation with the refund amount and expected timeline
 **Plans**: 3 plans
 
 Plans:
@@ -219,6 +225,6 @@ Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. P
 | 4. Booking Requests | 5/6 | In Progress|  |
 | 5. Approval Flow & Notifications | 5/5 | Complete   | 2026-03-28 |
 | 6. Payment | 3/3 | Complete   | 2026-03-28 |
-| 7. Booking Extensions | 0/? | Not started | - |
+| 7. Booking Extensions | 0/8 | Not started | - |
 | 8. Cancellations & Refunds | 0/? | Not started | - |
 | 9. Messaging | 0/? | Not started | - |

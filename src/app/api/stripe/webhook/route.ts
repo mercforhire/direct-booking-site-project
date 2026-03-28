@@ -1,0 +1,76 @@
+import { NextResponse } from "next/server"
+import { headers } from "next/headers"
+import Stripe from "stripe"
+import { stripe } from "@/lib/stripe"
+import { prisma } from "@/lib/prisma"
+import { Resend } from "resend"
+import { BookingPaymentConfirmationEmail } from "@/emails/booking-payment-confirmation"
+
+export async function POST(request: Request) {
+  const body = await request.text() // MUST be text() — raw body for HMAC verification
+  const sig = (await headers()).get("stripe-signature")
+
+  if (!sig) {
+    return new NextResponse("No signature", { status: 400 })
+  }
+
+  let event: Stripe.Event
+  try {
+    event = stripe.webhooks.constructEvent(
+      body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    )
+  } catch (err) {
+    return new NextResponse(
+      `Webhook error: ${(err as Error).message}`,
+      { status: 400 }
+    )
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session
+    const bookingId = session.metadata?.bookingId
+
+    if (!bookingId) {
+      return new NextResponse("No bookingId in metadata", { status: 400 })
+    }
+
+    // Idempotent update: updateMany with APPROVED guard — no-op if already PAID
+    const result = await prisma.booking.updateMany({
+      where: { id: bookingId, status: "APPROVED" },
+      data: { status: "PAID" },
+    })
+
+    // Send confirmation email only if we actually updated (count > 0)
+    if (result.count > 0) {
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: { room: { select: { name: true } } },
+      })
+
+      if (booking) {
+        try {
+          const resend = new Resend(process.env.RESEND_API_KEY)
+          await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
+            to: booking.guestEmail,
+            subject: `Payment received — ${booking.room.name}`,
+            react: BookingPaymentConfirmationEmail({
+              guestName: booking.guestName,
+              roomName: booking.room.name,
+              checkin: booking.checkin.toISOString().slice(0, 10),
+              checkout: booking.checkout.toISOString().slice(0, 10),
+              amountPaid: Number(booking.confirmedPrice),
+              bookingId: booking.id,
+            }),
+          })
+        } catch {
+          // Non-fatal: email failure does not fail the webhook
+        }
+      }
+    }
+  }
+
+  return NextResponse.json({ received: true })
+}

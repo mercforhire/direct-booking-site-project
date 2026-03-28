@@ -118,3 +118,114 @@ export async function markBookingAsPaid(bookingId: string) {
 
   return { success: true }
 }
+
+export async function createExtensionStripeCheckoutSession(extensionId: string) {
+  const extension = await prisma.bookingExtension.findUnique({
+    where: { id: extensionId, status: "APPROVED" },
+    include: {
+      booking: {
+        select: {
+          id: true,
+          guestEmail: true,
+          checkout: true,
+          room: { select: { name: true } },
+        },
+      },
+    },
+  })
+
+  if (!extension || !extension.extensionPrice) return { error: "extension_not_found" }
+
+  const origin =
+    (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL
+
+  const originalCheckout = extension.booking.checkout.toISOString().slice(0, 10)
+  const newCheckout = extension.requestedCheckout.toISOString().slice(0, 10)
+
+  const session = await stripe.checkout.sessions.create({
+    mode: "payment",
+    payment_method_types: ["card"],
+    currency: "cad",
+    line_items: [
+      {
+        price_data: {
+          currency: "cad",
+          unit_amount: Math.round(Number(extension.extensionPrice) * 100),
+          product_data: {
+            name: `${extension.booking.room.name} — extension ${originalCheckout} to ${newCheckout}`,
+          },
+        },
+        quantity: 1,
+      },
+    ],
+    metadata: { type: "extension", extensionId: extension.id },
+    success_url: `${origin}/bookings/${extension.booking.id}?extension_paid=1`,
+    cancel_url: `${origin}/bookings/${extension.booking.id}`,
+    customer_email: extension.booking.guestEmail,
+  })
+
+  await prisma.bookingExtension.update({
+    where: { id: extensionId },
+    data: { stripeSessionId: session.id },
+  })
+
+  redirect(session.url!) // Outside try/catch — NEXT_REDIRECT pattern
+}
+
+export async function markExtensionAsPaid(extensionId: string) {
+  await requireAuth()
+
+  let extension: {
+    id: string
+    bookingId: string
+    requestedCheckout: Date
+    extensionPrice: import("@prisma/client").Prisma.Decimal | null
+    booking: {
+      id: string
+      guestEmail: string
+      guestName: string
+      accessToken: string
+      room: { name: string }
+    }
+  }
+
+  try {
+    extension = await prisma.bookingExtension.update({
+      where: { id: extensionId, status: "APPROVED" },
+      data: { status: "PAID" },
+      include: {
+        booking: {
+          include: { room: { select: { name: true } } },
+        },
+      },
+    })
+
+    // Atomic: update booking.checkout to requestedCheckout
+    await prisma.booking.update({
+      where: { id: extension.bookingId },
+      data: { checkout: extension.requestedCheckout },
+    })
+  } catch (err) {
+    if (err instanceof PrismaClientKnownRequestError && err.code === "P2025") {
+      return { error: "not_approved" }
+    }
+    throw err
+  }
+
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
+      to: extension.booking.guestEmail,
+      subject: `Extension payment confirmed — ${extension.booking.room.name}`,
+      html: `<p>Hi ${extension.booking.guestName}, your extension payment has been received. New checkout: ${extension.requestedCheckout.toISOString().slice(0, 10)}.</p>`,
+    })
+  } catch (emailErr) {
+    console.error("[markExtensionAsPaid] email send failed:", emailErr)
+  }
+
+  revalidatePath(`/admin/bookings/${extension.bookingId}`)
+  revalidatePath(`/bookings/${extension.bookingId}`)
+
+  return { success: true }
+}

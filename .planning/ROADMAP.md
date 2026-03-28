@@ -109,7 +109,7 @@ Plans:
   4. Guest can submit a booking request without creating an account (name, email, phone required)
   5. Guest can optionally create an account to view booking history
   6. After submitting, guest can view a booking page showing their booking details, itemized costs, and current status
-**Plans**: 6 plans
+**Plans**: 7 plans
 
 Plans:
 - [ ] 04-01-PLAN.md — Prisma Booking model + BookingStatus enum + prisma db push + Zod validation schemas (dual-schema pattern)
@@ -118,6 +118,7 @@ Plans:
 - [ ] 04-04-PLAN.md — /rooms/[id]/book RSC shell + BookingForm client component (RHF, range picker, live pricing sidebar, add-ons, guest identity, optional account creation)
 - [ ] 04-05-PLAN.md — /bookings/[id] token-gated status page + BookingStatusView + email template + guest login page + activate CTA
 - [ ] 04-06-PLAN.md — Full test suite run + 7-scenario human verification checkpoint
+- [ ] 04-07-PLAN.md — Gap closure: fix 4 failing submitBooking tests (admin client mock) + remove unused import in booking-status-view.tsx
 
 ### Phase 5: Approval Flow & Notifications
 **Goal**: Landlord can review, approve, or decline booking requests, and both parties receive email notifications at each step

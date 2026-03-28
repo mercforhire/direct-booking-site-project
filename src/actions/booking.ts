@@ -7,6 +7,7 @@ import { redirect } from "next/navigation"
 import { Resend } from "resend"
 import { render } from "@react-email/render"
 import { BookingConfirmationEmail } from "@/emails/booking-confirmation"
+import { BookingNotificationEmail } from "@/emails/booking-notification"
 
 export async function submitBooking(data: unknown) {
   const parsed = bookingSchemaCoerced.safeParse(data)
@@ -71,6 +72,7 @@ export async function submitBooking(data: unknown) {
       status: "PENDING",
       accessToken,
     },
+    include: { room: { select: { name: true } } },
   })
 
   try {
@@ -84,6 +86,25 @@ export async function submitBooking(data: unknown) {
       subject: "Your booking request was received",
       html,
     })
+    if (process.env.LANDLORD_EMAIL) {
+      const landlordHtml = await render(
+        BookingNotificationEmail({
+          guestName,
+          bookingId: created.id,
+          roomName: created.room.name,
+          checkin,
+          checkout,
+          numGuests,
+          estimatedTotal: Number(estimatedTotal),
+        })
+      )
+      await resend.emails.send({
+        from: process.env.EMAIL_FROM ?? "bookings@example.com",
+        to: process.env.LANDLORD_EMAIL,
+        subject: `New booking request from ${guestName}`,
+        html: landlordHtml,
+      })
+    }
   } catch {
     // Email failure is non-fatal — booking was already created
   }

@@ -30,43 +30,91 @@ export async function POST(request: Request) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session
-    const bookingId = session.metadata?.bookingId
+    const metadataType = session.metadata?.type ?? "booking"
 
-    if (!bookingId) {
-      return new NextResponse("No bookingId in metadata", { status: 400 })
-    }
+    if (metadataType === "extension") {
+      // NEW: extension payment branch
+      const extensionId = session.metadata?.extensionId
+      if (!extensionId) {
+        return new NextResponse("No extensionId in metadata", { status: 400 })
+      }
 
-    // Idempotent update: updateMany with APPROVED guard — no-op if already PAID
-    const result = await prisma.booking.updateMany({
-      where: { id: bookingId, status: "APPROVED" },
-      data: { status: "PAID" },
-    })
-
-    // Send confirmation email only if we actually updated (count > 0)
-    if (result.count > 0) {
-      const booking = await prisma.booking.findUnique({
-        where: { id: bookingId },
-        include: { room: { select: { name: true } } },
+      const extension = await prisma.bookingExtension.findUnique({
+        where: { id: extensionId },
       })
 
-      if (booking) {
+      // Idempotent: no-op if already PAID
+      if (extension && extension.status !== "PAID") {
+        await prisma.$transaction([
+          prisma.bookingExtension.update({
+            where: { id: extensionId },
+            data: { status: "PAID" },
+          }),
+          prisma.booking.update({
+            where: { id: extension.bookingId },
+            data: { checkout: extension.requestedCheckout },
+          }),
+        ])
+
+        // Non-fatal email to guest
         try {
-          const resend = new Resend(process.env.RESEND_API_KEY)
-          await resend.emails.send({
-            from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
-            to: booking.guestEmail,
-            subject: `Payment received — ${booking.room.name}`,
-            react: BookingPaymentConfirmationEmail({
-              guestName: booking.guestName,
-              roomName: booking.room.name,
-              checkin: booking.checkin.toISOString().slice(0, 10),
-              checkout: booking.checkout.toISOString().slice(0, 10),
-              amountPaid: Number(booking.confirmedPrice),
-              bookingId: booking.id,
-            }),
+          const fullBooking = await prisma.booking.findUnique({
+            where: { id: extension.bookingId },
+            include: { room: { select: { name: true } } },
           })
+          if (fullBooking) {
+            const resend = new Resend(process.env.RESEND_API_KEY)
+            await resend.emails.send({
+              from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
+              to: fullBooking.guestEmail,
+              subject: `Extension payment received — ${fullBooking.room.name}`,
+              html: `<p>Hi ${fullBooking.guestName}, extension payment confirmed. New checkout: ${extension.requestedCheckout.toISOString().slice(0, 10)}.</p>`,
+            })
+          }
         } catch {
-          // Non-fatal: email failure does not fail the webhook
+          // Non-fatal: webhook always returns 200
+        }
+      }
+    } else {
+      // EXISTING BOOKING LOGIC — unchanged
+      const bookingId = session.metadata?.bookingId
+
+      if (!bookingId) {
+        return new NextResponse("No bookingId in metadata", { status: 400 })
+      }
+
+      // Idempotent update: updateMany with APPROVED guard — no-op if already PAID
+      const result = await prisma.booking.updateMany({
+        where: { id: bookingId, status: "APPROVED" },
+        data: { status: "PAID" },
+      })
+
+      // Send confirmation email only if we actually updated (count > 0)
+      if (result.count > 0) {
+        const booking = await prisma.booking.findUnique({
+          where: { id: bookingId },
+          include: { room: { select: { name: true } } },
+        })
+
+        if (booking) {
+          try {
+            const resend = new Resend(process.env.RESEND_API_KEY)
+            await resend.emails.send({
+              from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
+              to: booking.guestEmail,
+              subject: `Payment received — ${booking.room.name}`,
+              react: BookingPaymentConfirmationEmail({
+                guestName: booking.guestName,
+                roomName: booking.room.name,
+                checkin: booking.checkin.toISOString().slice(0, 10),
+                checkout: booking.checkout.toISOString().slice(0, 10),
+                amountPaid: Number(booking.confirmedPrice),
+                bookingId: booking.id,
+              }),
+            })
+          } catch {
+            // Non-fatal: email failure does not fail the webhook
+          }
         }
       }
     }

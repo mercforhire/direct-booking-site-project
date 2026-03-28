@@ -31,8 +31,8 @@
 ### Approval Flow
 
 - [ ] **APPR-01**: Landlord receives an email notification when a new booking request is submitted
-- [ ] **APPR-02**: Landlord can approve a booking request and set the exact confirmed price
-- [ ] **APPR-03**: Landlord can decline a booking request with an optional reason
+- [x] **APPR-02**: Landlord can approve a booking request and set the exact confirmed price
+- [x] **APPR-03**: Landlord can decline a booking request with an optional reason
 - [ ] **APPR-04**: Guest receives an email when their request is approved, including the confirmed price and payment instructions
 - [ ] **APPR-05**: Guest receives an email when their request is declined, including the optional reason
 
@@ -78,7 +78,7 @@
 
 ### Admin Dashboard
 
-- [ ] **ADMIN-01**: Landlord can view all bookings organized by status (pending, approved, payment pending, paid, completed, cancelled)
+- [x] **ADMIN-01**: Landlord can view all bookings organized by status (pending, approved, payment pending, paid, completed, cancelled)
 - [x] **ADMIN-02**: Landlord can add and edit room listings (photos, name, description, property, base nightly rate, max guests)
 - [x] **ADMIN-03**: Landlord can configure per-room fees: cleaning fee, per-extra-guest nightly fee, add-on options (name, price — free or fixed)
 - [x] **ADMIN-04**: Landlord can manage room availability: block/unblock dates, set min/max stay length, configure the booking window
@@ -137,8 +137,8 @@
 | BOOK-05 | Phase 4 | Complete |
 | BOOK-06 | Phase 4 | Complete |
 | APPR-01 | Phase 5 | Pending |
-| APPR-02 | Phase 5 | Pending |
-| APPR-03 | Phase 5 | Pending |
+| APPR-02 | Phase 5 | Complete |
+| APPR-03 | Phase 5 | Complete |
 | APPR-04 | Phase 5 | Pending |
 | APPR-05 | Phase 5 | Pending |
 | PAY-01 | Phase 6 | Pending |
@@ -166,7 +166,7 @@
 | MSG-03 | Phase 9 | Pending |
 | MSG-04 | Phase 9 | Pending |
 | MSG-05 | Phase 9 | Pending |
-| ADMIN-01 | Phase 5 | Pending |
+| ADMIN-01 | Phase 5 | Complete |
 | ADMIN-02 | Phase 1 | Complete |
 | ADMIN-03 | Phase 1 | Complete |
 | ADMIN-04 | Phase 2 | Complete |

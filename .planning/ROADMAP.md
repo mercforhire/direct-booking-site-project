@@ -218,7 +218,7 @@ Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. P
 | 3. Guest Room Browsing | 3/3 | Complete   | 2026-03-27 |
 | 4. Booking Requests | 5/6 | In Progress|  |
 | 5. Approval Flow & Notifications | 5/5 | Complete   | 2026-03-28 |
-| 6. Payment | 1/3 | In Progress|  |
+| 6. Payment | 2/3 | In Progress|  |
 | 7. Booking Extensions | 0/? | Not started | - |
 | 8. Cancellations & Refunds | 0/? | Not started | - |
 | 9. Messaging | 0/? | Not started | - |

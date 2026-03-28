@@ -21,15 +21,20 @@ vi.mock("resend", () => ({
   }),
 }))
 
-// Mock Supabase server client
-const mockSignUp = vi.fn()
-const mockGetUser = vi.fn()
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: vi.fn(() =>
-    Promise.resolve({
-      auth: { signUp: mockSignUp, getUser: mockGetUser },
-    })
-  ),
+// Mock the Supabase JS admin client (used by submitBooking for guest account creation)
+const { mockAdminCreateUser, mockAdminListUsers } = vi.hoisted(() => ({
+  mockAdminCreateUser: vi.fn(),
+  mockAdminListUsers: vi.fn(),
+}))
+vi.mock("@supabase/supabase-js", () => ({
+  createClient: vi.fn(() => ({
+    auth: {
+      admin: {
+        createUser: mockAdminCreateUser,
+        listUsers: mockAdminListUsers,
+      },
+    },
+  })),
 }))
 
 import { submitBooking } from "@/actions/booking"
@@ -72,6 +77,9 @@ describe("submitBooking", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockPrisma.booking.create.mockResolvedValue(mockCreatedBooking as any)
+    // Default: no account creation (createAccount=false path doesn't call these)
+    mockAdminCreateUser.mockResolvedValue({ data: { user: null }, error: null })
+    mockAdminListUsers.mockResolvedValue({ data: { users: [] }, error: null })
   })
 
   it("returns { error } when input is invalid", async () => {
@@ -90,9 +98,9 @@ describe("submitBooking", () => {
     expect(callArg.data.guestUserId).toBeNull()
   })
 
-  it("with createAccount=true and valid password: calls supabase.auth.signUp with email and role=guest", async () => {
-    mockSignUp.mockResolvedValue({
-      data: { user: { id: "user-abc" }, session: null },
+  it("with createAccount=true and valid password: calls adminClient.auth.admin.createUser with email_confirm: true and role=guest", async () => {
+    mockAdminCreateUser.mockResolvedValue({
+      data: { user: { id: "user-abc" } },
       error: null,
     })
     try {
@@ -100,16 +108,17 @@ describe("submitBooking", () => {
     } catch {
       // redirect throws
     }
-    expect(mockSignUp).toHaveBeenCalledWith({
+    expect(mockAdminCreateUser).toHaveBeenCalledWith({
       email: "jane@example.com",
       password: "password123",
-      options: { data: { role: "guest" } },
+      email_confirm: true,
+      user_metadata: { role: "guest" },
     })
   })
 
   it("with createAccount=true and signUp returning a user: stores user.id as guestUserId", async () => {
-    mockSignUp.mockResolvedValue({
-      data: { user: { id: "user-abc" }, session: null },
+    mockAdminCreateUser.mockResolvedValue({
+      data: { user: { id: "user-abc" } },
       error: null,
     })
     try {
@@ -122,10 +131,11 @@ describe("submitBooking", () => {
   })
 
   it("with createAccount=true and signUp returning user=null (duplicate email): stores guestUserId=null", async () => {
-    mockSignUp.mockResolvedValue({
-      data: { user: null, session: null },
-      error: null,
+    mockAdminCreateUser.mockResolvedValue({
+      data: { user: null },
+      error: { message: "User already registered" },
     })
+    mockAdminListUsers.mockResolvedValue({ data: { users: [] }, error: null })
     try {
       await submitBooking({ ...validBookingData, createAccount: true, password: "password123" })
     } catch {
@@ -197,6 +207,8 @@ describe("submitBooking", () => {
     } catch {
       // redirect throws
     }
-    expect(vi.mocked(redirect)).toHaveBeenCalledWith("/bookings/booking-123?new=1")
+    expect(vi.mocked(redirect)).toHaveBeenCalledWith(
+      expect.stringMatching(/^\/bookings\/booking-123\?token=[0-9a-f-]{36}&new=1$/)
+    )
   })
 })

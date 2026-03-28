@@ -2,7 +2,6 @@
 
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
-import { calculatePriceEstimate } from "@/lib/price-estimate"
 
 // All Decimal fields coerced to number at RSC boundary
 export type SerializedBooking = {
@@ -63,9 +62,6 @@ export function BookingStatusView({ booking, showSuccessBanner }: Props) {
     booking.selectedAddOnIds.includes(a.id)
   )
 
-  // Re-calculate itemized estimate from stored booking values
-  // We need settings (serviceFeePercent, depositAmount) — fall back to estimatedTotal if unavailable
-  // Since we only have the stored estimatedTotal (not original settings), show a simplified breakdown
   const hasAddOns = selectedAddOns.length > 0
 
   return (

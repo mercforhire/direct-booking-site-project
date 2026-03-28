@@ -54,7 +54,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                 <FormItem>
                   <FormLabel>Service Fee (%)</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="3.00" {...field} />
+                    <Input type="number" step="0.01" placeholder="3.00" {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
                   </FormControl>
                   <FormDescription>
                     Added to booking total to offset Stripe processing costs.
@@ -70,7 +70,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                 <FormItem>
                   <FormLabel>Deposit Amount ($)</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                    <Input type="number" step="0.01" placeholder="0.00" {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
                   </FormControl>
                   <FormDescription>
                     Set to 0 to disable. Collected as part of booking payment.

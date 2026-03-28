@@ -4,6 +4,7 @@ import { useTransition } from "react"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { createStripeCheckoutSession } from "@/actions/payment"
+import { ExtensionSection, type SerializedExtension } from "./extension-section"
 
 // All Decimal fields coerced to number at RSC boundary
 export type SerializedBooking = {
@@ -36,7 +37,10 @@ type Props = {
   booking: SerializedBooking
   showSuccessBanner: boolean
   showPaidBanner: boolean
+  showExtensionPaidBanner?: boolean
   etransferEmail: string | null
+  activeExtension?: SerializedExtension | null
+  blockedDates?: string[]
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -142,7 +146,10 @@ export function BookingStatusView({
   booking,
   showSuccessBanner,
   showPaidBanner,
+  showExtensionPaidBanner,
   etransferEmail,
+  activeExtension,
+  blockedDates = [],
 }: Props) {
   const checkinStr = booking.checkin.slice(0, 10) // "YYYY-MM-DD"
   const checkoutStr = booking.checkout.slice(0, 10)
@@ -167,6 +174,13 @@ export function BookingStatusView({
       {showPaidBanner && (
         <div className="mb-6 rounded-md bg-green-50 border border-green-200 p-4 text-green-800 text-sm font-medium">
           Payment successful — your booking is now confirmed.
+        </div>
+      )}
+
+      {/* Extension paid banner — redirected back from Stripe with ?extension_paid=1 */}
+      {showExtensionPaidBanner && (
+        <div className="mb-6 rounded-md bg-green-50 border border-green-200 p-4 text-green-800 text-sm font-medium">
+          Extension payment confirmed — your checkout date has been updated.
         </div>
       )}
 
@@ -252,6 +266,14 @@ export function BookingStatusView({
 
       {/* Payment section */}
       <PaymentSection booking={booking} etransferEmail={etransferEmail} />
+
+      {/* Extension section */}
+      <ExtensionSection
+        booking={{ id: booking.id, status: booking.status, checkout: booking.checkout }}
+        activeExtension={activeExtension ?? null}
+        blockedDates={blockedDates}
+        etransferEmail={etransferEmail}
+      />
 
       {/* Booking reference */}
       <p className="text-xs text-gray-400 mt-4 text-center">

@@ -223,7 +223,8 @@ describe("submitBooking", () => {
     delete process.env.LANDLORD_EMAIL
     // Two emails sent: guest confirmation + landlord notification
     expect(mockEmailSend).toHaveBeenCalledTimes(2)
-    const calls = mockEmailSend.mock.calls.map((c: [{ to: string; subject: string }]) => c[0])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const calls = mockEmailSend.mock.calls.map((c: any[]) => c[0] as { to: string; subject: string })
     const landlordCall = calls.find((c: { to: string }) => c.to === "landlord@example.com")
     expect(landlordCall).toBeDefined()
     expect(landlordCall?.subject).toMatch(/New booking request/i)

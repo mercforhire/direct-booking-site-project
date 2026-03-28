@@ -37,7 +37,6 @@ describe("availability actions", () => {
         id: "bd-1",
         roomId: "room-1",
         date: new Date("2026-04-01T00:00:00.000Z"),
-        room: {} as any,
       })
 
       await toggleBlockedDate("room-1", "2026-04-01")
@@ -56,7 +55,6 @@ describe("availability actions", () => {
         id: "bd-1",
         roomId: "room-1",
         date: new Date("2026-04-01T00:00:00.000Z"),
-        room: {} as any,
       }
       mockPrisma.blockedDate.findUnique.mockResolvedValue(existing)
       mockPrisma.blockedDate.delete.mockResolvedValue(existing)
@@ -91,7 +89,8 @@ describe("availability actions", () => {
       await saveBlockedRange("room-1", "2026-04-01", "2026-04-03", true)
 
       expect(mockPrisma.blockedDate.createMany).toHaveBeenCalledOnce()
-      const callArgs = mockPrisma.blockedDate.createMany.mock.calls[0][0]
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = mockPrisma.blockedDate.createMany.mock.calls[0]![0] as any
       expect(callArgs.data).toHaveLength(3)
       expect(callArgs.skipDuplicates).toBe(true)
     })
@@ -106,7 +105,8 @@ describe("availability actions", () => {
       await saveBlockedRange("room-1", "2026-04-01", "2026-04-03", false)
 
       expect(mockPrisma.blockedDate.deleteMany).toHaveBeenCalledOnce()
-      const callArgs = mockPrisma.blockedDate.deleteMany.mock.calls[0][0]
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = mockPrisma.blockedDate.deleteMany.mock.calls[0]![0] as any
       expect(callArgs.where.date.in).toHaveLength(3)
     })
 
@@ -119,7 +119,8 @@ describe("availability actions", () => {
 
       await saveBlockedRange("room-1", "2026-04-01", "2026-04-01", true)
 
-      const callArgs = mockPrisma.blockedDate.createMany.mock.calls[0][0]
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = mockPrisma.blockedDate.createMany.mock.calls[0]![0] as any
       expect(callArgs.data).toHaveLength(1)
     })
 
@@ -132,7 +133,8 @@ describe("availability actions", () => {
 
       await saveBlockedRange("room-1", "2026-04-01", "2026-04-01", false)
 
-      const callArgs = mockPrisma.blockedDate.deleteMany.mock.calls[0][0]
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = mockPrisma.blockedDate.deleteMany.mock.calls[0]![0] as any
       expect(callArgs.where.date.in).toHaveLength(1)
     })
   })

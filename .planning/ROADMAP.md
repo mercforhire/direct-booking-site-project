@@ -148,11 +148,12 @@ Plans:
   2. Approved guest can pay by e-transfer, and landlord can manually mark the booking as paid in the admin dashboard
   3. Service fee (configurable percentage) is correctly added to the booking total
   4. Deposit amount (configurable by landlord) is included in the payment breakdown and collected as part of payment
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
+- [ ] 06-01-PLAN.md — Schema migration (stripeSessionId, etransferEmail) + Stripe singleton + payment server actions + unit tests
+- [ ] 06-02-PLAN.md — Payment confirmation email + guest payment UI (Stripe + e-transfer when APPROVED) + admin Mark as Paid UI + settings etransferEmail field
+- [ ] 06-03-PLAN.md — Stripe webhook Route Handler (idempotent APPROVED→PAID) + human verification checkpoint
 
 ### Phase 7: Booking Extensions
 **Goal**: Guests can request to extend an existing stay, and the landlord can approve and collect payment for the additional nights
@@ -165,7 +166,7 @@ Plans:
   4. Guest receives email notification of extension approval (with price and payment link) or decline
   5. Guest can pay the extension amount via Stripe or e-transfer (same flow as original payment)
   6. Guest can view extension request status from their booking page
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
 - [ ] 07-01: TBD
@@ -182,7 +183,7 @@ Plans:
   4. For e-transfer bookings, landlord manually processes the refund and marks it as refunded in the system
   5. Deposit is automatically included in the refundable amount for pre-check-in cancellations; landlord decides for mid-stay cancellations
   6. Guest receives a cancellation email with the refund amount and expected timeline
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
 - [ ] 08-01: TBD
@@ -198,7 +199,7 @@ Plans:
   3. Both guest and landlord can view the full message thread on their respective booking views
   4. Landlord receives an email notification when a guest sends a new message
   5. Guest receives an email notification when the landlord replies
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
 - [ ] 09-01: TBD

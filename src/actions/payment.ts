@@ -9,7 +9,7 @@ import { headers } from "next/headers"
 import { Resend } from "resend"
 import { render } from "@react-email/render"
 import { markAsPaidSchema } from "@/lib/validations/payment"
-import { BookingPaidEmail } from "@/emails/booking-paid"
+import { BookingPaymentConfirmationEmail } from "@/emails/booking-payment-confirmation"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 
 async function requireAuth() {
@@ -73,6 +73,9 @@ export async function markBookingAsPaid(bookingId: string) {
     guestEmail: string
     guestName: string
     accessToken: string
+    checkin: Date
+    checkout: Date
+    confirmedPrice: import("@prisma/client").Prisma.Decimal | null
     room: { name: string }
   }
 
@@ -92,17 +95,19 @@ export async function markBookingAsPaid(bookingId: string) {
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
     const html = await render(
-      BookingPaidEmail({
+      BookingPaymentConfirmationEmail({
         bookingId: booking.id,
         guestName: booking.guestName,
         roomName: booking.room.name,
-        accessToken: booking.accessToken,
+        checkin: booking.checkin.toISOString().slice(0, 10),
+        checkout: booking.checkout.toISOString().slice(0, 10),
+        amountPaid: Number(booking.confirmedPrice ?? 0),
       })
     )
     await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
       to: booking.guestEmail,
-      subject: `Payment received — your booking is confirmed`,
+      subject: `Payment received — ${booking.room.name}`,
       html,
     })
   } catch (emailErr) {

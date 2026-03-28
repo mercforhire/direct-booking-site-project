@@ -19,10 +19,12 @@ export async function upsertSettings(data: unknown) {
       id: "global",
       serviceFeePercent: parsed.data.serviceFeePercent,
       depositAmount: parsed.data.depositAmount,
+      etransferEmail: parsed.data.etransferEmail || null,
     },
     update: {
       serviceFeePercent: parsed.data.serviceFeePercent,
       depositAmount: parsed.data.depositAmount,
+      etransferEmail: parsed.data.etransferEmail || null,
     },
   })
 

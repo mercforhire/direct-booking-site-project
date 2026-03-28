@@ -9,6 +9,7 @@ export const settingsSchema = z.object({
   depositAmount: z
     .number()
     .min(0, "Deposit amount must be 0 or greater"),
+  etransferEmail: z.string().optional(),
 })
 
 // Coerced schema for server actions (handles string inputs from unknown data)
@@ -20,6 +21,7 @@ export const settingsSchemaCoerced = z.object({
   depositAmount: z.coerce
     .number()
     .min(0, "Deposit amount must be 0 or greater"),
+  etransferEmail: z.string().optional(),
 })
 
 export type SettingsFormData = z.infer<typeof settingsSchema>

@@ -19,14 +19,20 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface SettingsFormProps {
-  defaultValues?: { serviceFeePercent: number; depositAmount: number }
+  defaultValues?: { serviceFeePercent: number; depositAmount: number; etransferEmail?: string | null }
 }
 
 export function SettingsForm({ defaultValues }: SettingsFormProps) {
   const [saved, setSaved] = useState(false)
   const form = useForm<SettingsFormData>({
     resolver: zodResolver(settingsSchema),
-    defaultValues: defaultValues ?? { serviceFeePercent: 0, depositAmount: 0 },
+    defaultValues: defaultValues
+      ? {
+          serviceFeePercent: defaultValues.serviceFeePercent,
+          depositAmount: defaultValues.depositAmount,
+          etransferEmail: defaultValues.etransferEmail ?? "",
+        }
+      : { serviceFeePercent: 0, depositAmount: 0, etransferEmail: "" },
   })
 
   async function onSubmit(data: SettingsFormData) {
@@ -74,6 +80,22 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                   </FormControl>
                   <FormDescription>
                     Set to 0 to disable. Collected as part of booking payment.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="etransferEmail"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>E-Transfer Email (optional)</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="e.g. payments@example.com" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Email address guests should send e-transfer payments to.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

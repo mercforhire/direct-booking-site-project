@@ -9,6 +9,7 @@ export default async function SettingsPage() {
     ? {
         serviceFeePercent: Number(settings.serviceFeePercent),
         depositAmount: Number(settings.depositAmount),
+        etransferEmail: settings.etransferEmail ?? "",
       }
     : undefined
 

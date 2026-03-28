@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 07-booking-extensions-02-PLAN.md
-last_updated: "2026-03-28T22:48:17.757Z"
+stopped_at: Completed 07-booking-extensions-03-PLAN.md
+last_updated: "2026-03-28T22:52:02.236Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
   completed_phases: 6
   total_plans: 40
-  completed_plans: 33
+  completed_plans: 34
   percent: 97
 ---
 
@@ -82,6 +82,7 @@ Progress: [█████████░] 97%
 | Phase 06-payment P03 | 3min | 2 tasks | 2 files |
 | Phase 07-booking-extensions P01 | 525882min | 3 tasks | 7 files |
 | Phase 07-booking-extensions P02 | 5 | 1 tasks | 2 files |
+| Phase 07-booking-extensions P03 | 1 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -167,6 +168,8 @@ Recent decisions affecting current work:
 - [Phase 07-booking-extensions]: Stripe webhook metadata uses type='extension' to route checkout.session.completed events to extension handler vs booking handler
 - [Phase 07-booking-extensions]: cancelExtension takes explicit bookingId param instead of pre-fetching extension — avoids extra DB query for revalidatePath target
 - [Phase 07-booking-extensions]: Plain HTML email body in submitExtension — React email template wired in Plan 06 when template file exists
+- [Phase 07-booking-extensions]: Three revalidatePath calls in both extension admin actions: /admin/bookings, /admin/bookings/[bookingId], /bookings/[bookingId] — ensures admin and guest views update atomically
+- [Phase 07-booking-extensions]: Inline HTML email body in approveExtension/declineExtension — Plan 07 will wire React email templates when they exist
 
 ### Pending Todos
 
@@ -180,6 +183,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T22:48:17.754Z
-Stopped at: Completed 07-booking-extensions-02-PLAN.md
+Last session: 2026-03-28T22:52:02.233Z
+Stopped at: Completed 07-booking-extensions-03-PLAN.md
 Resume file: None

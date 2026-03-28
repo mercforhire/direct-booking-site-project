@@ -106,7 +106,7 @@ function BookingsTable({ bookings }: { bookings: SerializedBooking[] }) {
           <TableRow key={b.id}>
             <TableCell>
               <Link
-                href={`/bookings/${b.id}`}
+                href={`/admin/bookings/${b.id}`}
                 className="font-medium hover:underline text-blue-600"
               >
                 {b.guestName}
@@ -127,7 +127,7 @@ function BookingsTable({ bookings }: { bookings: SerializedBooking[] }) {
             </TableCell>
             <TableCell>
               <Button asChild variant="outline" size="sm">
-                <Link href={`/bookings/${b.id}`}>View</Link>
+                <Link href={`/admin/bookings/${b.id}`}>View</Link>
               </Button>
             </TableCell>
           </TableRow>

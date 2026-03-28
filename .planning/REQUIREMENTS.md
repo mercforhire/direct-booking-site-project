@@ -30,11 +30,11 @@
 
 ### Approval Flow
 
-- [ ] **APPR-01**: Landlord receives an email notification when a new booking request is submitted
+- [x] **APPR-01**: Landlord receives an email notification when a new booking request is submitted
 - [x] **APPR-02**: Landlord can approve a booking request and set the exact confirmed price
 - [x] **APPR-03**: Landlord can decline a booking request with an optional reason
-- [ ] **APPR-04**: Guest receives an email when their request is approved, including the confirmed price and payment instructions
-- [ ] **APPR-05**: Guest receives an email when their request is declined, including the optional reason
+- [x] **APPR-04**: Guest receives an email when their request is approved, including the confirmed price and payment instructions
+- [x] **APPR-05**: Guest receives an email when their request is declined, including the optional reason
 
 ### Payment
 
@@ -136,11 +136,11 @@
 | BOOK-04 | Phase 4 | Complete |
 | BOOK-05 | Phase 4 | Complete |
 | BOOK-06 | Phase 4 | Complete |
-| APPR-01 | Phase 5 | Pending |
+| APPR-01 | Phase 5 | Complete |
 | APPR-02 | Phase 5 | Complete |
 | APPR-03 | Phase 5 | Complete |
-| APPR-04 | Phase 5 | Pending |
-| APPR-05 | Phase 5 | Pending |
+| APPR-04 | Phase 5 | Complete |
+| APPR-05 | Phase 5 | Complete |
 | PAY-01 | Phase 6 | Pending |
 | PAY-02 | Phase 6 | Pending |
 | PAY-03 | Phase 6 | Pending |

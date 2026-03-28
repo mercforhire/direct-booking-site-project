@@ -71,6 +71,7 @@ const mockCreatedBooking = {
   accessToken: "some-uuid",
   createdAt: new Date(),
   updatedAt: new Date(),
+  room: { name: "Room 1" },
 }
 
 describe("submitBooking", () => {
@@ -195,7 +196,7 @@ describe("submitBooking", () => {
     } catch {
       // redirect throws
     }
-    expect(mockEmailSend).toHaveBeenCalledOnce()
+    expect(mockEmailSend).toHaveBeenCalled()
     const sendCall = mockEmailSend.mock.calls[0][0]
     expect(sendCall.to).toBe("jane@example.com")
     expect(sendCall.subject).toMatch(/received/i)
@@ -209,6 +210,36 @@ describe("submitBooking", () => {
     }
     expect(vi.mocked(redirect)).toHaveBeenCalledWith(
       expect.stringMatching(/^\/bookings\/booking-123\?token=[0-9a-f-]{36}&new=1$/)
+    )
+  })
+
+  it("sends landlord notification email to LANDLORD_EMAIL with subject containing 'New booking request'", async () => {
+    process.env.LANDLORD_EMAIL = "landlord@example.com"
+    try {
+      await submitBooking(validBookingData)
+    } catch {
+      // redirect throws
+    }
+    delete process.env.LANDLORD_EMAIL
+    // Two emails sent: guest confirmation + landlord notification
+    expect(mockEmailSend).toHaveBeenCalledTimes(2)
+    const calls = mockEmailSend.mock.calls.map((c: [{ to: string; subject: string }]) => c[0])
+    const landlordCall = calls.find((c: { to: string }) => c.to === "landlord@example.com")
+    expect(landlordCall).toBeDefined()
+    expect(landlordCall?.subject).toMatch(/New booking request/i)
+  })
+
+  it("calls prisma.booking.create with room include", async () => {
+    try {
+      await submitBooking(validBookingData)
+    } catch {
+      // redirect throws
+    }
+    expect(mockPrisma.booking.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.anything(),
+        include: { room: { select: { name: true } } },
+      })
     )
   })
 })

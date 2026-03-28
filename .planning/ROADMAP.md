@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Availability Management** - Availability calendar, date blocking, booking window, and stay length constraints (completed 2026-03-27)
 - [x] **Phase 3: Guest Room Browsing** - Public room listing pages with photos, rates, fees, and capacity (completed 2026-03-27)
 - [ ] **Phase 4: Booking Requests** - Guest booking request form with itemized pricing, add-ons, and guest identity
-- [ ] **Phase 5: Approval Flow & Notifications** - Admin booking dashboard, approve/decline actions, and email notifications
+- [x] **Phase 5: Approval Flow & Notifications** - Admin booking dashboard, approve/decline actions, and email notifications
 - [ ] **Phase 6: Payment** - Stripe Checkout, e-transfer tracking, service fee, and deposit handling
 - [ ] **Phase 7: Booking Extensions** - Extension requests, landlord approval, and extension payment
 - [ ] **Phase 8: Cancellations & Refunds** - Booking cancellation, Stripe refunds, e-transfer refund tracking, and deposit rules
@@ -133,11 +133,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Schema migration (confirmedPrice, declineReason fields) + prisma db push + middleware /bookings protection + sidebar Bookings nav + Zod validation schemas + Wave 0 test stub
-- [ ] 05-02-PLAN.md — approveBooking + declineBooking server actions (TDD): requireAuth, Zod validation, status guard, Prisma update, email send, revalidatePath
-- [ ] 05-03-PLAN.md — Email templates (BookingNotificationEmail, BookingApprovedEmail, BookingDeclinedEmail) + submitBooking retrofit to send landlord notification
-- [ ] 05-04-PLAN.md — Admin bookings UI: /bookings list page (status tabs + table) + /bookings/[id] detail page (approve/decline forms with AlertDialog)
-- [ ] 05-05-PLAN.md — Full test suite run + 6-scenario human verification checkpoint
+- [x] 05-01-PLAN.md — Schema migration (confirmedPrice, declineReason fields) + prisma db push + middleware /bookings protection + sidebar Bookings nav + Zod validation schemas + Wave 0 test stub
+- [x] 05-02-PLAN.md — approveBooking + declineBooking server actions (TDD): requireAuth, Zod validation, status guard, Prisma update, email send, revalidatePath
+- [x] 05-03-PLAN.md — Email templates (BookingNotificationEmail, BookingApprovedEmail, BookingDeclinedEmail) + submitBooking retrofit to send landlord notification
+- [x] 05-04-PLAN.md — Admin bookings UI: /bookings list page (status tabs + table) + /bookings/[id] detail page (approve/decline forms with AlertDialog)
+- [x] 05-05-PLAN.md — Full test suite run + 6-scenario human verification checkpoint
 
 ### Phase 6: Payment
 **Goal**: Approved guests can pay for their booking via Stripe or e-transfer, completing the full booking lifecycle
@@ -216,7 +216,7 @@ Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. P
 | 2. Availability Management | 4/4 | Complete   | 2026-03-27 |
 | 3. Guest Room Browsing | 3/3 | Complete   | 2026-03-27 |
 | 4. Booking Requests | 5/6 | In Progress|  |
-| 5. Approval Flow & Notifications | 0/5 | Not started | - |
+| 5. Approval Flow & Notifications | 5/5 | Complete   | 2026-03-28 |
 | 6. Payment | 0/? | Not started | - |
 | 7. Booking Extensions | 0/? | Not started | - |
 | 8. Cancellations & Refunds | 0/? | Not started | - |

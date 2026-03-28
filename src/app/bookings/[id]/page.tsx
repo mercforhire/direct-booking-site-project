@@ -10,10 +10,10 @@ export default async function BookingPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ token?: string; new?: string }>
+  searchParams: Promise<{ token?: string; new?: string; paid?: string }>
 }) {
   const { id } = await params
-  const { token, new: isNew } = await searchParams
+  const { token, new: isNew, paid } = await searchParams
 
   const supabase = await createClient()
   const {
@@ -50,10 +50,15 @@ export default async function BookingPage({
     redirect(`/guest/login?next=/bookings/${id}`)
   }
 
+  // Fetch settings for etransferEmail
+  const settings = await prisma.settings.findUnique({ where: { id: "global" } })
+
   // Coerce Decimals at RSC boundary — Prisma Decimal objects cannot be serialized as Client Component props
   const serializedBooking = {
     ...booking,
     estimatedTotal: Number(booking.estimatedTotal),
+    confirmedPrice: booking.confirmedPrice != null ? Number(booking.confirmedPrice) : null,
+    stripeSessionId: booking.stripeSessionId ?? null,
     checkin: booking.checkin.toISOString(),
     checkout: booking.checkout.toISOString(),
     createdAt: booking.createdAt.toISOString(),
@@ -71,6 +76,8 @@ export default async function BookingPage({
     <BookingStatusView
       booking={serializedBooking}
       showSuccessBanner={isNew === "1"}
+      showPaidBanner={paid === "1"}
+      etransferEmail={settings?.etransferEmail ?? null}
     />
   )
 }

@@ -17,6 +17,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
     ...booking,
     estimatedTotal: Number(booking.estimatedTotal),
     confirmedPrice: booking.confirmedPrice != null ? Number(booking.confirmedPrice) : null,
+    stripeSessionId: booking.stripeSessionId ?? null,
     checkin: booking.checkin.toISOString(),
     checkout: booking.checkout.toISOString(),
     createdAt: booking.createdAt.toISOString(),

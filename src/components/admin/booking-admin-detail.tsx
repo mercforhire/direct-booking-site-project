@@ -18,6 +18,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog"
 import { approveBooking, declineBooking } from "@/actions/booking-admin"
+import { markBookingAsPaid } from "@/actions/payment"
 
 type BookingStatus =
   | "PENDING"
@@ -44,6 +45,7 @@ type SerializedBooking = {
   accessToken: string
   confirmedPrice: number | null
   declineReason: string | null
+  stripeSessionId: string | null
   createdAt: string
   updatedAt: string
   room: {
@@ -84,6 +86,23 @@ export function BookingAdminDetail({ booking }: { booking: SerializedBooking }) 
   const [declineReason, setDeclineReason] = useState("")
   const [approveError, setApproveError] = useState<string | null>(null)
   const [declineError, setDeclineError] = useState<string | null>(null)
+  const [markPaidError, setMarkPaidError] = useState<string | null>(null)
+
+  async function handleMarkAsPaid() {
+    setMarkPaidError(null)
+    startTransition(async () => {
+      const result = await markBookingAsPaid(booking.id)
+      if ("error" in result) {
+        if (result.error === "not_approved") {
+          setMarkPaidError("This booking is no longer in an approved state.")
+        } else {
+          setMarkPaidError("Failed to mark booking as paid. Please try again.")
+        }
+      } else {
+        router.refresh()
+      }
+    })
+  }
 
   const nights = differenceInCalendarDays(
     new Date(booking.checkout),
@@ -346,6 +365,43 @@ export function BookingAdminDetail({ booking }: { booking: SerializedBooking }) 
               </AlertDialogContent>
             </AlertDialog>
           </div>
+        </div>
+      )}
+
+      {/* Mark as Paid — only shown for APPROVED */}
+      {booking.status === "APPROVED" && (
+        <div className="border rounded-lg p-4 space-y-3">
+          <h2 className="font-semibold">Payment</h2>
+          <p className="text-sm text-muted-foreground">
+            Manually mark this booking as paid if the guest has paid via e-transfer or another offline method.
+          </p>
+          {markPaidError && (
+            <p className="text-sm text-destructive">{markPaidError}</p>
+          )}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="default" disabled={isPending}>
+                Mark as Paid
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Mark this booking as paid?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will update the booking status to Paid and send a payment confirmation email to the guest.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleMarkAsPaid}
+                  disabled={isPending}
+                >
+                  {isPending ? "Marking as paid..." : "Mark as Paid"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )}
     </div>

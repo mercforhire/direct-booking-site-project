@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 07-booking-extensions-04-PLAN.md
-last_updated: "2026-03-28T22:59:23.902Z"
+stopped_at: Completed 07-booking-extensions-06-PLAN.md
+last_updated: "2026-03-28T23:04:10.482Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
   completed_phases: 6
   total_plans: 40
-  completed_plans: 36
+  completed_plans: 37
   percent: 97
 ---
 
@@ -85,6 +85,7 @@ Progress: [█████████░] 97%
 | Phase 07-booking-extensions P03 | 1 | 1 tasks | 2 files |
 | Phase 07-booking-extensions P05 | 2 | 1 tasks | 3 files |
 | Phase 07-booking-extensions P04 | 4 | 2 tasks | 4 files |
+| Phase 07-booking-extensions P06 | 3 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -175,6 +176,8 @@ Recent decisions affecting current work:
 - [Phase 07-booking-extensions]: Plain JSX email templates only — no @react-email package imports, consistent with existing email templates
 - [Phase 07-booking-extensions]: Stripe webhook 400 guard for missing bookingId moved inside else-branch — extension sessions legitimately have no bookingId
 - [Phase 07-booking-extensions]: metadata.type ?? 'booking' default ensures no regression for existing booking sessions
+- [Phase 07-booking-extensions]: blockedDates passed as ISO strings across RSC-to-client boundary — Date objects are not serializable as Client Component props
+- [Phase 07-booking-extensions]: Separate useTransition instances for Stripe checkout vs cancel/submit in ExtensionSection — prevents UI state conflicts between concurrent actions
 
 ### Pending Todos
 
@@ -188,6 +191,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T22:59:23.899Z
-Stopped at: Completed 07-booking-extensions-04-PLAN.md
+Last session: 2026-03-28T23:04:10.480Z
+Stopped at: Completed 07-booking-extensions-06-PLAN.md
 Resume file: None

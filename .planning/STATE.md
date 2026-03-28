@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 06-payment-02-PLAN.md
-last_updated: "2026-03-28T17:36:56.646Z"
+stopped_at: "Checkpoint: 06-03 Task 2 awaiting human verification"
+last_updated: "2026-03-28T17:39:49.621Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 32
-  completed_plans: 30
+  completed_plans: 31
   percent: 97
 ---
 
@@ -154,6 +154,9 @@ Recent decisions affecting current work:
 - [Phase 06-payment]: BookingPaymentConfirmationEmail replaces BookingPaidEmail in markBookingAsPaid — full context (dates, amount) shown to guest
 - [Phase 06-payment]: etransferEmail coerced to null when empty string submitted — consistent with nullable Prisma String?
 - [Phase 06-payment]: PaymentSection extracted as internal component in BookingStatusView — keeps render function clean
+- [Phase 06-payment]: request.text() used (not request.json()) in webhook — raw body required for Stripe HMAC signature verification
+- [Phase 06-payment]: updateMany with APPROVED status guard in webhook — idempotent, no-op if webhook fires twice when booking already PAID
+- [Phase 06-payment]: Webhook email send in non-fatal try/catch — webhook always returns 200 regardless of Resend API result
 
 ### Pending Todos
 
@@ -167,6 +170,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T17:36:56.643Z
-Stopped at: Completed 06-payment-02-PLAN.md
+Last session: 2026-03-28T17:39:44.771Z
+Stopped at: Checkpoint: 06-03 Task 2 awaiting human verification
 Resume file: None

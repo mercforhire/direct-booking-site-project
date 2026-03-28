@@ -130,11 +130,14 @@ Plans:
   3. Landlord can approve a booking request and set the exact confirmed price
   4. Landlord can decline a booking request with an optional reason
   5. Guest receives an email when approved (with confirmed price and payment instructions) or declined (with optional reason)
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md — Schema migration (confirmedPrice, declineReason fields) + prisma db push + middleware /bookings protection + sidebar Bookings nav + Zod validation schemas + Wave 0 test stub
+- [ ] 05-02-PLAN.md — approveBooking + declineBooking server actions (TDD): requireAuth, Zod validation, status guard, Prisma update, email send, revalidatePath
+- [ ] 05-03-PLAN.md — Email templates (BookingNotificationEmail, BookingApprovedEmail, BookingDeclinedEmail) + submitBooking retrofit to send landlord notification
+- [ ] 05-04-PLAN.md — Admin bookings UI: /bookings list page (status tabs + table) + /bookings/[id] detail page (approve/decline forms with AlertDialog)
+- [ ] 05-05-PLAN.md — Full test suite run + 6-scenario human verification checkpoint
 
 ### Phase 6: Payment
 **Goal**: Approved guests can pay for their booking via Stripe or e-transfer, completing the full booking lifecycle
@@ -213,7 +216,7 @@ Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. P
 | 2. Availability Management | 4/4 | Complete   | 2026-03-27 |
 | 3. Guest Room Browsing | 3/3 | Complete   | 2026-03-27 |
 | 4. Booking Requests | 5/6 | In Progress|  |
-| 5. Approval Flow & Notifications | 0/? | Not started | - |
+| 5. Approval Flow & Notifications | 0/5 | Not started | - |
 | 6. Payment | 0/? | Not started | - |
 | 7. Booking Extensions | 0/? | Not started | - |
 | 8. Cancellations & Refunds | 0/? | Not started | - |

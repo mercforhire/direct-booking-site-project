@@ -38,10 +38,10 @@
 
 ### Payment
 
-- [ ] **PAY-01**: Approved guest can pay online via Stripe Checkout (credit/debit card)
-- [ ] **PAY-02**: Approved guest can pay by e-transfer; landlord manually marks the booking as paid in the admin dashboard
-- [ ] **PAY-03**: Landlord can configure an adjustable service fee (percentage of booking total) to offset Stripe processing costs
-- [ ] **PAY-04**: Landlord can configure an optional deposit amount required per booking
+- [x] **PAY-01**: Approved guest can pay online via Stripe Checkout (credit/debit card)
+- [x] **PAY-02**: Approved guest can pay by e-transfer; landlord manually marks the booking as paid in the admin dashboard
+- [x] **PAY-03**: Landlord can configure an adjustable service fee (percentage of booking total) to offset Stripe processing costs
+- [x] **PAY-04**: Landlord can configure an optional deposit amount required per booking
 
 ### Booking Extensions
 
@@ -141,10 +141,10 @@
 | APPR-03 | Phase 5 | Complete |
 | APPR-04 | Phase 5 | Complete |
 | APPR-05 | Phase 5 | Complete |
-| PAY-01 | Phase 6 | Pending |
-| PAY-02 | Phase 6 | Pending |
-| PAY-03 | Phase 6 | Pending |
-| PAY-04 | Phase 6 | Pending |
+| PAY-01 | Phase 6 | Complete |
+| PAY-02 | Phase 6 | Complete |
+| PAY-03 | Phase 6 | Complete |
+| PAY-04 | Phase 6 | Complete |
 | EXT-01 | Phase 7 | Pending |
 | EXT-02 | Phase 7 | Pending |
 | EXT-03 | Phase 7 | Pending |

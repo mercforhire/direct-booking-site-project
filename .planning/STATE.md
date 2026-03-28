@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 6 context gathered
-last_updated: "2026-03-28T16:49:35.012Z"
+stopped_at: Completed 06-payment-01-PLAN.md
+last_updated: "2026-03-28T17:30:12.486Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
   completed_phases: 5
-  total_plans: 29
-  completed_plans: 28
+  total_plans: 32
+  completed_plans: 29
   percent: 97
 ---
 
@@ -77,6 +77,7 @@ Progress: [█████████░] 97%
 | Phase 05-approval-flow-notifications P04 | 2min | 2 tasks | 8 files |
 | Phase 05-approval-flow-notifications P04 | 75min | 3 tasks | 9 files |
 | Phase 05 P05 | 5min | 1 tasks | 1 files |
+| Phase 06-payment P01 | 15min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -146,6 +147,9 @@ Recent decisions affecting current work:
 - [Phase 05-approval-flow-notifications]: declineReason typed as string|null (not undefined) — consistent with Prisma nullable field
 - [Phase 05-approval-flow-notifications]: Tabs and AlertDialog installed as shadcn/ui components — were referenced in plan but not yet in repo
 - [Phase 05-approval-flow-notifications]: Admin booking detail moved from /(admin)/bookings/[id] to /(admin)/admin/bookings/[id] — route groups are transparent in URL resolution, causing /bookings/[id] collision with the guest booking status page
+- [Phase 06-payment]: Stripe singleton omits apiVersion — uses account default, avoids TypeScript type string issues
+- [Phase 06-payment]: createStripeCheckoutSession has no requireAuth() — guest-facing action, validated via DB lookup only
+- [Phase 06-payment]: redirect() called outside try/catch in createStripeCheckoutSession — Next.js redirect() throws NEXT_REDIRECT internally
 
 ### Pending Todos
 
@@ -159,6 +163,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T16:49:35.009Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-payment/06-CONTEXT.md
+Last session: 2026-03-28T17:30:12.483Z
+Stopped at: Completed 06-payment-01-PLAN.md
+Resume file: None

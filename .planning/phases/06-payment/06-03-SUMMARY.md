@@ -13,6 +13,7 @@ requires:
 provides:
   - /api/stripe/webhook POST handler (idempotent APPROVED → PAID via checkout.session.completed)
   - .env.local.example documenting STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET
+  - Human-verified end-to-end Stripe Checkout and e-transfer payment flows
 
 affects:
   - 07-extensions (webhook pattern for future payment events)
@@ -44,31 +45,32 @@ requirements-completed:
   - PAY-01
   - PAY-02
 
-duration: partial (Task 1 complete, Task 2 awaiting human verification)
+duration: ~3min (Task 1 implementation) + human verification
 completed: 2026-03-28
 ---
 
 # Phase 06 Plan 03: Stripe Webhook Route Handler Summary
 
-**Stripe webhook /api/stripe/webhook handler with idempotent APPROVED-to-PAID transition, Stripe signature verification, and non-fatal payment confirmation email**
+**Stripe webhook /api/stripe/webhook handler with idempotent APPROVED-to-PAID transition, Stripe signature verification, and non-fatal payment confirmation email — Phase 6 end-to-end payment flow human-verified**
 
 ## Performance
 
-- **Duration:** ~3 min (Task 1 only — Task 2 is human verification)
+- **Duration:** ~3 min (Task 1 implementation) + human verification
 - **Started:** 2026-03-28T17:38:06Z
-- **Completed:** 2026-03-28T17:41:00Z (Task 1 only)
-- **Tasks:** 1 of 2 (Task 2 is checkpoint:human-verify — awaiting user)
+- **Completed:** 2026-03-28T17:41:00Z
+- **Tasks:** 2 of 2
 - **Files modified:** 2
 
 ## Accomplishments
 
 - Created `src/app/api/stripe/webhook/route.ts` — POST handler verifies Stripe HMAC signature, handles `checkout.session.completed`, updates booking APPROVED → PAID idempotently, sends payment confirmation email (non-fatal)
 - Created `.env.local.example` — documents all env vars including `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` alongside existing database, Supabase, Resend vars
+- Human-verified all 6 end-to-end scenarios: guest payment section visible, Stripe Checkout card payment, admin e-transfer mark as paid, Settings etransferEmail, PAID state UI, webhook idempotency
 
 ## Task Commits
 
 1. **Task 1: Stripe webhook Route Handler + env var documentation** - `803086e` (feat)
-2. **Task 2: Human verification — full payment flow** - PENDING (checkpoint:human-verify)
+2. **Task 2: Human verification — full payment flow** - approved by user (checkpoint:human-verify)
 
 ## Files Created/Modified
 
@@ -92,18 +94,13 @@ None — pre-existing TypeScript errors in `tests/actions/availability.test.ts` 
 
 ## User Setup Required
 
-To complete Task 2 (human verification), the following is needed:
-
-1. Add `STRIPE_SECRET_KEY` (test key: `sk_test_...`) to `.env.local`
-2. Run `stripe listen --forward-to localhost:3000/api/stripe/webhook` in a second terminal — this prints the local `STRIPE_WEBHOOK_SECRET` to add to `.env.local`
-3. Ensure at least one booking is in APPROVED status
-4. Run through the 6 verification scenarios described in the plan
+None - human verification complete and all 6 scenarios approved.
 
 ## Next Phase Readiness
 
-- Webhook handler is complete and tested (all 114 unit tests pass)
-- Full payment flow (Stripe card + e-transfer) ready for end-to-end human verification
-- Phase 7 (extensions) can proceed once human verification is approved
+- Full Phase 6 payment flow verified end-to-end: Stripe card checkout, e-transfer admin approval, webhook idempotency
+- Phase 7 (extensions) can proceed — depends on Phase 6 payment flow which is now complete
+- Phase 8 (cancellations) also depends on Phase 6 and is now unblocked
 
 ---
 *Phase: 06-payment*

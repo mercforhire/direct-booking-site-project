@@ -10,10 +10,10 @@ export default async function BookingPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ token?: string; new?: string; paid?: string }>
+  searchParams: Promise<{ token?: string; new?: string; paid?: string; extension_paid?: string }>
 }) {
   const { id } = await params
-  const { token, new: isNew, paid } = await searchParams
+  const { token, new: isNew, paid, extension_paid } = await searchParams
 
   const supabase = await createClient()
   const {
@@ -30,6 +30,7 @@ export default async function BookingPage({
           addOns: {
             select: { id: true, name: true, price: true },
           },
+          blockedDates: { select: { date: true } },
         },
       },
     },
@@ -52,6 +53,31 @@ export default async function BookingPage({
 
   // Fetch settings for etransferEmail
   const settings = await prisma.settings.findUnique({ where: { id: "global" } })
+
+  // Load the most recent extension (if any)
+  const activeExtension = await prisma.bookingExtension.findFirst({
+    where: { bookingId: id },
+    orderBy: { createdAt: "desc" },
+  })
+
+  // Serialize extension — coerce Decimal and Date at RSC boundary
+  const serializedExtension = activeExtension
+    ? {
+        ...activeExtension,
+        extensionPrice:
+          activeExtension.extensionPrice != null
+            ? Number(activeExtension.extensionPrice)
+            : null,
+        requestedCheckout: activeExtension.requestedCheckout.toISOString(),
+        createdAt: activeExtension.createdAt.toISOString(),
+        updatedAt: activeExtension.updatedAt.toISOString(),
+      }
+    : null
+
+  // Serialize blocked dates as ISO strings (Date objects cannot cross RSC boundary)
+  const blockedDateStrings = booking.room.blockedDates.map((d) =>
+    d.date.toISOString()
+  )
 
   // Coerce Decimals at RSC boundary — Prisma Decimal objects cannot be serialized as Client Component props
   const serializedBooking = {
@@ -77,7 +103,10 @@ export default async function BookingPage({
       booking={serializedBooking}
       showSuccessBanner={isNew === "1"}
       showPaidBanner={paid === "1"}
+      showExtensionPaidBanner={extension_paid === "1"}
       etransferEmail={settings?.etransferEmail ?? null}
+      activeExtension={serializedExtension}
+      blockedDates={blockedDateStrings}
     />
   )
 }

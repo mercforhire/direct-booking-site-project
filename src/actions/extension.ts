@@ -3,10 +3,10 @@
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
+import { render } from "@react-email/render"
 import { submitExtensionSchema, cancelExtensionSchema } from "@/lib/validations/extension"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
-// Import email template once created in Plan 05:
-// import { BookingExtensionRequestEmail } from "@/emails/booking-extension-request"
+import { BookingExtensionRequestEmail } from "@/emails/booking-extension-request"
 
 export async function submitExtension(bookingId: string, data: unknown) {
   const parsed = submitExtensionSchema.safeParse(data)
@@ -47,11 +47,20 @@ export async function submitExtension(bookingId: string, data: unknown) {
   try {
     if (process.env.LANDLORD_EMAIL) {
       const resend = new Resend(process.env.RESEND_API_KEY)
+      const html = await render(
+        BookingExtensionRequestEmail({
+          guestName: booking.guestName,
+          roomName: booking.room.name,
+          requestedCheckout: parsed.data.requestedCheckout,
+          noteToLandlord: parsed.data.noteToLandlord ?? null,
+          bookingId,
+        })
+      )
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
         to: process.env.LANDLORD_EMAIL,
         subject: `Extension request — ${booking.room.name}`,
-        html: `<p>${booking.guestName} has requested an extension to ${parsed.data.requestedCheckout}.</p><p>Review: ${process.env.NEXT_PUBLIC_SITE_URL}/admin/bookings/${bookingId}</p>`,
+        html,
       })
     }
   } catch (emailErr) {

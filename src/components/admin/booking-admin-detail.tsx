@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/alert-dialog"
 import { approveBooking, declineBooking } from "@/actions/booking-admin"
 import { markBookingAsPaid } from "@/actions/payment"
+import { approveExtension, declineExtension } from "@/actions/extension-admin"
+import { markExtensionAsPaid } from "@/actions/payment"
 
 type BookingStatus =
   | "PENDING"
@@ -54,6 +56,19 @@ type SerializedBooking = {
   }
 }
 
+type SerializedExtension = {
+  id: string
+  bookingId: string
+  requestedCheckout: string
+  noteToLandlord: string | null
+  status: "PENDING" | "APPROVED" | "DECLINED" | "PAID"
+  extensionPrice: number | null
+  declineReason: string | null
+  stripeSessionId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 function statusBadgeVariant(status: BookingStatus): "secondary" | "default" | "destructive" | "outline" {
   switch (status) {
     case "PENDING":
@@ -79,7 +94,13 @@ function statusLabel(status: BookingStatus): string {
   return status.charAt(0) + status.slice(1).toLowerCase()
 }
 
-export function BookingAdminDetail({ booking }: { booking: SerializedBooking }) {
+export function BookingAdminDetail({
+  booking,
+  activeExtension,
+}: {
+  booking: SerializedBooking
+  activeExtension?: SerializedExtension | null
+}) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [confirmedPrice, setConfirmedPrice] = useState("")
@@ -87,6 +108,11 @@ export function BookingAdminDetail({ booking }: { booking: SerializedBooking }) 
   const [approveError, setApproveError] = useState<string | null>(null)
   const [declineError, setDeclineError] = useState<string | null>(null)
   const [markPaidError, setMarkPaidError] = useState<string | null>(null)
+  const [extensionPrice, setExtensionPrice] = useState("")
+  const [extensionDeclineReason, setExtensionDeclineReason] = useState("")
+  const [approveExtError, setApproveExtError] = useState<string | null>(null)
+  const [declineExtError, setDeclineExtError] = useState<string | null>(null)
+  const [markExtPaidError, setMarkExtPaidError] = useState<string | null>(null)
 
   async function handleMarkAsPaid() {
     setMarkPaidError(null)
@@ -143,6 +169,49 @@ export function BookingAdminDetail({ booking }: { booking: SerializedBooking }) 
         } else {
           setDeclineError("Failed to decline booking. Please try again.")
         }
+      } else {
+        router.refresh()
+      }
+    })
+  }
+
+  async function handleApproveExtension() {
+    if (!activeExtension) return
+    setApproveExtError(null)
+    startTransition(async () => {
+      const result = await approveExtension(activeExtension.id, {
+        extensionPrice: Number(extensionPrice),
+      })
+      if ("error" in result) {
+        setApproveExtError("Failed to approve extension. Please try again.")
+      } else {
+        router.refresh()
+      }
+    })
+  }
+
+  async function handleDeclineExtension() {
+    if (!activeExtension) return
+    setDeclineExtError(null)
+    startTransition(async () => {
+      const result = await declineExtension(activeExtension.id, {
+        declineReason: extensionDeclineReason || undefined,
+      })
+      if ("error" in result) {
+        setDeclineExtError("Failed to decline extension. Please try again.")
+      } else {
+        router.refresh()
+      }
+    })
+  }
+
+  async function handleMarkExtensionAsPaid() {
+    if (!activeExtension) return
+    setMarkExtPaidError(null)
+    startTransition(async () => {
+      const result = await markExtensionAsPaid(activeExtension.id)
+      if ("error" in result) {
+        setMarkExtPaidError("Failed to mark extension as paid. Please try again.")
       } else {
         router.refresh()
       }
@@ -402,6 +471,161 @@ export function BookingAdminDetail({ booking }: { booking: SerializedBooking }) 
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+        </div>
+      )}
+
+      {/* Extension Request Section */}
+      {activeExtension && (
+        <div className="border rounded-lg p-4 space-y-3">
+          <h2 className="font-semibold">Extension Request</h2>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <span className="text-muted-foreground">Requested checkout</span>
+              <p className="font-medium">
+                {format(new Date(activeExtension.requestedCheckout), "MMMM d, yyyy")}
+              </p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Status</span>
+              <p className="font-medium capitalize">{activeExtension.status.toLowerCase()}</p>
+            </div>
+            {activeExtension.extensionPrice != null && (
+              <div>
+                <span className="text-muted-foreground">Extension price</span>
+                <p className="font-medium">
+                  {new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
+                    activeExtension.extensionPrice
+                  )}
+                </p>
+              </div>
+            )}
+            {activeExtension.noteToLandlord && (
+              <div className="col-span-2">
+                <span className="text-muted-foreground">Guest note</span>
+                <p className="font-medium">{activeExtension.noteToLandlord}</p>
+              </div>
+            )}
+            {activeExtension.declineReason && (
+              <div className="col-span-2">
+                <span className="text-muted-foreground">Decline reason</span>
+                <p className="font-medium">{activeExtension.declineReason}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Approve / Decline — only for PENDING */}
+          {activeExtension.status === "PENDING" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+              {/* Approve */}
+              <div className="border rounded-lg p-3 space-y-2">
+                <h3 className="font-medium text-sm">Approve Extension</h3>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={extensionPrice}
+                  onChange={(e) => setExtensionPrice(e.target.value)}
+                  className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Extension price (CAD)"
+                />
+                {approveExtError && <p className="text-sm text-destructive">{approveExtError}</p>}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="default" size="sm" disabled={isPending || !extensionPrice}>
+                      Approve
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Approve this extension?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Extension price:{" "}
+                        {new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(
+                          Number(extensionPrice) || 0
+                        )}{" "}
+                        CAD. The guest will be notified and can pay.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleApproveExtension} disabled={isPending}>
+                        {isPending ? "Approving..." : "Approve"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+
+              {/* Decline */}
+              <div className="border rounded-lg p-3 space-y-2">
+                <h3 className="font-medium text-sm">Decline Extension</h3>
+                <textarea
+                  value={extensionDeclineReason}
+                  onChange={(e) => setExtensionDeclineReason(e.target.value)}
+                  className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  rows={2}
+                  placeholder="Optional reason..."
+                />
+                {declineExtError && <p className="text-sm text-destructive">{declineExtError}</p>}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm" disabled={isPending}>
+                      Decline
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Decline this extension?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        The guest will be notified that their extension was declined.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeclineExtension}
+                        disabled={isPending}
+                        className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                      >
+                        {isPending ? "Declining..." : "Decline"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+          )}
+
+          {/* Mark Extension as Paid — only for APPROVED */}
+          {activeExtension.status === "APPROVED" && (
+            <div className="mt-2">
+              {markExtPaidError && (
+                <p className="text-sm text-destructive mb-2">{markExtPaidError}</p>
+              )}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="default" size="sm" disabled={isPending}>
+                    Mark Extension as Paid
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Mark extension as paid?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will mark the extension as paid and update the booking checkout date to{" "}
+                      {format(new Date(activeExtension.requestedCheckout), "MMMM d, yyyy")}.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleMarkExtensionAsPaid} disabled={isPending}>
+                      {isPending ? "Marking as paid..." : "Mark as Paid"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -13,6 +13,12 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
 
   if (!booking) notFound()
 
+  const activeExtension = await prisma.bookingExtension.findFirst({
+    where: { bookingId: id },
+    orderBy: { createdAt: "desc" },
+    take: 1,
+  })
+
   const serialized = {
     ...booking,
     estimatedTotal: Number(booking.estimatedTotal),
@@ -28,5 +34,18 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
     },
   }
 
-  return <BookingAdminDetail booking={serialized} />
+  const serializedExtension = activeExtension
+    ? {
+        ...activeExtension,
+        extensionPrice:
+          activeExtension.extensionPrice != null
+            ? Number(activeExtension.extensionPrice)
+            : null,
+        requestedCheckout: activeExtension.requestedCheckout.toISOString(),
+        createdAt: activeExtension.createdAt.toISOString(),
+        updatedAt: activeExtension.updatedAt.toISOString(),
+      }
+    : null
+
+  return <BookingAdminDetail booking={serialized} activeExtension={serializedExtension} />
 }

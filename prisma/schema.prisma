@@ -76,6 +76,13 @@ enum BookingStatus {
   CANCELLED
 }
 
+enum BookingExtensionStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  PAID
+}
+
 model Booking {
   id               String        @id @default(cuid())
   roomId           String
@@ -97,8 +104,25 @@ model Booking {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   room             Room          @relation(fields: [roomId], references: [id])
+  extensions       BookingExtension[]
 
   @@index([guestEmail])
   @@index([accessToken])
   @@index([guestUserId])
+}
+
+model BookingExtension {
+  id                String                 @id @default(cuid())
+  bookingId         String
+  requestedCheckout DateTime               @db.Date
+  noteToLandlord    String?
+  status            BookingExtensionStatus @default(PENDING)
+  extensionPrice    Decimal?               @db.Decimal(10, 2)
+  declineReason     String?
+  stripeSessionId   String?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  booking           Booking                @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
 }

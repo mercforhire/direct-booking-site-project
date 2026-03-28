@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 07-booking-extensions-01-PLAN.md
-last_updated: "2026-03-28T19:26:06.718Z"
+stopped_at: Completed 07-booking-extensions-02-PLAN.md
+last_updated: "2026-03-28T22:48:17.757Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
   completed_phases: 6
   total_plans: 40
-  completed_plans: 32
+  completed_plans: 33
   percent: 97
 ---
 
@@ -81,6 +81,7 @@ Progress: [█████████░] 97%
 | Phase 06-payment P02 | 4min | 2 tasks | 9 files |
 | Phase 06-payment P03 | 3min | 2 tasks | 2 files |
 | Phase 07-booking-extensions P01 | 525882min | 3 tasks | 7 files |
+| Phase 07-booking-extensions P02 | 5 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -164,6 +165,8 @@ Recent decisions affecting current work:
 - [Phase 06-payment]: Webhook email send in non-fatal try/catch — webhook always returns 200 regardless of Resend API result
 - [Phase 07-booking-extensions]: stripeSessionId stored on BookingExtension (not Booking) — each extension has its own independent Stripe payment session
 - [Phase 07-booking-extensions]: Stripe webhook metadata uses type='extension' to route checkout.session.completed events to extension handler vs booking handler
+- [Phase 07-booking-extensions]: cancelExtension takes explicit bookingId param instead of pre-fetching extension — avoids extra DB query for revalidatePath target
+- [Phase 07-booking-extensions]: Plain HTML email body in submitExtension — React email template wired in Plan 06 when template file exists
 
 ### Pending Todos
 
@@ -177,6 +180,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T19:26:06.715Z
-Stopped at: Completed 07-booking-extensions-01-PLAN.md
+Last session: 2026-03-28T22:48:17.754Z
+Stopped at: Completed 07-booking-extensions-02-PLAN.md
 Resume file: None

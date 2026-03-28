@@ -75,18 +75,25 @@ export async function submitBooking(data: unknown) {
     include: { room: { select: { name: true } } },
   })
 
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  const fromEmail = process.env.EMAIL_FROM ?? "bookings@example.com"
+
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY)
     const html = await render(
       BookingConfirmationEmail({ bookingId: created.id, accessToken, guestName })
     )
     await resend.emails.send({
-      from: process.env.EMAIL_FROM ?? "bookings@example.com",
+      from: fromEmail,
       to: guestEmail,
       subject: "Your booking request was received",
       html,
     })
-    if (process.env.LANDLORD_EMAIL) {
+  } catch (err) {
+    console.error("[submitBooking] guest confirmation email failed:", err)
+  }
+
+  if (process.env.LANDLORD_EMAIL) {
+    try {
       const landlordHtml = await render(
         BookingNotificationEmail({
           guestName,
@@ -99,14 +106,14 @@ export async function submitBooking(data: unknown) {
         })
       )
       await resend.emails.send({
-        from: process.env.EMAIL_FROM ?? "bookings@example.com",
+        from: fromEmail,
         to: process.env.LANDLORD_EMAIL,
         subject: `New booking request from ${guestName}`,
         html: landlordHtml,
       })
+    } catch (err) {
+      console.error("[submitBooking] landlord notification email failed:", err)
     }
-  } catch {
-    // Email failure is non-fatal — booking was already created
   }
 
   redirect(`/bookings/${created.id}?token=${accessToken}&new=1`)

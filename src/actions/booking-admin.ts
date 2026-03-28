@@ -61,8 +61,8 @@ export async function approveBooking(bookingId: string, data: unknown) {
       subject: `Your booking has been approved`,
       html,
     })
-  } catch {
-    // Email failure is non-fatal — booking is already approved
+  } catch (emailErr) {
+    console.error("[approveBooking] email send failed:", emailErr)
   }
 
   revalidatePath("/bookings")
@@ -109,8 +109,8 @@ export async function declineBooking(bookingId: string, data: unknown) {
       subject: `Your booking request has been declined`,
       html,
     })
-  } catch {
-    // Email failure is non-fatal — booking is already declined
+  } catch (emailErr) {
+    console.error("[declineBooking] email send failed:", emailErr)
   }
 
   revalidatePath("/bookings")

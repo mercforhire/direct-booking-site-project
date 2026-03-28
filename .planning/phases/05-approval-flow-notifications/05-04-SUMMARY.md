@@ -33,7 +33,7 @@ tech-stack:
 key-files:
   created:
     - src/app/(admin)/bookings/page.tsx
-    - src/app/(admin)/bookings/[id]/page.tsx
+    - src/app/(admin)/admin/bookings/[id]/page.tsx
     - src/components/admin/booking-admin-list.tsx
     - src/components/admin/booking-admin-detail.tsx
     - src/components/ui/tabs.tsx
@@ -46,6 +46,7 @@ key-decisions:
   - "Tabs and AlertDialog installed as shadcn/ui components — were referenced in plan but not yet in repo"
   - "BookingAdminList uses Intl.NumberFormat for CAD currency formatting — consistent with established number display patterns"
   - "approveBooking/declineBooking imported directly as server actions in client component — no API route intermediary needed"
+  - "Admin booking detail moved from /(admin)/bookings/[id] to /(admin)/admin/bookings/[id] — route groups are transparent in URL resolution, causing /bookings/[id] collision with the guest booking status page"
 
 patterns-established:
   - "RSC + client split: RSC fetches and serializes Decimals/Dates; client component handles interactivity"
@@ -61,21 +62,22 @@ completed: 2026-03-27
 
 # Phase 05 Plan 04: Admin Bookings UI Summary
 
-**Status-tabbed /bookings list page and /bookings/[id] detail page with AlertDialog-confirmed approve/decline forms wired to server actions**
+**Status-tabbed /bookings list page and /admin/bookings/[id] detail page with AlertDialog-confirmed approve/decline forms wired to server actions, verified end-to-end**
 
 ## Performance
 
-- **Duration:** 2 min
+- **Duration:** ~75 min (including human verification)
 - **Started:** 2026-03-28T01:21:39Z
-- **Completed:** 2026-03-28T01:23:39Z
-- **Tasks:** 2 (+ 1 checkpoint pending human verification)
-- **Files modified:** 8
+- **Completed:** 2026-03-28T03:37:31Z
+- **Tasks:** 3 (2 auto + 1 human-verify checkpoint — approved)
+- **Files modified:** 9
 
 ## Accomplishments
 - `/bookings` RSC page fetches all bookings with Decimal/Date coercion and renders via BookingAdminList
-- `/bookings/[id]` RSC page fetches single booking (with add-ons) and renders via BookingAdminDetail
+- `/admin/bookings/[id]` RSC page fetches single booking (with add-ons) and renders via BookingAdminDetail (moved from `/bookings/[id]` to fix route conflict with guest booking status page)
 - BookingAdminList shows 7 tabs (All + 6 statuses), each with a shadcn Table; "APPROVED" tab labeled "Approved / Awaiting Payment"
 - BookingAdminDetail shows booking info card with approve (confirmedPrice input) and decline (optional reason textarea) sections, each guarded by AlertDialog confirmation; router.refresh() after success
+- Human verification passed: approve/decline actions update booking status live, and Resend confirmation emails were delivered
 
 ## Task Commits
 
@@ -83,11 +85,12 @@ Each task was committed atomically:
 
 1. **Task 1: RSC pages — /bookings list and /bookings/[id] detail** - `7be32c0` (feat)
 2. **Task 2: BookingAdminList and BookingAdminDetail client components** - `4340d2b` (feat)
+3. **Deviation fix: Move admin booking detail to /admin/bookings/[id]** - `639a366` (fix)
 
 ## Files Created/Modified
 - `src/app/(admin)/bookings/page.tsx` - RSC page: fetches all bookings with Decimal coercion
-- `src/app/(admin)/bookings/[id]/page.tsx` - RSC page: fetches single booking, notFound() guard
-- `src/components/admin/booking-admin-list.tsx` - Client: 7-tab status filter + table per tab
+- `src/app/(admin)/admin/bookings/[id]/page.tsx` - RSC page: fetches single booking, notFound() guard (moved to avoid route conflict)
+- `src/components/admin/booking-admin-list.tsx` - Client: 7-tab status filter + table per tab; links to /admin/bookings/[id]
 - `src/components/admin/booking-admin-detail.tsx` - Client: booking info + approve/decline forms
 - `src/components/ui/tabs.tsx` - Installed via shadcn (was missing)
 - `src/components/ui/alert-dialog.tsx` - Installed via shadcn (was missing)
@@ -97,6 +100,7 @@ Each task was committed atomically:
 - Installed missing `tabs` and `alert-dialog` shadcn/ui components via `npx shadcn@latest add` (Rule 3 auto-fix — were referenced in plan but not installed)
 - Used `Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" })` for currency display
 - Server actions imported directly in client component — no API route needed
+- Admin booking detail moved from `/(admin)/bookings/[id]` to `/(admin)/admin/bookings/[id]` (URL: `/admin/bookings/[id]`) to resolve route collision with the guest `/bookings/[id]` status page — route groups are stripped from URLs so both were resolving to the same path
 
 ## Deviations from Plan
 
@@ -112,19 +116,37 @@ Each task was committed atomically:
 
 ---
 
-**Total deviations:** 1 auto-fixed (1 blocking)
-**Impact on plan:** Missing shadcn components required before client code could compile. Auto-fix was necessary. No scope creep.
+**2. [Rule 1 - Bug] Moved admin booking detail page to /admin/bookings/[id] to fix URL collision**
+- **Found during:** Human verification checkpoint (Task 3)
+- **Issue:** `/(admin)/bookings/[id]/page.tsx` and `app/bookings/[id]/page.tsx` both resolved to URL `/bookings/[id]` because Next.js route groups are transparent in URL resolution
+- **Fix:** Moved file to `src/app/(admin)/admin/bookings/[id]/page.tsx` (URL: `/admin/bookings/[id]`); updated `href` links in BookingAdminList from `/bookings/${b.id}` to `/admin/bookings/${b.id}`
+- **Files modified:** src/app/(admin)/admin/bookings/[id]/page.tsx (moved), src/components/admin/booking-admin-list.tsx
+- **Verification:** Human confirmed admin detail page loads at /admin/bookings/[id] and guest /bookings/[id] page is unaffected
+- **Committed in:** 639a366 (fix commit, approved deviation)
+
+---
+
+**Total deviations:** 2 auto-fixed (1 blocking, 1 routing bug)
+**Impact on plan:** Both fixes necessary for correctness. Route deviation approved by user. No scope creep.
 
 ## Issues Encountered
 - Pre-existing TypeScript errors in `tests/actions/availability.test.ts` and `tests/actions/booking.test.ts` are out of scope (not caused by this plan)
+- Route group collision between `/(admin)/bookings/[id]` and `app/bookings/[id]` — resolved via deviation fix (commit 639a366)
 
 ## User Setup Required
 None — no external service configuration required beyond what Plans 02 and 03 already set up.
 
 ## Next Phase Readiness
-- All admin booking UI surfaces are complete: list, detail, approve, decline
-- Human checkpoint verification required to confirm the full end-to-end flow works in the browser
-- After checkpoint approval, Phase 05 approval flow is fully complete
+- All admin booking UI surfaces are complete and verified: list at /bookings, detail at /admin/bookings/[id], approve, decline
+- Human checkpoint approved — end-to-end approve/decline flow confirmed working with Resend emails delivered
+- Phase 05 Plan 05 (full test suite run + 6-scenario human verification) is next and ready to execute
+
+## Self-Check: PASSED
+
+All created files verified on disk. All task commits confirmed in git log:
+- `7be32c0` FOUND
+- `4340d2b` FOUND
+- `639a366` FOUND
 
 ---
 *Phase: 05-approval-flow-notifications*

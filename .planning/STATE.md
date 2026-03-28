@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: "Completed 05-approval-flow-notifications-05-04-PLAN.md (checkpoint: awaiting human verification)"
-last_updated: "2026-03-28T01:24:50.418Z"
+stopped_at: Completed 05-04-PLAN.md
+last_updated: "2026-03-28T03:40:15.322Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
@@ -75,6 +75,7 @@ Progress: [█████████░] 93%
 | Phase 05-approval-flow-notifications P02 | 2min | 2 tasks | 4 files |
 | Phase 05-approval-flow-notifications P03 | 3min | 2 tasks | 5 files |
 | Phase 05-approval-flow-notifications P04 | 2min | 2 tasks | 8 files |
+| Phase 05-approval-flow-notifications P04 | 75min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -143,6 +144,7 @@ Recent decisions affecting current work:
 - [Phase 05-approval-flow-notifications]: LANDLORD_EMAIL guarded with if-check so CI without env var does not fail
 - [Phase 05-approval-flow-notifications]: declineReason typed as string|null (not undefined) — consistent with Prisma nullable field
 - [Phase 05-approval-flow-notifications]: Tabs and AlertDialog installed as shadcn/ui components — were referenced in plan but not yet in repo
+- [Phase 05-approval-flow-notifications]: Admin booking detail moved from /(admin)/bookings/[id] to /(admin)/admin/bookings/[id] — route groups are transparent in URL resolution, causing /bookings/[id] collision with the guest booking status page
 
 ### Pending Todos
 
@@ -156,6 +158,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T01:24:50.415Z
-Stopped at: Completed 05-approval-flow-notifications-05-04-PLAN.md (checkpoint: awaiting human verification)
+Last session: 2026-03-28T03:40:15.319Z
+Stopped at: Completed 05-04-PLAN.md
 Resume file: None

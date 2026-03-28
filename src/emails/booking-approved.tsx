@@ -1,21 +1,25 @@
 import * as React from "react"
 
 type Props = {
-  bookingId: string
   guestName: string
-  roomName: string
-  confirmedPrice: number
+  bookingId: string
   accessToken: string
+  confirmedPrice: number
+  roomName: string
 }
 
 export function BookingApprovedEmail({
-  bookingId,
   guestName,
-  roomName,
-  confirmedPrice,
+  bookingId,
   accessToken,
+  confirmedPrice,
+  roomName,
 }: Props) {
   const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/bookings/${bookingId}?token=${accessToken}`
+  const formattedPrice = new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency: "CAD",
+  }).format(confirmedPrice)
 
   return (
     <div
@@ -29,13 +33,16 @@ export function BookingApprovedEmail({
     >
       <p>Hi {guestName},</p>
       <p>
-        Great news! Your booking for <strong>{roomName}</strong> has been{" "}
-        <strong>approved</strong>.
+        Great news! Your booking request for <strong>{roomName}</strong> has
+        been <strong>approved</strong>.
       </p>
       <p>
-        Confirmed price: <strong>${confirmedPrice}</strong>
+        Confirmed price: <strong>{formattedPrice}</strong>
       </p>
-      <p>You can view your booking details here:</p>
+      <p>
+        Payment instructions will be sent in a follow-up message. In the
+        meantime, you can view your booking details here:
+      </p>
       <p>
         <a href={bookingUrl} style={{ color: "#2563eb" }}>
           {bookingUrl}

@@ -1,18 +1,22 @@
 import * as React from "react"
 
 type Props = {
-  bookingId: string
   guestName: string
+  bookingId: string
+  accessToken: string
+  declineReason: string | null
   roomName: string
-  declineReason?: string | null
-  accessToken?: string
 }
 
 export function BookingDeclinedEmail({
   guestName,
-  roomName,
+  bookingId,
+  accessToken,
   declineReason,
+  roomName,
 }: Props) {
+  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/bookings/${bookingId}?token=${accessToken}`
+
   return (
     <div
       style={{
@@ -25,10 +29,10 @@ export function BookingDeclinedEmail({
     >
       <p>Hi {guestName},</p>
       <p>
-        Unfortunately, your booking request for <strong>{roomName}</strong> has
-        been <strong>declined</strong>.
+        We&apos;re sorry to let you know that your booking request for{" "}
+        <strong>{roomName}</strong> has been <strong>declined</strong>.
       </p>
-      {declineReason && (
+      {declineReason !== null && (
         <p>
           Reason: <em>{declineReason}</em>
         </p>
@@ -36,6 +40,12 @@ export function BookingDeclinedEmail({
       <p>
         Please feel free to reach out if you have any questions or would like to
         explore other dates.
+      </p>
+      <p>You can view your booking details here:</p>
+      <p>
+        <a href={bookingUrl} style={{ color: "#2563eb" }}>
+          {bookingUrl}
+        </a>
       </p>
     </div>
   )

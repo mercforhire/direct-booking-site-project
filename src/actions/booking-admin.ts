@@ -30,7 +30,7 @@ export async function approveBooking(bookingId: string, data: unknown) {
   if (!parsed.success) return { error: parsed.error.flatten() }
   const { confirmedPrice } = parsed.data
 
-  let booking: { id: string; guestEmail: string; guestName: string; room: { name: string } }
+  let booking: { id: string; guestEmail: string; guestName: string; accessToken: string; room: { name: string } }
   try {
     booking = await prisma.booking.update({
       where: { id: bookingId, status: "PENDING" },
@@ -52,7 +52,7 @@ export async function approveBooking(bookingId: string, data: unknown) {
         guestName: booking.guestName,
         roomName: booking.room.name,
         confirmedPrice,
-        accessToken: "",
+        accessToken: booking.accessToken,
       })
     )
     await resend.emails.send({
@@ -78,7 +78,7 @@ export async function declineBooking(bookingId: string, data: unknown) {
   if (!parsed.success) return { error: parsed.error.flatten() }
   const { declineReason } = parsed.data
 
-  let booking: { id: string; guestEmail: string; guestName: string; room: { name: string } }
+  let booking: { id: string; guestEmail: string; guestName: string; accessToken: string; room: { name: string } }
   try {
     booking = await prisma.booking.update({
       where: { id: bookingId, status: "PENDING" },
@@ -99,7 +99,8 @@ export async function declineBooking(bookingId: string, data: unknown) {
         bookingId: booking.id,
         guestName: booking.guestName,
         roomName: booking.room.name,
-        declineReason,
+        accessToken: booking.accessToken,
+        declineReason: declineReason ?? null,
       })
     )
     await resend.emails.send({

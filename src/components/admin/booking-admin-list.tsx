@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useTransition } from "react"
 import Link from "next/link"
 import { format } from "date-fns"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
@@ -13,6 +14,18 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog"
+import { cancelBooking } from "@/actions/cancellation"
 
 type BookingStatus =
   | "PENDING"
@@ -32,11 +45,47 @@ type SerializedBooking = {
   numGuests: number
   estimatedTotal: number
   confirmedPrice: number | null
+  stripeSessionId: string | null
   status: BookingStatus
   room: { name: string }
   createdAt: string
   updatedAt: string
   hasPendingExtension: boolean
+  paidExtensionsTotal: number
+}
+
+function CancelBookingRowAction({ bookingId }: { bookingId: string }) {
+  const [isPending, startTransition] = useTransition()
+  const [open, setOpen] = useState(false)
+
+  function handleConfirm() {
+    startTransition(async () => {
+      await cancelBooking(bookingId, { refundAmount: 0 })
+      setOpen(false)
+    })
+  }
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <Button variant="destructive" size="sm" disabled={isPending}>Cancel</Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This booking has not been paid. No refund is required. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep Booking</AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirm} disabled={isPending}>
+            {isPending ? "Cancelling..." : "Cancel Booking"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
 }
 
 const STATUS_TABS: { value: string; label: string }[] = [
@@ -126,21 +175,34 @@ function BookingsTable({ bookings }: { bookings: SerializedBooking[] }) {
             <TableCell>{format(new Date(b.checkout), "MMM d, yyyy")}</TableCell>
             <TableCell>{b.numGuests}</TableCell>
             <TableCell>
-              {new Intl.NumberFormat("en-CA", {
-                style: "currency",
-                currency: "CAD",
-              }).format(b.status === "PAID" && b.confirmedPrice != null ? b.confirmedPrice : b.estimatedTotal)}
+              {(() => {
+                const base = b.status === "PAID" && b.confirmedPrice != null ? b.confirmedPrice : b.estimatedTotal
+                const total = base + b.paidExtensionsTotal
+                return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(total)
+              })()}
               {b.status === "PAID" && b.confirmedPrice != null && (
-                <div className="text-xs text-muted-foreground mt-0.5">paid</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {b.paidExtensionsTotal > 0 ? "incl. extension" : "paid"}
+                </div>
               )}
             </TableCell>
             <TableCell>
               <StatusBadge status={b.status} />
             </TableCell>
             <TableCell>
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/admin/bookings/${b.id}`}>View</Link>
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/admin/bookings/${b.id}`}>View</Link>
+                </Button>
+                {b.status === "APPROVED" && (
+                  <CancelBookingRowAction bookingId={b.id} />
+                )}
+                {b.status === "PAID" && (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/admin/bookings/${b.id}`}>Cancel (see refund)</Link>
+                  </Button>
+                )}
+              </div>
             </TableCell>
           </TableRow>
         ))}

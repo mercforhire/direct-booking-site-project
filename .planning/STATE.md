@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 08-cancellations-refunds 08-08-PLAN.md — awaiting human verification checkpoint
-last_updated: "2026-03-29T16:51:11.109Z"
+stopped_at: Completed 08-cancellations-refunds 08-08-PLAN.md — Phase 8 fully verified and complete
+last_updated: "2026-03-29T18:56:16.398Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
@@ -96,6 +96,7 @@ Progress: [█████████░] 97%
 | Phase 08-cancellations-refunds P06 | 3 | 2 tasks | 3 files |
 | Phase 08-cancellations-refunds P07 | 525848 | 1 tasks | 2 files |
 | Phase 08-cancellations-refunds P08 | 5 | 1 tasks | 6 files |
+| Phase 08-cancellations-refunds P08 | 60min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -207,6 +208,9 @@ Recent decisions affecting current work:
 - [Phase 08-cancellations-refunds]: auth/confirm routes recovery emails to /guest/reset-password via type=recovery query param
 - [Phase 08-cancellations-refunds]: my-booking redirect page resolves authenticated guest to their most recent booking by userId or email
 - [Phase 08-cancellations-refunds]: extension-section allows new request after PAID extension; minExtensionDate is day after checkout
+- [Phase 08-cancellations-refunds]: cancelBookingSchema must NOT include bookingId — extra field caused silent Zod validation failure on cancel
+- [Phase 08-cancellations-refunds]: Extension Stripe payments refunded atomically with booking cancellation in cancelBooking action
+- [Phase 08-cancellations-refunds]: All date formatting uses T00:00:00 (local midnight) pattern to prevent timezone off-by-one display errors
 
 ### Pending Todos
 
@@ -220,6 +224,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T16:51:11.106Z
-Stopped at: Completed 08-cancellations-refunds 08-08-PLAN.md — awaiting human verification checkpoint
+Last session: 2026-03-29T18:56:16.395Z
+Stopped at: Completed 08-cancellations-refunds 08-08-PLAN.md — Phase 8 fully verified and complete
 Resume file: None

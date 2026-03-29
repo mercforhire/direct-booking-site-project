@@ -22,6 +22,19 @@ import { markBookingAsPaid } from "@/actions/payment"
 import { approveExtension, declineExtension } from "@/actions/extension-admin"
 import { markExtensionAsPaid } from "@/actions/payment"
 import { cancelBooking } from "@/actions/cancellation"
+import { approveDateChange, declineDateChange } from "@/actions/date-change"
+
+export type SerializedDateChange = {
+  id: string
+  bookingId: string
+  requestedCheckin: string
+  requestedCheckout: string
+  newPrice: number | null
+  status: "PENDING" | "APPROVED" | "DECLINED"
+  declineReason: string | null
+  stripeSessionId: string | null
+  createdAt: string
+}
 
 type BookingStatus =
   | "PENDING"
@@ -102,10 +115,12 @@ function statusLabel(status: BookingStatus): string {
 export function BookingAdminDetail({
   booking,
   activeExtension,
+  activeDateChange,
   depositAmount,
 }: {
   booking: SerializedBooking
   activeExtension?: SerializedExtension | null
+  activeDateChange?: SerializedDateChange | null
   depositAmount: number
 }) {
   const router = useRouter()
@@ -125,6 +140,10 @@ export function BookingAdminDetail({
   const [refundAmountInput, setRefundAmountInput] = useState<string>(
     String(booking.confirmedPrice ?? 0)
   )
+  const [isDateChangePending, startDateChangeTransition] = useTransition()
+  const [newPriceInput, setNewPriceInput] = useState("")
+  const [declineReasonInput, setDeclineReasonInput] = useState("")
+  const [dateChangeError, setDateChangeError] = useState<string | null>(null)
 
   async function handleMarkAsPaid() {
     setMarkPaidError(null)
@@ -622,6 +641,124 @@ export function BookingAdminDetail({
             )
           })()}
         </div>
+      )}
+
+      {/* Date Change Request Section */}
+      {activeDateChange && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">Date Change Request</h2>
+          <div className="rounded-lg border p-4 space-y-2">
+            <p className="text-sm">
+              <span className="font-medium">Requested dates:</span>{" "}
+              {format(new Date(activeDateChange.requestedCheckin), "MMMM d, yyyy")} &rarr;{" "}
+              {format(new Date(activeDateChange.requestedCheckout), "MMMM d, yyyy")}
+            </p>
+            <p className="text-sm">
+              <span className="font-medium">Status:</span>{" "}
+              <Badge>{activeDateChange.status}</Badge>
+            </p>
+
+            {activeDateChange.status === "PENDING" && (
+              <div className="flex gap-2 pt-2">
+                {/* Approve button with price input */}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm">Approve</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Approve Date Change</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Set the new confirmed price for the updated dates.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="py-2">
+                      <label className="text-sm font-medium">New Price (CAD)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={newPriceInput}
+                        onChange={(e) => setNewPriceInput(e.target.value)}
+                        className="mt-1 w-full rounded border px-3 py-2 text-sm"
+                        placeholder={String(booking.confirmedPrice ?? "")}
+                      />
+                      {dateChangeError && (
+                        <p className="text-sm text-destructive mt-1">{dateChangeError}</p>
+                      )}
+                    </div>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        disabled={isDateChangePending}
+                        onClick={() => {
+                          setDateChangeError(null)
+                          startDateChangeTransition(async () => {
+                            const result = await approveDateChange(activeDateChange.id, {
+                              newPrice: Number(newPriceInput),
+                            })
+                            if (result?.error) {
+                              setDateChangeError(
+                                typeof result.error === "string" ? result.error : "Failed to approve"
+                              )
+                            }
+                          })
+                        }}
+                      >
+                        {isDateChangePending ? "Approving..." : "Approve"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+                {/* Decline button */}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      Decline
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Decline Date Change</AlertDialogTitle>
+                    </AlertDialogHeader>
+                    <div className="py-2">
+                      <label className="text-sm font-medium">Reason (optional)</label>
+                      <textarea
+                        value={declineReasonInput}
+                        onChange={(e) => setDeclineReasonInput(e.target.value)}
+                        className="mt-1 w-full rounded border px-3 py-2 text-sm"
+                        rows={2}
+                      />
+                    </div>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        disabled={isDateChangePending}
+                        onClick={() => {
+                          startDateChangeTransition(async () => {
+                            await declineDateChange(activeDateChange.id, {
+                              declineReason: declineReasonInput || undefined,
+                            })
+                          })
+                        }}
+                      >
+                        {isDateChangePending ? "Declining..." : "Decline"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            )}
+
+            {activeDateChange.status === "APPROVED" && (
+              <p className="text-sm text-muted-foreground">
+                Approved — awaiting guest payment (new price:{" "}
+                {formatCurrency(activeDateChange.newPrice ?? 0)})
+              </p>
+            )}
+          </div>
+        </section>
       )}
 
       {/* Extension Request Section */}

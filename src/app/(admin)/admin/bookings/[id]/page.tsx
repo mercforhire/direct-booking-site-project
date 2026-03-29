@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import { BookingAdminDetail } from "@/components/admin/booking-admin-detail"
+import type { SerializedDateChange } from "@/components/admin/booking-admin-detail"
 
 export const dynamic = "force-dynamic"
 
@@ -47,12 +48,32 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
       }
     : null
 
+  const activeDateChangeRaw = await prisma.bookingDateChange.findFirst({
+    where: { bookingId: id, status: { in: ["PENDING", "APPROVED"] } },
+    orderBy: { createdAt: "desc" },
+  })
+  const activeDateChange: SerializedDateChange | null = activeDateChangeRaw
+    ? {
+        id: activeDateChangeRaw.id,
+        bookingId: activeDateChangeRaw.bookingId,
+        requestedCheckin: activeDateChangeRaw.requestedCheckin.toISOString(),
+        requestedCheckout: activeDateChangeRaw.requestedCheckout.toISOString(),
+        newPrice:
+          activeDateChangeRaw.newPrice != null ? Number(activeDateChangeRaw.newPrice) : null,
+        status: activeDateChangeRaw.status as "PENDING" | "APPROVED" | "DECLINED",
+        declineReason: activeDateChangeRaw.declineReason,
+        stripeSessionId: activeDateChangeRaw.stripeSessionId,
+        createdAt: activeDateChangeRaw.createdAt.toISOString(),
+      }
+    : null
+
   const settings = await prisma.settings.findUnique({ where: { id: "global" } })
 
   return (
     <BookingAdminDetail
       booking={serialized}
       activeExtension={serializedExtension}
+      activeDateChange={activeDateChange}
       depositAmount={Number(settings?.depositAmount ?? 0)}
     />
   )

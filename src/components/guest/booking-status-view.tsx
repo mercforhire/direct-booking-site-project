@@ -5,6 +5,7 @@ import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { createStripeCheckoutSession } from "@/actions/payment"
 import { ExtensionSection, type SerializedExtension } from "./extension-section"
+import { DateChangeSection } from "./date-change-section"
 
 // All Decimal fields coerced to number at RSC boundary
 export type SerializedBooking = {
@@ -22,6 +23,8 @@ export type SerializedBooking = {
   estimatedTotal: number
   confirmedPrice: number | null
   stripeSessionId: string | null
+  refundAmount: number | null
+  cancelledAt: string | null
   status: string
   accessToken: string
   createdAt: string
@@ -33,6 +36,18 @@ export type SerializedBooking = {
   }
 }
 
+export type SerializedDateChange = {
+  id: string
+  bookingId: string
+  requestedCheckin: string
+  requestedCheckout: string
+  newPrice: number | null
+  status: "PENDING" | "APPROVED" | "DECLINED"
+  declineReason: string | null
+  stripeSessionId: string | null
+  createdAt: string
+}
+
 type Props = {
   booking: SerializedBooking
   showSuccessBanner: boolean
@@ -40,6 +55,7 @@ type Props = {
   showExtensionPaidBanner?: boolean
   etransferEmail: string | null
   activeExtension?: SerializedExtension | null
+  activeDateChange?: SerializedDateChange | null
   blockedDates?: string[]
 }
 
@@ -61,6 +77,30 @@ function formatCurrency(amount: number): string {
     style: "currency",
     currency: "CAD",
   }).format(amount)
+}
+
+function CancellationNotice({ booking }: { booking: SerializedBooking }) {
+  const isStripe = !!booking.stripeSessionId
+  const hasPayment = booking.refundAmount !== null
+
+  return (
+    <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 space-y-2">
+      <h3 className="font-semibold text-destructive">Booking Cancelled</h3>
+      {!hasPayment && (
+        <p className="text-sm text-muted-foreground">This booking was cancelled. No payment was taken.</p>
+      )}
+      {hasPayment && isStripe && (
+        <p className="text-sm">
+          Refund of {formatCurrency(booking.refundAmount!)} will be returned to your card within 5–10 business days.
+        </p>
+      )}
+      {hasPayment && !isStripe && (
+        <p className="text-sm">
+          Refund of {formatCurrency(booking.refundAmount!)} will be sent via e-transfer.
+        </p>
+      )}
+    </div>
+  )
 }
 
 function PaymentSection({
@@ -149,6 +189,7 @@ export function BookingStatusView({
   showExtensionPaidBanner,
   etransferEmail,
   activeExtension,
+  activeDateChange,
   blockedDates = [],
 }: Props) {
   const checkinStr = booking.checkin.slice(0, 10) // "YYYY-MM-DD"
@@ -264,6 +305,9 @@ export function BookingStatusView({
         </div>
       </div>
 
+      {/* Cancellation notice */}
+      {booking.status === "CANCELLED" && <CancellationNotice booking={booking} />}
+
       {/* Payment section */}
       <PaymentSection booking={booking} etransferEmail={etransferEmail} />
 
@@ -274,6 +318,14 @@ export function BookingStatusView({
         blockedDates={blockedDates}
         etransferEmail={etransferEmail}
       />
+
+      {/* Date change section */}
+      {booking.status !== "CANCELLED" && booking.status !== "DECLINED" && booking.status !== "COMPLETED" && (
+        <DateChangeSection
+          booking={{ id: booking.id, status: booking.status, checkin: booking.checkin, checkout: booking.checkout }}
+          activeDateChange={activeDateChange ?? null}
+        />
+      )}
 
       {/* Booking reference */}
       <p className="text-xs text-gray-400 mt-4 text-center">

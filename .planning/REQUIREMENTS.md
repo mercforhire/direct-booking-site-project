@@ -54,13 +54,13 @@
 
 ### Cancellations & Refunds
 
-- [ ] **CNCL-01**: Landlord can cancel any booking from the admin dashboard at any time
-- [ ] **CNCL-02**: When cancelling, landlord enters the refund amount (no fixed policy — case by case)
-- [ ] **CNCL-03**: For Stripe-paid bookings, the system automatically issues the Stripe refund for the entered amount (service fee included in refund)
-- [ ] **CNCL-04**: For e-transfer bookings, landlord manually processes the refund outside the system and marks it as refunded
-- [ ] **CNCL-05**: If cancelled before check-in, the deposit is always included in the refundable amount
-- [ ] **CNCL-06**: If cancelled mid-stay, landlord decides whether to include the deposit in the refund
-- [ ] **CNCL-07**: Guest receives an email on cancellation with the refund amount and expected timeline
+- [x] **CNCL-01**: Landlord can cancel any booking from the admin dashboard at any time
+- [x] **CNCL-02**: When cancelling, landlord enters the refund amount (no fixed policy — case by case)
+- [x] **CNCL-03**: For Stripe-paid bookings, the system automatically issues the Stripe refund for the entered amount (service fee included in refund)
+- [x] **CNCL-04**: For e-transfer bookings, landlord manually processes the refund outside the system and marks it as refunded
+- [x] **CNCL-05**: If cancelled before check-in, the deposit is always included in the refundable amount
+- [x] **CNCL-06**: If cancelled mid-stay, landlord decides whether to include the deposit in the refund
+- [x] **CNCL-07**: Guest receives an email on cancellation with the refund amount and expected timeline
 
 ### Guest Booking Page
 
@@ -151,13 +151,13 @@
 | EXT-04 | Phase 7 | Complete |
 | EXT-05 | Phase 7 | Complete |
 | EXT-06 | Phase 7 | Complete |
-| CNCL-01 | Phase 8 | Pending |
-| CNCL-02 | Phase 8 | Pending |
-| CNCL-03 | Phase 8 | Pending |
-| CNCL-04 | Phase 8 | Pending |
-| CNCL-05 | Phase 8 | Pending |
-| CNCL-06 | Phase 8 | Pending |
-| CNCL-07 | Phase 8 | Pending |
+| CNCL-01 | Phase 8 | Complete |
+| CNCL-02 | Phase 8 | Complete |
+| CNCL-03 | Phase 8 | Complete |
+| CNCL-04 | Phase 8 | Complete |
+| CNCL-05 | Phase 8 | Complete |
+| CNCL-06 | Phase 8 | Complete |
+| CNCL-07 | Phase 8 | Complete |
 | GUEST-01 | Phase 4 | Complete |
 | GUEST-02 | Phase 7 | Complete |
 | GUEST-03 | Phase 7 | Complete |

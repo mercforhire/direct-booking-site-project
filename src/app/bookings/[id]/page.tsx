@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
 import { BookingStatusView } from "@/components/guest/booking-status-view"
+import type { SerializedDateChange } from "@/components/guest/booking-status-view"
 
 export const dynamic = "force-dynamic"
 
@@ -60,6 +61,25 @@ export default async function BookingPage({
     orderBy: { createdAt: "desc" },
   })
 
+  // Load active date change request (PENDING or APPROVED)
+  const activeDateChangeRecord = await prisma.bookingDateChange.findFirst({
+    where: { bookingId: id, status: { in: ["PENDING", "APPROVED"] } },
+    orderBy: { createdAt: "desc" },
+  })
+  const serializedDateChange: SerializedDateChange | null = activeDateChangeRecord
+    ? {
+        id: activeDateChangeRecord.id,
+        bookingId: activeDateChangeRecord.bookingId,
+        requestedCheckin: activeDateChangeRecord.requestedCheckin.toISOString(),
+        requestedCheckout: activeDateChangeRecord.requestedCheckout.toISOString(),
+        newPrice: activeDateChangeRecord.newPrice != null ? Number(activeDateChangeRecord.newPrice) : null,
+        status: activeDateChangeRecord.status as "PENDING" | "APPROVED" | "DECLINED",
+        declineReason: activeDateChangeRecord.declineReason,
+        stripeSessionId: activeDateChangeRecord.stripeSessionId,
+        createdAt: activeDateChangeRecord.createdAt.toISOString(),
+      }
+    : null
+
   // Serialize extension — coerce Decimal and Date at RSC boundary
   const serializedExtension = activeExtension
     ? {
@@ -85,6 +105,8 @@ export default async function BookingPage({
     estimatedTotal: Number(booking.estimatedTotal),
     confirmedPrice: booking.confirmedPrice != null ? Number(booking.confirmedPrice) : null,
     stripeSessionId: booking.stripeSessionId ?? null,
+    refundAmount: booking.refundAmount != null ? Number(booking.refundAmount) : null,
+    cancelledAt: booking.cancelledAt ? booking.cancelledAt.toISOString() : null,
     checkin: booking.checkin.toISOString(),
     checkout: booking.checkout.toISOString(),
     createdAt: booking.createdAt.toISOString(),
@@ -106,6 +128,7 @@ export default async function BookingPage({
       showExtensionPaidBanner={extension_paid === "1"}
       etransferEmail={settings?.etransferEmail ?? null}
       activeExtension={serializedExtension}
+      activeDateChange={serializedDateChange}
       blockedDates={blockedDateStrings}
     />
   )

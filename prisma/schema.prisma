@@ -141,6 +141,7 @@ model BookingDateChange {
   bookingId         String
   requestedCheckin  DateTime                @db.Date
   requestedCheckout DateTime                @db.Date
+  noteToLandlord    String?
   newPrice          Decimal?                @db.Decimal(10, 2)
   status            BookingDateChangeStatus @default(PENDING)
   declineReason     String?

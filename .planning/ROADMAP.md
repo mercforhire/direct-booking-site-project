@@ -179,7 +179,7 @@ Plans:
 - [ ] 07-08-PLAN.md — Full test suite run + 7-scenario human verification checkpoint
 
 ### Phase 8: Cancellations & Refunds
-**Goal**: Landlord can cancel any booking and issue appropriate refunds through the original payment channel
+**Goal**: Landlord can cancel any booking and issue appropriate refunds through the original payment channel; guests can request date modifications
 **Depends on**: Phase 6
 **Requirements**: CNCL-01, CNCL-02, CNCL-03, CNCL-04, CNCL-05, CNCL-06, CNCL-07
 **Success Criteria** (what must be TRUE):
@@ -189,11 +189,17 @@ Plans:
   4. For e-transfer bookings, landlord manually processes the refund outside the system and marks it as refunded
   5. Deposit is automatically included in the refundable amount for pre-check-in cancellations; landlord decides for mid-stay cancellations
   6. Guest receives an email on cancellation with the refund amount and expected timeline
-**Plans**: 3 plans
+**Plans**: 8 plans
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
+- [ ] 08-01-PLAN.md — Prisma schema additions (refundAmount, cancelledAt, BookingDateChange model) + Zod schemas + Wave 0 test stubs + db push
+- [ ] 08-02-PLAN.md — cancelBooking server action (TDD) + BookingCancelledEmail template
+- [ ] 08-03-PLAN.md — Guest date change actions: submitDateChange + cancelDateChange (TDD) + BookingDateChangeRequestEmail
+- [ ] 08-04-PLAN.md — Admin date change actions: approveDateChange + declineDateChange + Stripe top-up + webhook date_change_topup branch (TDD)
+- [ ] 08-05-PLAN.md — Admin UI: cancel section on detail page (full refund dialog) + cancel row action on list page
+- [ ] 08-06-PLAN.md — Guest UI: CancellationNotice section + DateChangeSection component + RSC page update
+- [ ] 08-07-PLAN.md — Admin UI: date change approve/decline section on detail page
+- [ ] 08-08-PLAN.md — Full test suite run + 7-scenario human verification checkpoint
 
 ### Phase 9: Messaging
 **Goal**: Guest and landlord can communicate via text messages scoped to a booking, with email notifications for new messages
@@ -226,5 +232,5 @@ Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. P
 | 5. Approval Flow & Notifications | 5/5 | Complete   | 2026-03-28 |
 | 6. Payment | 3/3 | Complete   | 2026-03-28 |
 | 7. Booking Extensions | 8/8 | Complete   | 2026-03-29 |
-| 8. Cancellations & Refunds | 0/? | Not started | - |
+| 8. Cancellations & Refunds | 0/8 | Not started | - |
 | 9. Messaging | 0/? | Not started | - |

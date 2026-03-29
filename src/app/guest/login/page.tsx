@@ -23,6 +23,8 @@ function GuestLoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  const justReset = searchParams.get("reset") === "1"
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -41,7 +43,7 @@ function GuestLoginForm() {
       return
     }
 
-    const next = searchParams.get("next") ?? "/"
+    const next = searchParams.get("next") ?? "/my-booking"
     // Full navigation instead of router.push — forces the browser to send the
     // new session cookie to the server rather than reusing a cached RSC.
     window.location.href = next
@@ -57,6 +59,11 @@ function GuestLoginForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {justReset && (
+            <p className="mb-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2">
+              Password updated — sign in with your new password.
+            </p>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -90,6 +97,14 @@ function GuestLoginForm() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </Button>
+            <div className="text-center">
+              <Link
+                href="/guest/forgot-password"
+                className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </div>
           </form>
         </CardContent>
       </Card>

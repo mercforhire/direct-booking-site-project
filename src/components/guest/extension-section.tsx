@@ -70,10 +70,16 @@ export function ExtensionSection({
 
   const canRequestExtension =
     (booking.status === "APPROVED" || booking.status === "PAID") &&
-    (activeExtension === null || activeExtension.status === "DECLINED")
+    (activeExtension === null ||
+      activeExtension.status === "DECLINED" ||
+      activeExtension.status === "PAID")
 
   // Convert blocked date strings to Date objects for DayPicker
   const blockedDateObjects = blockedDates.map((d) => new Date(d))
+
+  // First selectable date is the day after current checkout
+  const minExtensionDate = new Date(booking.checkout)
+  minExtensionDate.setDate(minExtensionDate.getDate() + 1)
 
   function handleSubmit() {
     if (!selectedDate) return
@@ -265,7 +271,7 @@ export function ExtensionSection({
                 selected={selectedDate}
                 onSelect={setSelectedDate}
                 disabled={[
-                  { before: new Date(booking.checkout) },
+                  { before: minExtensionDate },
                   ...blockedDateObjects,
                 ]}
               />

@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server"
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get("code")
-  const next = searchParams.get("next") ?? "/dashboard"
+  const type = searchParams.get("type")
+  const next = searchParams.get("next") ?? (type === "recovery" ? "/guest/reset-password" : "/dashboard")
 
   if (code) {
     const supabase = await createClient()
@@ -15,5 +16,5 @@ export async function GET(request: NextRequest) {
   }
 
   // Token invalid, expired, or missing — redirect to login with error param
-  return NextResponse.redirect(new URL("/login?error=invalid_token", request.url))
+  return NextResponse.redirect(new URL("/guest/login?error=invalid_token", request.url))
 }

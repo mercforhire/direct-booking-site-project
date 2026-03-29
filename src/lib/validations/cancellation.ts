@@ -1,7 +1,6 @@
 import { z } from "zod"
 
 export const cancelBookingSchema = z.object({
-  bookingId: z.string().min(1),
   refundAmount: z.coerce.number().min(0),
 })
 

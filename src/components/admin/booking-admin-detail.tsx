@@ -117,11 +117,13 @@ export function BookingAdminDetail({
   activeExtension,
   activeDateChange,
   depositAmount,
+  totalPaid,
 }: {
   booking: SerializedBooking
   activeExtension?: SerializedExtension | null
   activeDateChange?: SerializedDateChange | null
   depositAmount: number
+  totalPaid?: number | null
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -138,7 +140,7 @@ export function BookingAdminDetail({
   const [isCancelPending, startCancelTransition] = useTransition()
   const [cancelError, setCancelError] = useState<string | null>(null)
   const [refundAmountInput, setRefundAmountInput] = useState<string>(
-    String(booking.confirmedPrice ?? 0)
+    String(totalPaid ?? booking.confirmedPrice ?? 0)
   )
   const [isDateChangePending, startDateChangeTransition] = useTransition()
   const [newPriceInput, setNewPriceInput] = useState("")
@@ -162,8 +164,8 @@ export function BookingAdminDetail({
   }
 
   const nights = differenceInCalendarDays(
-    new Date(booking.checkout),
-    new Date(booking.checkin)
+    new Date(booking.checkout.slice(0, 10) + "T00:00:00"),
+    new Date(booking.checkin.slice(0, 10) + "T00:00:00")
   )
 
   const selectedAddOns = booking.room.addOns.filter((a) =>
@@ -289,11 +291,11 @@ export function BookingAdminDetail({
           </div>
           <div>
             <span className="text-muted-foreground">Check-in</span>
-            <p className="font-medium">{format(new Date(booking.checkin), "MMMM d, yyyy")}</p>
+            <p className="font-medium">{format(new Date(booking.checkin.slice(0, 10) + "T00:00:00"), "MMMM d, yyyy")}</p>
           </div>
           <div>
             <span className="text-muted-foreground">Check-out</span>
-            <p className="font-medium">{format(new Date(booking.checkout), "MMMM d, yyyy")}</p>
+            <p className="font-medium">{format(new Date(booking.checkout.slice(0, 10) + "T00:00:00"), "MMMM d, yyyy")}</p>
           </div>
           <div>
             <span className="text-muted-foreground">Nights</span>
@@ -558,37 +560,46 @@ export function BookingAdminDetail({
             const today = new Date().toISOString().slice(0, 10)
             const checkinStr = booking.checkin.slice(0, 10)
             const isPreCheckin = today < checkinStr
+            const isStripe = !!booking.stripeSessionId
             return (
               <>
                 <p className="text-sm text-muted-foreground">
                   This booking has been paid. Issuing a refund will process through the original payment method.
                 </p>
                 <div className="space-y-2">
-                  <label htmlFor="refundAmount" className="block text-sm font-medium">
-                    Refund Amount (CAD)
-                  </label>
-                  <input
-                    id="refundAmount"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={refundAmountInput}
-                    onChange={(e) => setRefundAmountInput(e.target.value)}
-                    className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  {isPreCheckin ? (
-                    <p className="text-sm text-muted-foreground">
-                      Pre-check-in cancellation. Deposit is included — standard for pre-check-in since no damage is possible.
-                    </p>
+                  {isStripe ? (
+                    <>
+                      <p className="text-sm font-medium">
+                        Refund Amount (CAD): {formatCurrency(totalPaid ?? booking.confirmedPrice ?? 0)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Stripe will automatically refund each payment at the original charged amount. Refunds typically take 5–10 business days.
+                      </p>
+                    </>
                   ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Mid-stay cancellation — deposit ({formatCurrency(depositAmount)}) is included in the pre-filled amount. Adjust if withholding for potential damages.
-                    </p>
-                  )}
-                  {booking.stripeSessionId && (
-                    <p className="text-sm text-muted-foreground">
-                      Stripe refunds typically take 5–10 business days.
-                    </p>
+                    <>
+                      <label htmlFor="refundAmount" className="block text-sm font-medium">
+                        Refund Amount (CAD)
+                      </label>
+                      <input
+                        id="refundAmount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={refundAmountInput}
+                        onChange={(e) => setRefundAmountInput(e.target.value)}
+                        className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                      {isPreCheckin ? (
+                        <p className="text-sm text-muted-foreground">
+                          Pre-check-in cancellation. Deposit is included — standard for pre-check-in since no damage is possible.
+                        </p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Mid-stay cancellation — deposit ({formatCurrency(depositAmount)}) is included in the pre-filled amount. Adjust if withholding for potential damages.
+                        </p>
+                      )}
+                    </>
                   )}
                   {cancelError && (
                     <p className="text-sm text-destructive">{cancelError}</p>
@@ -604,8 +615,9 @@ export function BookingAdminDetail({
                     <AlertDialogHeader>
                       <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        A refund of {formatCurrency(Number(refundAmountInput) || 0)} CAD will be issued
-                        {booking.stripeSessionId ? " via Stripe" : " manually"}. This action cannot be undone.
+                        {isStripe
+                          ? `Stripe will automatically refund ${formatCurrency(totalPaid ?? booking.confirmedPrice ?? 0)} CAD across all payments. This action cannot be undone.`
+                          : `A refund of ${formatCurrency(Number(refundAmountInput) || 0)} CAD will be issued manually via e-transfer. This action cannot be undone.`}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -615,11 +627,14 @@ export function BookingAdminDetail({
                           setCancelError(null)
                           startCancelTransition(async () => {
                             const result = await cancelBooking(booking.id, {
-                              refundAmount: Number(refundAmountInput),
+                              refundAmount: isStripe
+                                ? (totalPaid ?? booking.confirmedPrice ?? 0)
+                                : Number(refundAmountInput),
                             })
                             if ("error" in result) {
                               if (result.error === "stripe_refund_failed") {
-                                setCancelError("Stripe refund failed. The booking has NOT been cancelled. Please try again or contact Stripe support.")
+                                const detail = "message" in result && result.message ? ` (${result.message})` : ""
+                                setCancelError(`Stripe refund failed — booking NOT cancelled.${detail}`)
                               } else if (result.error === "not_cancellable") {
                                 setCancelError("This booking can no longer be cancelled.")
                               } else {
@@ -650,8 +665,8 @@ export function BookingAdminDetail({
           <div className="rounded-lg border p-4 space-y-2">
             <p className="text-sm">
               <span className="font-medium">Requested dates:</span>{" "}
-              {format(new Date(activeDateChange.requestedCheckin), "MMMM d, yyyy")} &rarr;{" "}
-              {format(new Date(activeDateChange.requestedCheckout), "MMMM d, yyyy")}
+              {format(new Date(activeDateChange.requestedCheckin.slice(0, 10) + "T00:00:00"), "MMMM d, yyyy")} &rarr;{" "}
+              {format(new Date(activeDateChange.requestedCheckout.slice(0, 10) + "T00:00:00"), "MMMM d, yyyy")}
             </p>
             <p className="text-sm">
               <span className="font-medium">Status:</span>{" "}
@@ -769,7 +784,7 @@ export function BookingAdminDetail({
             <div>
               <span className="text-muted-foreground">Requested checkout</span>
               <p className="font-medium">
-                {format(new Date(activeExtension.requestedCheckout), "MMMM d, yyyy")}
+                {format(new Date(activeExtension.requestedCheckout.slice(0, 10) + "T00:00:00"), "MMMM d, yyyy")}
               </p>
             </div>
             <div>
@@ -900,7 +915,7 @@ export function BookingAdminDetail({
                     <AlertDialogTitle>Mark extension as paid?</AlertDialogTitle>
                     <AlertDialogDescription>
                       This will mark the extension as paid and update the booking checkout date to{" "}
-                      {format(new Date(activeExtension.requestedCheckout), "MMMM d, yyyy")}.
+                      {format(new Date(activeExtension.requestedCheckout.slice(0, 10) + "T00:00:00"), "MMMM d, yyyy")}.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

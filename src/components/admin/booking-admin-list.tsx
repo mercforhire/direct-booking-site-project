@@ -171,8 +171,8 @@ function BookingsTable({ bookings }: { bookings: SerializedBooking[] }) {
               <div className="text-xs text-muted-foreground font-mono mt-0.5">{b.id}</div>
             </TableCell>
             <TableCell>{b.room.name}</TableCell>
-            <TableCell>{format(new Date(b.checkin), "MMM d, yyyy")}</TableCell>
-            <TableCell>{format(new Date(b.checkout), "MMM d, yyyy")}</TableCell>
+            <TableCell>{format(new Date(b.checkin.slice(0, 10) + "T00:00:00"), "MMM d, yyyy")}</TableCell>
+            <TableCell>{format(new Date(b.checkout.slice(0, 10) + "T00:00:00"), "MMM d, yyyy")}</TableCell>
             <TableCell>{b.numGuests}</TableCell>
             <TableCell>
               {(() => {

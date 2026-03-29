@@ -34,19 +34,42 @@ export async function cancelBooking(bookingId: string, data: unknown) {
   })
   if (!booking) return { error: "not_found" }
 
-  // Stripe refund FIRST (hard block if fails)
-  if (booking.stripeSessionId && booking.status === "PAID") {
-    const session = await stripe.checkout.sessions.retrieve(booking.stripeSessionId)
-    if (!session.payment_intent || typeof session.payment_intent !== "string") {
-      return { error: "no_payment_intent" }
+  // Stripe refunds FIRST (hard block if any fail)
+  if (booking.status === "PAID") {
+    // Refund main booking Stripe payment
+    if (booking.stripeSessionId) {
+      const session = await stripe.checkout.sessions.retrieve(booking.stripeSessionId)
+      if (!session.payment_intent || typeof session.payment_intent !== "string") {
+        return { error: "no_payment_intent" }
+      }
+      try {
+        await stripe.refunds.create({
+          payment_intent: session.payment_intent,
+          amount: Math.round(Number(booking.confirmedPrice ?? 0) * 100),
+        })
+      } catch (err) {
+        return { error: "stripe_refund_failed", message: (err as Error).message }
+      }
     }
-    try {
-      await stripe.refunds.create({
-        payment_intent: session.payment_intent,
-        amount: Math.round(Number(refundAmount) * 100),
-      })
-    } catch (err) {
-      return { error: "stripe_refund_failed", message: (err as Error).message }
+
+    // Refund any Stripe-paid extensions
+    const paidExtensions = await prisma.bookingExtension.findMany({
+      where: { bookingId, status: "PAID", stripeSessionId: { not: null } },
+      select: { stripeSessionId: true, extensionPrice: true },
+    })
+    for (const ext of paidExtensions) {
+      const extSession = await stripe.checkout.sessions.retrieve(ext.stripeSessionId!)
+      if (!extSession.payment_intent || typeof extSession.payment_intent !== "string") {
+        return { error: "no_payment_intent" }
+      }
+      try {
+        await stripe.refunds.create({
+          payment_intent: extSession.payment_intent,
+          amount: Math.round(Number(ext.extensionPrice ?? 0) * 100),
+        })
+      } catch (err) {
+        return { error: "stripe_refund_failed", message: (err as Error).message }
+      }
     }
   }
 
@@ -62,7 +85,7 @@ export async function cancelBooking(bookingId: string, data: unknown) {
         },
       }),
       prisma.bookingExtension.updateMany({
-        where: { bookingId, status: { in: ["PENDING", "APPROVED"] } },
+        where: { bookingId, status: { in: ["PENDING", "APPROVED", "PAID"] } },
         data: { status: "DECLINED" },
       }),
     ])

@@ -30,7 +30,7 @@ type Props = {
 }
 
 function formatDate(iso: string): string {
-  return format(new Date(iso), "MMMM d, yyyy")
+  return format(new Date(iso.slice(0, 10) + "T00:00:00"), "MMMM d, yyyy")
 }
 
 function formatCurrency(amount: number): string {

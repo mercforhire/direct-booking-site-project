@@ -20,6 +20,17 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
     take: 1,
   })
 
+  const paidExtensions = await prisma.bookingExtension.findMany({
+    where: { bookingId: id, status: "PAID" },
+    select: { extensionPrice: true },
+  })
+  const paidExtensionsTotal = paidExtensions.reduce(
+    (sum, ext) => sum + (ext.extensionPrice != null ? Number(ext.extensionPrice) : 0),
+    0
+  )
+  const totalPaid =
+    booking.confirmedPrice != null ? Number(booking.confirmedPrice) + paidExtensionsTotal : null
+
   const serialized = {
     ...booking,
     estimatedTotal: Number(booking.estimatedTotal),
@@ -75,6 +86,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
       activeExtension={serializedExtension}
       activeDateChange={activeDateChange}
       depositAmount={Number(settings?.depositAmount ?? 0)}
+      totalPaid={totalPaid}
     />
   )
 }

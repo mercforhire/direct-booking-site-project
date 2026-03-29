@@ -45,7 +45,7 @@ type Props = {
 }
 
 function formatDate(iso: string): string {
-  return format(new Date(iso), "MMMM d, yyyy")
+  return format(new Date(iso.slice(0, 10) + "T00:00:00"), "MMMM d, yyyy")
 }
 
 function formatCurrency(amount: number): string {
@@ -78,7 +78,7 @@ export function ExtensionSection({
   const blockedDateObjects = blockedDates.map((d) => new Date(d))
 
   // First selectable date is the day after current checkout
-  const minExtensionDate = new Date(booking.checkout)
+  const minExtensionDate = new Date(booking.checkout.slice(0, 10) + "T00:00:00")
   minExtensionDate.setDate(minExtensionDate.getDate() + 1)
 
   function handleSubmit() {

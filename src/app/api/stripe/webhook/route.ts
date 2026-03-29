@@ -5,6 +5,8 @@ import { stripe } from "@/lib/stripe"
 import { prisma } from "@/lib/prisma"
 import { Resend } from "resend"
 import { BookingPaymentConfirmationEmail } from "@/emails/booking-payment-confirmation"
+import { BookingExtensionPaidEmail } from "@/emails/booking-extension-paid"
+import { render } from "@react-email/render"
 
 export async function POST(request: Request) {
   const body = await request.text() // MUST be text() — raw body for HMAC verification
@@ -64,11 +66,22 @@ export async function POST(request: Request) {
           })
           if (fullBooking) {
             const resend = new Resend(process.env.RESEND_API_KEY)
+            const html = await render(
+              BookingExtensionPaidEmail({
+                guestName: fullBooking.guestName,
+                roomName: fullBooking.room.name,
+                checkin: fullBooking.checkin.toISOString().slice(0, 10),
+                newCheckout: extension.requestedCheckout.toISOString().slice(0, 10),
+                extensionAmountPaid: Number(extension.extensionPrice ?? 0),
+                bookingId: fullBooking.id,
+                accessToken: fullBooking.accessToken,
+              })
+            )
             await resend.emails.send({
               from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
               to: fullBooking.guestEmail,
-              subject: `Extension payment received — ${fullBooking.room.name}`,
-              html: `<p>Hi ${fullBooking.guestName}, extension payment confirmed. New checkout: ${extension.requestedCheckout.toISOString().slice(0, 10)}.</p>`,
+              subject: `Extension confirmed — ${fullBooking.room.name}`,
+              html,
             })
           }
         } catch {

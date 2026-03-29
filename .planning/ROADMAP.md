@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 4: Booking Requests** - Guest booking request form with itemized pricing, add-ons, and guest identity
 - [x] **Phase 5: Approval Flow & Notifications** - Admin booking dashboard, approve/decline actions, and email notifications
 - [x] **Phase 6: Payment** - Stripe Checkout, e-transfer tracking, service fee, and deposit handling (completed 2026-03-28)
-- [ ] **Phase 7: Booking Extensions** - Extension requests, landlord approval, and extension payment
+- [x] **Phase 7: Booking Extensions** - Extension requests, landlord approval, and extension payment (completed 2026-03-29)
 - [ ] **Phase 8: Cancellations & Refunds** - Booking cancellation, Stripe refunds, e-transfer refund tracking, and deposit rules
 - [ ] **Phase 9: Messaging** - Booking-scoped text messaging between guest and landlord with email notifications
 
@@ -225,6 +225,6 @@ Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. P
 | 4. Booking Requests | 5/6 | In Progress|  |
 | 5. Approval Flow & Notifications | 5/5 | Complete   | 2026-03-28 |
 | 6. Payment | 3/3 | Complete   | 2026-03-28 |
-| 7. Booking Extensions | 7/8 | In Progress|  |
+| 7. Booking Extensions | 8/8 | Complete   | 2026-03-29 |
 | 8. Cancellations & Refunds | 0/? | Not started | - |
 | 9. Messaging | 0/? | Not started | - |

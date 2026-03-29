@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 08-cancellations-refunds 08-03-PLAN.md
-last_updated: "2026-03-29T16:29:15.523Z"
+stopped_at: Completed 08-cancellations-refunds 08-04-PLAN.md
+last_updated: "2026-03-29T16:35:43.923Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
   completed_phases: 7
   total_plans: 48
-  completed_plans: 42
+  completed_plans: 43
   percent: 97
 ---
 
@@ -91,6 +91,7 @@ Progress: [█████████░] 97%
 | Phase 08-cancellations-refunds P01 | 8 | 2 tasks | 5 files |
 | Phase 08-cancellations-refunds P02 | 15 | 2 tasks | 3 files |
 | Phase 08-cancellations-refunds P03 | 3 | 2 tasks | 4 files |
+| Phase 08-cancellations-refunds P04 | 3 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -193,6 +194,8 @@ Recent decisions affecting current work:
 - [Phase 08-cancellations-refunds]: Guest date change actions have no requireAuth — validated via DB booking lookup + status guard (APPROVED or PAID)
 - [Phase 08-cancellations-refunds]: cancelDateChange uses findFirst + update status DECLINED (not delete) — date change requests are soft-cancelled for audit trail
 - [Phase 08-cancellations-refunds]: noteToLandlord String? added to BookingDateChange schema — missing from Plan 01 schema, required for submitDateChange
+- [Phase 08-cancellations-refunds]: BookingDateChangeStatus PAID added to enum — required for webhook to mark top-up payment complete
+- [Phase 08-cancellations-refunds]: approveDateChange Stripe top-up: dates NOT updated immediately — webhook handles atomically after payment confirmation
 
 ### Pending Todos
 
@@ -206,6 +209,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T16:29:15.519Z
-Stopped at: Completed 08-cancellations-refunds 08-03-PLAN.md
+Last session: 2026-03-29T16:35:43.920Z
+Stopped at: Completed 08-cancellations-refunds 08-04-PLAN.md
 Resume file: None

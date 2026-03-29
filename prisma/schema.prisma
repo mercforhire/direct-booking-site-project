@@ -101,10 +101,13 @@ model Booking {
   confirmedPrice   Decimal?      @db.Decimal(10, 2)
   declineReason    String?
   stripeSessionId  String?
+  refundAmount     Decimal?      @db.Decimal(10, 2)
+  cancelledAt      DateTime?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   room             Room          @relation(fields: [roomId], references: [id])
   extensions       BookingExtension[]
+  dateChanges      BookingDateChange[]
 
   @@index([guestEmail])
   @@index([accessToken])
@@ -123,6 +126,28 @@ model BookingExtension {
   createdAt         DateTime               @default(now())
   updatedAt         DateTime               @updatedAt
   booking           Booking                @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+}
+
+enum BookingDateChangeStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
+model BookingDateChange {
+  id                String                  @id @default(cuid())
+  bookingId         String
+  requestedCheckin  DateTime                @db.Date
+  requestedCheckout DateTime                @db.Date
+  newPrice          Decimal?                @db.Decimal(10, 2)
+  status            BookingDateChangeStatus @default(PENDING)
+  declineReason     String?
+  stripeSessionId   String?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  booking           Booking                 @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@index([bookingId])
 }

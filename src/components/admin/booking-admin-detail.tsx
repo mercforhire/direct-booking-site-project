@@ -21,6 +21,7 @@ import { approveBooking, declineBooking } from "@/actions/booking-admin"
 import { markBookingAsPaid } from "@/actions/payment"
 import { approveExtension, declineExtension } from "@/actions/extension-admin"
 import { markExtensionAsPaid } from "@/actions/payment"
+import { cancelBooking } from "@/actions/cancellation"
 
 type BookingStatus =
   | "PENDING"
@@ -69,6 +70,10 @@ type SerializedExtension = {
   updatedAt: string
 }
 
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(amount)
+}
+
 function statusBadgeVariant(status: BookingStatus): "secondary" | "default" | "destructive" | "outline" {
   switch (status) {
     case "PENDING":
@@ -97,9 +102,11 @@ function statusLabel(status: BookingStatus): string {
 export function BookingAdminDetail({
   booking,
   activeExtension,
+  depositAmount,
 }: {
   booking: SerializedBooking
   activeExtension?: SerializedExtension | null
+  depositAmount: number
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -113,6 +120,11 @@ export function BookingAdminDetail({
   const [approveExtError, setApproveExtError] = useState<string | null>(null)
   const [declineExtError, setDeclineExtError] = useState<string | null>(null)
   const [markExtPaidError, setMarkExtPaidError] = useState<string | null>(null)
+  const [isCancelPending, startCancelTransition] = useTransition()
+  const [cancelError, setCancelError] = useState<string | null>(null)
+  const [refundAmountInput, setRefundAmountInput] = useState<string>(
+    String(booking.confirmedPrice ?? 0)
+  )
 
   async function handleMarkAsPaid() {
     setMarkPaidError(null)
@@ -471,6 +483,144 @@ export function BookingAdminDetail({
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+        </div>
+      )}
+
+      {/* Cancel Section — shown for APPROVED and PAID bookings */}
+      {(booking.status === "APPROVED" || booking.status === "PAID") && (
+        <div className="border rounded-lg p-4 space-y-3">
+          <h2 className="font-semibold">Cancel Booking</h2>
+
+          {booking.status === "APPROVED" && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                This booking has not been paid. No refund is required.
+              </p>
+              {cancelError && (
+                <p className="text-sm text-destructive">{cancelError}</p>
+              )}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" disabled={isCancelPending}>
+                    Cancel Booking
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This booking has not been paid. No refund is required. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep Booking</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => {
+                        setCancelError(null)
+                        startCancelTransition(async () => {
+                          const result = await cancelBooking(booking.id, { refundAmount: 0 })
+                          if ("error" in result && result.error === "not_cancellable") {
+                            setCancelError("This booking can no longer be cancelled.")
+                          }
+                        })
+                      }}
+                      disabled={isCancelPending}
+                      className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                    >
+                      {isCancelPending ? "Cancelling..." : "Cancel Booking"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
+          )}
+
+          {booking.status === "PAID" && (() => {
+            const today = new Date().toISOString().slice(0, 10)
+            const checkinStr = booking.checkin.slice(0, 10)
+            const isPreCheckin = today < checkinStr
+            return (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  This booking has been paid. Issuing a refund will process through the original payment method.
+                </p>
+                <div className="space-y-2">
+                  <label htmlFor="refundAmount" className="block text-sm font-medium">
+                    Refund Amount (CAD)
+                  </label>
+                  <input
+                    id="refundAmount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={refundAmountInput}
+                    onChange={(e) => setRefundAmountInput(e.target.value)}
+                    className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  {isPreCheckin ? (
+                    <p className="text-sm text-muted-foreground">
+                      Pre-check-in cancellation. Deposit is included — standard for pre-check-in since no damage is possible.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Mid-stay cancellation — deposit ({formatCurrency(depositAmount)}) is included in the pre-filled amount. Adjust if withholding for potential damages.
+                    </p>
+                  )}
+                  {booking.stripeSessionId && (
+                    <p className="text-sm text-muted-foreground">
+                      Stripe refunds typically take 5–10 business days.
+                    </p>
+                  )}
+                  {cancelError && (
+                    <p className="text-sm text-destructive">{cancelError}</p>
+                  )}
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" disabled={isCancelPending}>
+                      Cancel Booking &amp; Refund
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        A refund of {formatCurrency(Number(refundAmountInput) || 0)} CAD will be issued
+                        {booking.stripeSessionId ? " via Stripe" : " manually"}. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Keep Booking</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => {
+                          setCancelError(null)
+                          startCancelTransition(async () => {
+                            const result = await cancelBooking(booking.id, {
+                              refundAmount: Number(refundAmountInput),
+                            })
+                            if ("error" in result) {
+                              if (result.error === "stripe_refund_failed") {
+                                setCancelError("Stripe refund failed. The booking has NOT been cancelled. Please try again or contact Stripe support.")
+                              } else if (result.error === "not_cancellable") {
+                                setCancelError("This booking can no longer be cancelled.")
+                              } else {
+                                setCancelError("Failed to cancel booking. Please try again.")
+                              }
+                            }
+                            // On success: revalidatePath will refresh the page — no explicit close needed
+                          })
+                        }}
+                        disabled={isCancelPending}
+                        className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                      >
+                        {isCancelPending ? "Cancelling..." : "Cancel Booking"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            )
+          })()}
         </div>
       )}
 

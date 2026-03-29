@@ -47,5 +47,13 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
       }
     : null
 
-  return <BookingAdminDetail booking={serialized} activeExtension={serializedExtension} />
+  const settings = await prisma.settings.findUnique({ where: { id: "global" } })
+
+  return (
+    <BookingAdminDetail
+      booking={serialized}
+      activeExtension={serializedExtension}
+      depositAmount={Number(settings?.depositAmount ?? 0)}
+    />
+  )
 }

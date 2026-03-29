@@ -73,6 +73,7 @@ describe("cancelBooking", () => {
     mockRefundsCreate.mockResolvedValue({ id: "re_1" })
     mockEmailSend.mockReset()
     mockEmailSend.mockResolvedValue({ data: { id: "email-1" }, error: null })
+    mockPrisma.bookingExtension.findMany.mockResolvedValue([])
   })
 
   describe("auth guard", () => {
@@ -94,16 +95,17 @@ describe("cancelBooking", () => {
       expect(mockCheckoutRetrieve).toHaveBeenCalledWith("cs_test_123")
     })
 
-    it("issues Stripe refund in cents (refundAmount * 100)", async () => {
+    it("issues Stripe refund in cents (confirmedPrice * 100)", async () => {
       mockPrisma.booking.findUnique.mockResolvedValue(baseBooking)
       mockPrisma.$transaction.mockResolvedValue([{}, {}])
 
       const { cancelBooking } = await import("@/actions/cancellation")
       await cancelBooking("booking-1", { bookingId: "booking-1", refundAmount: 150 })
 
+      // Stripe refunds the exact confirmed price (200), not the admin-entered refundAmount
       expect(mockRefundsCreate).toHaveBeenCalledWith({
         payment_intent: "pi_test_456",
-        amount: 15000,
+        amount: 20000,
       })
     })
 

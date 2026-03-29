@@ -134,6 +134,7 @@ enum BookingDateChangeStatus {
   PENDING
   APPROVED
   DECLINED
+  PAID
 }
 
 model BookingDateChange {

@@ -232,5 +232,5 @@ Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. P
 | 5. Approval Flow & Notifications | 5/5 | Complete   | 2026-03-28 |
 | 6. Payment | 3/3 | Complete   | 2026-03-28 |
 | 7. Booking Extensions | 8/8 | Complete   | 2026-03-29 |
-| 8. Cancellations & Refunds | 6/8 | In Progress|  |
+| 8. Cancellations & Refunds | 7/8 | In Progress|  |
 | 9. Messaging | 0/? | Not started | - |

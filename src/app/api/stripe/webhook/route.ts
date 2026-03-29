@@ -75,6 +75,35 @@ export async function POST(request: Request) {
           // Non-fatal: webhook always returns 200
         }
       }
+    } else if (metadataType === "date_change_topup") {
+      // Date change top-up payment branch
+      const dateChangeId = session.metadata?.dateChangeId
+      if (!dateChangeId) {
+        return new NextResponse("No dateChangeId in metadata", { status: 400 })
+      }
+
+      const dateChange = await prisma.bookingDateChange.findUnique({
+        where: { id: dateChangeId },
+      })
+
+      if (dateChange && dateChange.status === "APPROVED") {
+        // Atomically mark PAID + update booking dates
+        await prisma.$transaction([
+          prisma.bookingDateChange.update({
+            where: { id: dateChangeId },
+            data: { status: "PAID" },
+          }),
+          prisma.booking.update({
+            where: { id: dateChange.bookingId },
+            data: {
+              checkin: dateChange.requestedCheckin,
+              checkout: dateChange.requestedCheckout,
+              confirmedPrice: dateChange.newPrice,
+            },
+          }),
+        ])
+      }
+      // Idempotent: skip if status is already PAID or DECLINED
     } else {
       // EXISTING BOOKING LOGIC — unchanged
       const bookingId = session.metadata?.bookingId

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 08-cancellations-refunds 08-02-PLAN.md
-last_updated: "2026-03-29T16:24:30.488Z"
+stopped_at: Completed 08-cancellations-refunds 08-03-PLAN.md
+last_updated: "2026-03-29T16:29:15.523Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
   completed_phases: 7
   total_plans: 48
-  completed_plans: 41
+  completed_plans: 42
   percent: 97
 ---
 
@@ -90,6 +90,7 @@ Progress: [█████████░] 97%
 | Phase 07-booking-extensions P08 | 15min | 2 tasks | 2 files |
 | Phase 08-cancellations-refunds P01 | 8 | 2 tasks | 5 files |
 | Phase 08-cancellations-refunds P02 | 15 | 2 tasks | 3 files |
+| Phase 08-cancellations-refunds P03 | 3 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -189,6 +190,9 @@ Recent decisions affecting current work:
 - [Phase 08-cancellations-refunds]: BookingDateChange mirrors BookingExtension structure with bookingId index and Cascade delete
 - [Phase 08-cancellations-refunds]: Stripe refund is a hard block — failure returns stripe_refund_failed and does not cancel booking
 - [Phase 08-cancellations-refunds]: bookingExtension.updateMany DECLINED in same prisma.$transaction as booking cancel for atomicity
+- [Phase 08-cancellations-refunds]: Guest date change actions have no requireAuth — validated via DB booking lookup + status guard (APPROVED or PAID)
+- [Phase 08-cancellations-refunds]: cancelDateChange uses findFirst + update status DECLINED (not delete) — date change requests are soft-cancelled for audit trail
+- [Phase 08-cancellations-refunds]: noteToLandlord String? added to BookingDateChange schema — missing from Plan 01 schema, required for submitDateChange
 
 ### Pending Todos
 
@@ -202,6 +206,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T16:24:30.485Z
-Stopped at: Completed 08-cancellations-refunds 08-02-PLAN.md
+Last session: 2026-03-29T16:29:15.519Z
+Stopped at: Completed 08-cancellations-refunds 08-03-PLAN.md
 Resume file: None

@@ -296,6 +296,13 @@ Plans:
   4. Email date strings use ET (not UTC)
   5. Date serialization between admin and guest calendar uses a consistent ET-aware format
 
+**Plans:** 3 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — Wave 0 test scaffolds: availability.test.ts (AVAIL-02 noon-UTC write) + availability-filter.test.ts (AVAIL-01 cursor fix)
+- [ ] 14-02-PLAN.md — DB write fixes (T12:00:00.000Z), DB read fixes (toISOString), availability-filter cursor, formatDateET utility
+- [ ] 14-03-PLAN.md — Email date formatting: apply formatDateET to all action + webhook email call sites
+
 ## Progress
 
 **Execution Order:**
@@ -318,4 +325,4 @@ Note: Gap closure phases 10-14 are independent of each other and can be executed
 | 11. Date Change Top-Up + Auth Guards | 3/3 | Complete    | 2026-03-30 |
 | 12. Email & Environment Consistency | 1/1 | Complete    | 2026-03-30 |
 | 13. Fix Stale Unit Tests | 0/0 | Complete    | 2026-03-30 |
-| 14. Force Eastern Time (ET) | 0/0 | Pending |  |
+| 14. Force Eastern Time (ET) | 0/3 | Pending |  |

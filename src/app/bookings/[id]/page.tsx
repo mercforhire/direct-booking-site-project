@@ -6,6 +6,7 @@ import { Resend } from "resend"
 import { render } from "@react-email/render"
 import { BookingPaymentConfirmationEmail } from "@/emails/booking-payment-confirmation"
 import { BookingExtensionPaidEmail } from "@/emails/booking-extension-paid"
+import { BookingDateChangePaidEmail } from "@/emails/booking-date-change-paid"
 import { BookingStatusView } from "@/components/guest/booking-status-view"
 import type { SerializedDateChange } from "@/components/guest/booking-status-view"
 
@@ -16,10 +17,10 @@ export default async function BookingPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ token?: string; new?: string; paid?: string; extension_paid?: string }>
+  searchParams: Promise<{ token?: string; new?: string; paid?: string; extension_paid?: string; date_change_paid?: string }>
 }) {
   const { id } = await params
-  const { token, new: isNew, paid, extension_paid } = await searchParams
+  const { token, new: isNew, paid, extension_paid, date_change_paid } = await searchParams
 
   const supabase = await createClient()
   const {
@@ -162,6 +163,70 @@ export default async function BookingPage({
     }
   }
 
+  // Load active date change request (PENDING, APPROVED, or PAID — include PAID for re-navigation after payment)
+  let activeDateChangeRecord = await prisma.bookingDateChange.findFirst({
+    where: { bookingId: id, status: { in: ["PENDING", "APPROVED", "PAID"] } },
+    orderBy: { createdAt: "desc" },
+  })
+
+  // Webhook fallback: if guest returns from Stripe (?date_change_paid=1) and dateChange is still APPROVED,
+  // verify payment and mark PAID + update booking dates.
+  if (date_change_paid === "1" && activeDateChangeRecord?.status === "APPROVED" && activeDateChangeRecord.stripeSessionId) {
+    try {
+      const dcSession = await stripe.checkout.sessions.retrieve(activeDateChangeRecord.stripeSessionId)
+      if (dcSession.payment_status === "paid") {
+        await prisma.$transaction([
+          prisma.bookingDateChange.update({
+            where: { id: activeDateChangeRecord.id, status: "APPROVED" },
+            data: { status: "PAID" },
+          }),
+          prisma.booking.update({
+            where: { id },
+            data: {
+              checkin: new Date(activeDateChangeRecord.requestedCheckin),
+              checkout: new Date(activeDateChangeRecord.requestedCheckout),
+              confirmedPrice: activeDateChangeRecord.newPrice,
+            },
+          }),
+        ])
+        // Mutate local refs so render sees PAID state
+        activeDateChangeRecord = { ...activeDateChangeRecord, status: "PAID" }
+        booking.checkin = new Date(activeDateChangeRecord.requestedCheckin)
+        booking.checkout = new Date(activeDateChangeRecord.requestedCheckout)
+        try {
+          const freshBooking = await prisma.booking.findUnique({
+            where: { id },
+            include: { room: { select: { name: true } } },
+          })
+          if (freshBooking) {
+            const resend = new Resend(process.env.RESEND_API_KEY)
+            const html = await render(
+              BookingDateChangePaidEmail({
+                guestName: freshBooking.guestName,
+                roomName: freshBooking.room.name,
+                newCheckin: freshBooking.checkin.toISOString().slice(0, 10),
+                newCheckout: freshBooking.checkout.toISOString().slice(0, 10),
+                amountPaid: Number(activeDateChangeRecord.newPrice ?? 0),
+                bookingId: freshBooking.id,
+                accessToken: freshBooking.accessToken,
+              })
+            )
+            await resend.emails.send({
+              from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
+              to: freshBooking.guestEmail,
+              subject: `Date change confirmed — ${freshBooking.room.name}`,
+              html,
+            })
+          }
+        } catch {
+          // Non-fatal
+        }
+      }
+    } catch {
+      // Non-fatal: page still renders correctly
+    }
+  }
+
   // Load messages ordered oldest-first
   const messages = await prisma.message.findMany({
     where: { bookingId: booking.id },
@@ -175,11 +240,6 @@ export default async function BookingPage({
     createdAt: m.createdAt.toISOString(),
   }))
 
-  // Load active date change request (PENDING or APPROVED)
-  const activeDateChangeRecord = await prisma.bookingDateChange.findFirst({
-    where: { bookingId: id, status: { in: ["PENDING", "APPROVED"] } },
-    orderBy: { createdAt: "desc" },
-  })
   const serializedDateChange: SerializedDateChange | null = activeDateChangeRecord
     ? {
         id: activeDateChangeRecord.id,
@@ -187,7 +247,7 @@ export default async function BookingPage({
         requestedCheckin: activeDateChangeRecord.requestedCheckin.toISOString(),
         requestedCheckout: activeDateChangeRecord.requestedCheckout.toISOString(),
         newPrice: activeDateChangeRecord.newPrice != null ? Number(activeDateChangeRecord.newPrice) : null,
-        status: activeDateChangeRecord.status as "PENDING" | "APPROVED" | "DECLINED",
+        status: activeDateChangeRecord.status as "PENDING" | "APPROVED" | "DECLINED" | "PAID",
         declineReason: activeDateChangeRecord.declineReason,
         stripeSessionId: activeDateChangeRecord.stripeSessionId,
         createdAt: activeDateChangeRecord.createdAt.toISOString(),
@@ -240,6 +300,7 @@ export default async function BookingPage({
       showSuccessBanner={isNew === "1"}
       showPaidBanner={paid === "1"}
       showExtensionPaidBanner={extension_paid === "1"}
+      showDateChangePaidBanner={date_change_paid === "1"}
       etransferEmail={settings?.etransferEmail ?? null}
       activeExtension={serializedExtension}
       activeDateChange={serializedDateChange}

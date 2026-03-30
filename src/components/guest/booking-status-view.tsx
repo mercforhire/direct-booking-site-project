@@ -43,7 +43,7 @@ export type SerializedDateChange = {
   requestedCheckin: string
   requestedCheckout: string
   newPrice: number | null
-  status: "PENDING" | "APPROVED" | "DECLINED"
+  status: "PENDING" | "APPROVED" | "DECLINED" | "PAID"
   declineReason: string | null
   stripeSessionId: string | null
   createdAt: string
@@ -54,6 +54,7 @@ type Props = {
   showSuccessBanner: boolean
   showPaidBanner: boolean
   showExtensionPaidBanner?: boolean
+  showDateChangePaidBanner?: boolean
   etransferEmail: string | null
   activeExtension?: SerializedExtension | null
   activeDateChange?: SerializedDateChange | null
@@ -190,6 +191,7 @@ export function BookingStatusView({
   showSuccessBanner,
   showPaidBanner,
   showExtensionPaidBanner,
+  showDateChangePaidBanner,
   etransferEmail,
   activeExtension,
   activeDateChange,
@@ -224,6 +226,13 @@ export function BookingStatusView({
       )}
 
       {/* Extension paid banner — disabled for v1.0 */}
+
+      {/* Date change paid banner — redirected back from Stripe with ?date_change_paid=1 */}
+      {showDateChangePaidBanner && (
+        <div className="mb-4 rounded-md bg-green-50 border border-green-200 p-4 text-green-800">
+          Date change confirmed — your new dates are now active.
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-start justify-between mb-6">

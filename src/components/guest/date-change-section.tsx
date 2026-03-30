@@ -51,8 +51,21 @@ export function DateChangeSection({ booking, activeDateChange }: Props) {
   const [isStripeLoading, startStripeTransition] = useTransition()
 
   // Internal guard: only show for APPROVED or PAID bookings
-  if (booking.status !== "APPROVED" && booking.status !== "PAID") {
+  // Exception: if activeDateChange is PAID, always show the confirmation
+  if (booking.status !== "APPROVED" && booking.status !== "PAID" && activeDateChange?.status !== "PAID") {
     return null
+  }
+
+  // PAID state: show green confirmation panel with confirmed dates
+  if (activeDateChange?.status === "PAID") {
+    return (
+      <div className="rounded-md border p-4">
+        <h3 className="font-semibold mb-2">Date Change</h3>
+        <div className="rounded-md bg-green-50 border border-green-200 p-3 text-green-800 text-sm">
+          Date change confirmed. New dates: {formatDate(activeDateChange.requestedCheckin)} — {formatDate(activeDateChange.requestedCheckout)}
+        </div>
+      </div>
+    )
   }
 
   function handleSubmit() {

@@ -302,7 +302,7 @@ Note: Gap closure phases 10-14 are independent of each other and can be executed
 | 7. Booking Extensions | 8/8 | Complete   | 2026-03-29 |
 | 8. Cancellations & Refunds | 8/8 | Complete   | 2026-03-29 |
 | 9. Messaging | 3/3 | Complete   | 2026-03-30 |
-| 10. Fix Guest Access Middleware | 1/1 | Complete   | 2026-03-30 |
+| 10. Fix Guest Access Middleware | 1/1 | Complete    | 2026-03-30 |
 | 11. Date Change Top-Up + Auth Guards | 0/0 | Pending |  |
 | 12. Email & Environment Consistency | 0/0 | Pending |  |
 | 13. Fix Stale Unit Tests | 0/0 | Pending |  |

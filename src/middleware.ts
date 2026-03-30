@@ -36,7 +36,7 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  const adminPaths = ["/dashboard", "/settings", "/availability", "/admin/rooms", "/admin/bookings", "/bookings"]
+  const adminPaths = ["/dashboard", "/settings", "/availability", "/admin/rooms", "/admin/bookings"]
   const isAdminRoute = adminPaths.some((p) => pathname.startsWith(p))
 
   if (!user && isAdminRoute) {

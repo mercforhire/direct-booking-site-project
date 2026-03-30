@@ -54,7 +54,7 @@ export default async function BookingPage({
   const hasToken = !!(token && token === booking.accessToken)
 
   if (!hasAuth && !hasToken) {
-    redirect(`/guest/login?next=/bookings/${id}`)
+    notFound()
   }
 
   // Webhook fallback: if guest returns from Stripe (?paid=1) and booking is still APPROVED,

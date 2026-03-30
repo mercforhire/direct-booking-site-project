@@ -172,8 +172,8 @@
 | ADMIN-04 | Phase 2 | Complete |
 | ADMIN-05 | Phase 1 | Complete |
 
-| AVAIL-01 | Phase 14 | Pending |
-| AVAIL-02 | Phase 14 | Pending |
+| AVAIL-01 | Phase 14 | Complete |
+| AVAIL-02 | Phase 14 | Complete |
 
 **Coverage:**
 - v1 requirements: 49 total

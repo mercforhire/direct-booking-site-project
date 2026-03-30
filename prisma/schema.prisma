@@ -108,6 +108,7 @@ model Booking {
   room             Room          @relation(fields: [roomId], references: [id])
   extensions       BookingExtension[]
   dateChanges      BookingDateChange[]
+  messages         Message[]
 
   @@index([guestEmail])
   @@index([accessToken])
@@ -137,6 +138,11 @@ enum BookingDateChangeStatus {
   PAID
 }
 
+enum SenderRole {
+  GUEST
+  LANDLORD
+}
+
 model BookingDateChange {
   id                String                  @id @default(cuid())
   bookingId         String
@@ -150,6 +156,18 @@ model BookingDateChange {
   createdAt         DateTime                @default(now())
   updatedAt         DateTime                @updatedAt
   booking           Booking                 @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+}
+
+model Message {
+  id         String     @id @default(cuid())
+  bookingId  String
+  sender     SenderRole
+  senderName String
+  body       String
+  createdAt  DateTime   @default(now())
+  booking    Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@index([bookingId])
 }

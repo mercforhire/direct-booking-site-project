@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 11-02-PLAN.md
-last_updated: "2026-03-30T05:27:58.411Z"
+stopped_at: Completed 11-03-PLAN.md
+last_updated: "2026-03-30T05:34:27.656Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 15
-  completed_phases: 11
+  completed_phases: 12
   total_plans: 55
-  completed_plans: 54
+  completed_plans: 55
   percent: 97
 ---
 
@@ -104,6 +104,7 @@ Progress: [█████████░] 97%
 | Phase 10-fix-guest-access-middleware P01 | 5min | 2 tasks | 3 files |
 | Phase 11-date-change-topup-auth-guards P01 | 1 | 2 tasks | 2 files |
 | Phase 11-date-change-topup-auth-guards P02 | 12 | 2 tasks | 4 files |
+| Phase 11-date-change-topup-auth-guards P03 | 4min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -231,6 +232,8 @@ Recent decisions affecting current work:
 - [Phase 11-date-change-topup-auth-guards]: BookingDateChangePaidEmail has newCheckin + newCheckout props — date change updates both dates unlike extension which only changes checkout
 - [Phase 11-date-change-topup-auth-guards]: fullBooking fetched after transaction in webhook so email shows updated checkin/checkout dates
 - [Phase 11-date-change-topup-auth-guards]: SerializedDateChange.status extended to include PAID — required for page fallback and DateChangeSection PAID branch
+- [Phase 11-date-change-topup-auth-guards]: cancelDateChange token check placed before PENDING date change lookup — booking auth guard evaluated first
+- [Phase 11-date-change-topup-auth-guards]: cancelExtension token check placed after schema parse and before delete — schema validates input shape first, then auth guard
 
 ### Pending Todos
 
@@ -244,6 +247,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T05:27:58.407Z
-Stopped at: Completed 11-02-PLAN.md
+Last session: 2026-03-30T05:34:27.653Z
+Stopped at: Completed 11-03-PLAN.md
 Resume file: None

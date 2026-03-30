@@ -23,7 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 8: Cancellations & Refunds** - Booking cancellation, Stripe refunds, e-transfer refund tracking, and deposit rules (completed 2026-03-29)
 - [x] **Phase 9: Messaging** - Booking-scoped text messaging between guest and landlord with email notifications (completed 2026-03-30)
 - [x] **Phase 10: Fix Guest Access Middleware** - Fix P0 middleware regression blocking token-only guests from /bookings/[id]; also protect /availability admin route (Gap closure) (completed 2026-03-30)
-- [ ] **Phase 11: Date Change Top-Up + Action Auth Guards** - Handle ?date_change_paid=1 page param, send confirmation email after date change payment, add auth guards to cancelDateChange/cancelExtension (Gap closure)
+- [x] **Phase 11: Date Change Top-Up + Action Auth Guards** - Handle ?date_change_paid=1 page param, send confirmation email after date change payment, add auth guards to cancelDateChange/cancelExtension (Gap closure) (completed 2026-03-30)
 - [ ] **Phase 12: Email & Environment Consistency** - Standardize EMAIL_FROM env var, add missing vars to .env.local.example, convert markExtensionAsPaid to React Email template, remove dead BookingPaidEmail file (Gap closure)
 - [ ] **Phase 13: Fix Stale Unit Tests** - Update booking.test.ts mocks to match Phase 6 adminClient.auth.admin.createUser pattern; fix redirect assertion (Gap closure)
 - [ ] **Phase 14: Force Eastern Time (ET)** - Pin all date/time display and serialization to Eastern Time throughout the app — admin calendar, guest calendar, booking pages, emails (Gap closure)
@@ -250,7 +250,7 @@ Plans:
   2. Webhook handler for `date_change_topup` sends a confirmation email to the guest
   3. `cancelDateChange` and `cancelExtension` server actions verify auth (requireAuth or token check) before executing
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 11-01-PLAN.md — BookingDateChangePaidEmail template + webhook-date-change-topup.test.ts stubs (Wave 0 infrastructure)
@@ -310,7 +310,7 @@ Note: Gap closure phases 10-14 are independent of each other and can be executed
 | 8. Cancellations & Refunds | 8/8 | Complete   | 2026-03-29 |
 | 9. Messaging | 3/3 | Complete   | 2026-03-30 |
 | 10. Fix Guest Access Middleware | 1/1 | Complete    | 2026-03-30 |
-| 11. Date Change Top-Up + Auth Guards | 2/3 | In Progress|  |
+| 11. Date Change Top-Up + Auth Guards | 3/3 | Complete   | 2026-03-30 |
 | 12. Email & Environment Consistency | 0/0 | Pending |  |
 | 13. Fix Stale Unit Tests | 0/0 | Pending |  |
 | 14. Force Eastern Time (ET) | 0/0 | Pending |  |

@@ -55,10 +55,10 @@ completed: 2026-03-29
 
 ## Performance
 
-- **Duration:** ~5 min
+- **Duration:** ~5 min (Task 1) + human verification
 - **Started:** 2026-03-30T02:26:00Z
-- **Completed:** 2026-03-30T02:28:31Z
-- **Tasks:** 1 of 2 (Task 2 is checkpoint:human-verify — awaiting human verification)
+- **Completed:** 2026-03-30T03:15:00Z
+- **Tasks:** 2 of 2 (complete — human verification passed)
 - **Files modified:** 4
 
 ## Accomplishments
@@ -66,12 +66,14 @@ completed: 2026-03-29
 - Admin booking page (/admin/bookings/[id]) loads messages from Prisma and renders MessageSection at bottom with token=null (landlord mode)
 - Messages ordered oldest-first with ISO string serialization at RSC boundary
 - All 210 tests pass; TypeScript errors confirmed pre-existing (out of scope)
+- Human verified all 7 end-to-end checks: send/receive messages, polling (~15s), email notifications to both parties, correct CTA links, and "No messages yet." empty state
 
 ## Task Commits
 
 1. **Task 1: Wire MessageSection into both booking pages** - `9eead53` (feat)
+2. **Task 2: checkpoint:human-verify** - approved by human (no code commit)
 
-**Plan metadata:** (pending — awaiting checkpoint verification)
+**Plan metadata:** `bcce950` (docs: complete integration plan — awaiting human-verify checkpoint)
 
 ## Files Created/Modified
 - `src/app/bookings/[id]/page.tsx` - Added prisma.message.findMany + serialization + pass messages/token to BookingStatusView
@@ -92,15 +94,10 @@ Pre-existing TypeScript errors in booking-admin-detail.tsx (activeExtension poss
 None - no external service configuration required.
 
 ## Next Phase Readiness
-- Human verification (Task 2 checkpoint) required to confirm:
-  1. Messages section visible at bottom of guest booking page with "No messages yet." empty state
-  2. Guest can send messages; message appears immediately
-  3. Admin sees guest message on admin booking page
-  4. Admin can reply; reply appears on guest page within 15 seconds (polling)
-  5. Email notifications: landlord email for guest messages, guest email for landlord replies
-  6. CTA links in emails are correct (admin link vs token-gated guest link)
-  7. Empty state "No messages yet." on booking with no messages
-- Once all 7 checks pass, messaging feature (MSG-01 through MSG-05) is complete
+- Phase 9 messaging is fully complete. All three plans executed and human-verified.
+- MSG-01 (guest can send messages), MSG-02 (admin can send messages), and MSG-03 (full thread ordered oldest-first) requirements satisfied.
+- Email notifications (MSG-04 for guest→landlord, MSG-05 for landlord→guest) verified end-to-end with correct subjects and CTA links.
+- No blockers. Project is ready for any remaining work or final launch steps.
 
 ---
 *Phase: 09-messaging*

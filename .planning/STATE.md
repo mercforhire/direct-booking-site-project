@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 09-messaging 09-02-PLAN.md
-last_updated: "2026-03-30T02:25:09.933Z"
+stopped_at: "Checkpoint: 09-messaging 09-03 — awaiting human-verify (Task 2)"
+last_updated: "2026-03-30T02:29:30.339Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 10
-  completed_phases: 9
+  completed_phases: 10
   total_plans: 51
-  completed_plans: 50
+  completed_plans: 51
   percent: 97
 ---
 
@@ -99,6 +99,7 @@ Progress: [█████████░] 97%
 | Phase 08-cancellations-refunds P08 | 60min | 2 tasks | 10 files |
 | Phase 09-messaging P01 | 4 | 2 tasks | 6 files |
 | Phase 09-messaging P02 | 2 | 2 tasks | 3 files |
+| Phase 09-messaging P03 | 5 | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -218,6 +219,7 @@ Recent decisions affecting current work:
 - [Phase 09-messaging]: submitMessage validates guest via accessToken DB lookup — no Supabase auth required for guests
 - [Phase 09-messaging]: Email template props kept as 'body' (not 'messageBody') to match existing messaging.ts action from Plan 01
 - [Phase 09-messaging]: MessageSection always renders (never hidden) — empty state shows 'No messages yet.' placeholder
+- [Phase 09-messaging]: MessageSection always receives token from URL searchParam on guest page; token=null on admin page (triggers landlord mode)
 
 ### Pending Todos
 
@@ -231,6 +233,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T02:25:09.930Z
-Stopped at: Completed 09-messaging 09-02-PLAN.md
+Last session: 2026-03-30T02:29:30.336Z
+Stopped at: Checkpoint: 09-messaging 09-03 — awaiting human-verify (Task 2)
 Resume file: None

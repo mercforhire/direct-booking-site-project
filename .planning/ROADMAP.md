@@ -250,6 +250,13 @@ Plans:
   2. Webhook handler for `date_change_topup` sends a confirmation email to the guest
   3. `cancelDateChange` and `cancelExtension` server actions verify auth (requireAuth or token check) before executing
 
+**Plans:** 3 plans
+
+Plans:
+- [ ] 11-01-PLAN.md — BookingDateChangePaidEmail template + webhook-date-change-topup.test.ts stubs (Wave 0 infrastructure)
+- [ ] 11-02-PLAN.md — Webhook email send in date_change_topup branch + page.tsx date_change_paid fallback + success banner + DateChangeSection PAID state
+- [ ] 11-03-PLAN.md — cancelDateChange + cancelExtension token auth guards + DateChangeSection/ExtensionSection/BookingStatusView token prop threading
+
 ### Phase 12: Email & Environment Consistency
 **Goal:** All server actions use the same env var for the sender address; all required env vars are documented; `markExtensionAsPaid` uses a React Email template; dead code removed
 **Depends on:** Phase 9 (gap closure)
@@ -303,7 +310,7 @@ Note: Gap closure phases 10-14 are independent of each other and can be executed
 | 8. Cancellations & Refunds | 8/8 | Complete   | 2026-03-29 |
 | 9. Messaging | 3/3 | Complete   | 2026-03-30 |
 | 10. Fix Guest Access Middleware | 1/1 | Complete    | 2026-03-30 |
-| 11. Date Change Top-Up + Auth Guards | 0/0 | Pending |  |
+| 11. Date Change Top-Up + Auth Guards | 0/3 | Pending |  |
 | 12. Email & Environment Consistency | 0/0 | Pending |  |
 | 13. Fix Stale Unit Tests | 0/0 | Pending |  |
 | 14. Force Eastern Time (ET) | 0/0 | Pending |  |

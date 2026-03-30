@@ -12,7 +12,7 @@ This roadmap delivers a semi-private direct booking website for a single landlor
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation & Room Management** - Project setup, database schema, admin auth, room/fee CRUD, and global settings
+- [x] **Phase 1: Foundation & Room Management** - Project setup, database schema, admin auth, room/fee CRUD, and global settings (completed 2026-03-29)
 - [x] **Phase 1.5: Supabase Migration** (INSERTED) - Replace local PostgreSQL + NextAuth with Supabase managed PostgreSQL and Supabase Auth, keeping Prisma as ORM and UploadThing for file storage (completed 2026-03-27)
 - [x] **Phase 2: Availability Management** - Availability calendar, date blocking, booking window, and stay length constraints (completed 2026-03-27)
 - [x] **Phase 3: Guest Room Browsing** - Public room listing pages with photos, rates, fees, and capacity (completed 2026-03-27)
@@ -38,11 +38,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 5 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Project setup, Prisma schema, Auth.js magic link, admin shell layout, test scaffolding
-- [ ] 01-02-PLAN.md — Room CRUD server actions + room list table + create/edit form with fees and add-ons
-- [ ] 01-03-PLAN.md — Global settings server action and settings form page
-- [ ] 01-04-PLAN.md — Photo upload (UploadThing), drag-to-reorder (dnd-kit), and CDN deletion
-- [ ] 01-05-PLAN.md — Full test suite run + human visual verification checkpoint
+- [x] 01-01-PLAN.md — Project setup, Prisma schema, Auth.js magic link, admin shell layout, test scaffolding
+- [x] 01-02-PLAN.md — Room CRUD server actions + room list table + create/edit form with fees and add-ons
+- [x] 01-03-PLAN.md — Global settings server action and settings form page
+- [x] 01-04-PLAN.md — Photo upload (UploadThing), drag-to-reorder (dnd-kit), and CDN deletion
+- [x] 01-05-PLAN.md — Full test suite run + human visual verification checkpoint
 
 ### Phase 1.5: Supabase Migration (INSERTED)
 **Goal**: App runs on Supabase managed PostgreSQL with Supabase Auth replacing NextAuth — landlord can log in via magic link, all existing admin features work unchanged

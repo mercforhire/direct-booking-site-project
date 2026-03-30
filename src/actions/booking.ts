@@ -76,7 +76,7 @@ export async function submitBooking(data: unknown) {
   })
 
   const resend = new Resend(process.env.RESEND_API_KEY)
-  const fromEmail = process.env.EMAIL_FROM ?? "bookings@example.com"
+  const fromEmail = process.env.RESEND_FROM_EMAIL ?? "noreply@example.com"
 
   try {
     const html = await render(

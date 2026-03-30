@@ -56,7 +56,7 @@ export default async function RoomPage({
   const addOns = room.addOns.map((a) => ({ ...a, price: Number(a.price) }))
 
   const blockedDateStrings = room.blockedDates.map((b) =>
-    b.date.toLocaleDateString("en-CA")
+    b.date.toISOString().slice(0, 10)
   )
 
   // Build "Request to Book" href with forwarded URL params

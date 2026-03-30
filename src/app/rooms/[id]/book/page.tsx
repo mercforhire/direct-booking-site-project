@@ -60,9 +60,9 @@ export default async function BookPage({
   const serviceFeePercent = Number(settings.serviceFeePercent)
   const depositAmount = Number(settings.depositAmount)
 
-  // Convert blocked Date objects to YYYY-MM-DD local strings
+  // Convert blocked Date objects to YYYY-MM-DD strings via ISO — works for both legacy midnight-UTC and noon-UTC rows
   const blockedDateStrings = room.blockedDates.map((b) =>
-    b.date.toLocaleDateString("en-CA")
+    b.date.toISOString().slice(0, 10)
   )
 
   const coverPhoto = room.photos[0]?.url ?? null

@@ -27,18 +27,18 @@ export function isRoomAvailable(
   // Booking window check: compute windowEnd from today
   const windowEnd = new Date()
   windowEnd.setMonth(windowEnd.getMonth() + room.bookingWindowMonths)
-  const checkoutDate = new Date(checkout + "T00:00:00")
+  const checkoutDate = new Date(checkout + "T12:00:00.000Z")
   if (checkoutDate > windowEnd) return false
 
   // Blocked date overlap: iterate nights from checkin (inclusive) to checkout (exclusive)
   const blockedSet = new Set(room.blockedDateStrings)
-  const cursor = new Date(checkin + "T00:00:00")
-  const end = new Date(checkout + "T00:00:00")
+  const cursor = new Date(checkin + "T12:00:00.000Z")
+  const end = new Date(checkout + "T12:00:00.000Z")
 
   while (cursor < end) {
-    const dateStr = cursor.toLocaleDateString("en-CA")
+    const dateStr = cursor.toISOString().slice(0, 10)
     if (blockedSet.has(dateStr)) return false
-    cursor.setDate(cursor.getDate() + 1)
+    cursor.setUTCDate(cursor.getUTCDate() + 1)
   }
 
   return true

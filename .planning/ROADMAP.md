@@ -26,7 +26,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 11: Date Change Top-Up + Action Auth Guards** - Handle ?date_change_paid=1 page param, send confirmation email after date change payment, add auth guards to cancelDateChange/cancelExtension (Gap closure) (completed 2026-03-30)
 - [x] **Phase 12: Email & Environment Consistency** - Standardize EMAIL_FROM env var, add missing vars to .env.local.example, convert markExtensionAsPaid to React Email template, remove dead BookingPaidEmail file (Gap closure) (completed 2026-03-30)
 - [x] **Phase 13: Fix Stale Unit Tests** - Update booking.test.ts mocks to match Phase 6 adminClient.auth.admin.createUser pattern; fix redirect assertion (Gap closure) (completed 2026-03-30)
-- [ ] **Phase 14: Force Eastern Time (ET)** - Pin all date/time display and serialization to Eastern Time throughout the app — admin calendar, guest calendar, booking pages, emails (Gap closure)
+- [x] **Phase 14: Force Eastern Time (ET)** - Pin all date/time display and serialization to Eastern Time throughout the app — admin calendar, guest calendar, booking pages, emails (Gap closure) (completed 2026-03-30)
 
 ## Phase Details
 
@@ -296,7 +296,7 @@ Plans:
   4. Email date strings use ET (not UTC)
   5. Date serialization between admin and guest calendar uses a consistent ET-aware format
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 14-01-PLAN.md — Wave 0 test scaffolds: availability.test.ts (AVAIL-02 noon-UTC write) + availability-filter.test.ts (AVAIL-01 cursor fix)
@@ -325,4 +325,4 @@ Note: Gap closure phases 10-14 are independent of each other and can be executed
 | 11. Date Change Top-Up + Auth Guards | 3/3 | Complete    | 2026-03-30 |
 | 12. Email & Environment Consistency | 1/1 | Complete    | 2026-03-30 |
 | 13. Fix Stale Unit Tests | 0/0 | Complete    | 2026-03-30 |
-| 14. Force Eastern Time (ET) | 2/3 | In Progress|  |
+| 14. Force Eastern Time (ET) | 3/3 | Complete   | 2026-03-30 |

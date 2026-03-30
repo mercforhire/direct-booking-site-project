@@ -142,6 +142,10 @@ describe("submitExtension", () => {
 describe("cancelExtension", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockPrisma.booking.findUnique.mockResolvedValue({
+      id: "booking-1",
+      accessToken: "token-abc",
+    } as any)
     mockPrisma.bookingExtension.delete.mockResolvedValue({
       id: "ext-1",
       bookingId: "booking-1",
@@ -149,8 +153,27 @@ describe("cancelExtension", () => {
     } as any)
   })
 
-  it("deletes the BookingExtension record when status is PENDING and returns { success: true }", async () => {
-    const result = await cancelExtension("booking-1", "ext-1")
+  it("returns { error: 'unauthorized' } when token is null", async () => {
+    const result = await cancelExtension("booking-1", "ext-1", null)
+    expect(result).toEqual({ error: "unauthorized" })
+    expect(mockPrisma.bookingExtension.delete).not.toHaveBeenCalled()
+  })
+
+  it("returns { error: 'unauthorized' } when token does not match booking.accessToken", async () => {
+    const result = await cancelExtension("booking-1", "ext-1", "wrong-token")
+    expect(result).toEqual({ error: "unauthorized" })
+    expect(mockPrisma.bookingExtension.delete).not.toHaveBeenCalled()
+  })
+
+  it("returns { error: 'unauthorized' } when booking is not found", async () => {
+    mockPrisma.booking.findUnique.mockResolvedValue(null)
+    const result = await cancelExtension("booking-1", "ext-1", "token-abc")
+    expect(result).toEqual({ error: "unauthorized" })
+    expect(mockPrisma.bookingExtension.delete).not.toHaveBeenCalled()
+  })
+
+  it("deletes the BookingExtension record when status is PENDING and token matches", async () => {
+    const result = await cancelExtension("booking-1", "ext-1", "token-abc")
     expect(mockPrisma.bookingExtension.delete).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
@@ -164,12 +187,12 @@ describe("cancelExtension", () => {
 
   it("returns { error: 'not_pending' } when extension is not in PENDING status (P2025)", async () => {
     mockPrisma.bookingExtension.delete.mockRejectedValue(makePrismaNotFoundError())
-    const result = await cancelExtension("booking-1", "ext-1")
+    const result = await cancelExtension("booking-1", "ext-1", "token-abc")
     expect(result).toEqual({ error: "not_pending" })
   })
 
   it("revalidates /bookings/[bookingId] after cancellation", async () => {
-    await cancelExtension("booking-1", "ext-1")
+    await cancelExtension("booking-1", "ext-1", "token-abc")
     expect(revalidatePath).toHaveBeenCalledWith("/bookings/booking-1")
   })
 })

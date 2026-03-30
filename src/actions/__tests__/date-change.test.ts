@@ -164,6 +164,10 @@ describe("submitDateChange", () => {
 describe("cancelDateChange", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockPrisma.booking.findUnique.mockResolvedValue({
+      id: "booking-1",
+      accessToken: "token-abc",
+    } as any)
     mockPrisma.bookingDateChange.findFirst.mockResolvedValue({
       id: "dc-1",
       bookingId: "booking-1",
@@ -175,15 +179,34 @@ describe("cancelDateChange", () => {
     } as any)
   })
 
-  it("returns error when no PENDING date change found", async () => {
+  it("returns { error: 'unauthorized' } when token is null", async () => {
+    const result = await cancelDateChange("booking-1", null)
+    expect(result).toEqual({ error: "unauthorized" })
+    expect(mockPrisma.bookingDateChange.update).not.toHaveBeenCalled()
+  })
+
+  it("returns { error: 'unauthorized' } when token does not match booking.accessToken", async () => {
+    const result = await cancelDateChange("booking-1", "wrong-token")
+    expect(result).toEqual({ error: "unauthorized" })
+    expect(mockPrisma.bookingDateChange.update).not.toHaveBeenCalled()
+  })
+
+  it("returns { error: 'unauthorized' } when booking is not found", async () => {
+    mockPrisma.booking.findUnique.mockResolvedValue(null)
+    const result = await cancelDateChange("booking-1", "token-abc")
+    expect(result).toEqual({ error: "unauthorized" })
+    expect(mockPrisma.bookingDateChange.update).not.toHaveBeenCalled()
+  })
+
+  it("returns error when no PENDING date change found (token matches)", async () => {
     mockPrisma.bookingDateChange.findFirst.mockResolvedValue(null)
-    const result = await cancelDateChange("booking-1")
+    const result = await cancelDateChange("booking-1", "token-abc")
     expect(result).toEqual({ error: "not_pending" })
     expect(mockPrisma.bookingDateChange.update).not.toHaveBeenCalled()
   })
 
-  it("sets status to DECLINED and revalidates", async () => {
-    const result = await cancelDateChange("booking-1")
+  it("sets status to DECLINED and revalidates when token matches", async () => {
+    const result = await cancelDateChange("booking-1", "token-abc")
     expect(mockPrisma.bookingDateChange.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: "dc-1" },

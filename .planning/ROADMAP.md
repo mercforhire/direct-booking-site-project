@@ -235,4 +235,4 @@ Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. P
 | 6. Payment | 3/3 | Complete   | 2026-03-28 |
 | 7. Booking Extensions | 8/8 | Complete   | 2026-03-29 |
 | 8. Cancellations & Refunds | 8/8 | Complete   | 2026-03-29 |
-| 9. Messaging | 1/3 | In Progress|  |
+| 9. Messaging | 2/3 | In Progress|  |

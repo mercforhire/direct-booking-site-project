@@ -134,8 +134,8 @@ describe("submitDateChange", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           bookingId: "booking-1",
-          requestedCheckin: new Date("2026-06-01T00:00:00.000Z"),
-          requestedCheckout: new Date("2026-06-07T00:00:00.000Z"),
+          requestedCheckin: new Date("2026-06-01T12:00:00.000Z"),
+          requestedCheckout: new Date("2026-06-07T12:00:00.000Z"),
           status: "PENDING",
         }),
       })

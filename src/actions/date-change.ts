@@ -13,6 +13,7 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 import { BookingDateChangeRequestEmail } from "@/emails/booking-date-change-request"
 import { BookingDateChangeApprovedEmail } from "@/emails/booking-date-change-approved"
 import { BookingDateChangeDeclinedEmail } from "@/emails/booking-date-change-declined"
+import { formatDateET } from "@/lib/format-date-et"
 
 async function requireAuth() {
   const supabase = await createClient()
@@ -58,10 +59,10 @@ export async function submitDateChange(bookingId: string, data: unknown) {
         BookingDateChangeRequestEmail({
           guestName: booking.guestName,
           roomName: booking.room.name,
-          originalCheckin: booking.checkin.toISOString().slice(0, 10),
-          originalCheckout: booking.checkout.toISOString().slice(0, 10),
-          requestedCheckin,
-          requestedCheckout,
+          originalCheckin: formatDateET(booking.checkin),
+          originalCheckout: formatDateET(booking.checkout),
+          requestedCheckin: formatDateET(new Date(requestedCheckin + "T12:00:00.000Z")),
+          requestedCheckout: formatDateET(new Date(requestedCheckout + "T12:00:00.000Z")),
           noteToLandlord: noteToLandlord ?? null,
           bookingId: booking.id,
         })
@@ -254,8 +255,8 @@ export async function approveDateChange(dateChangeId: string, data: unknown) {
       BookingDateChangeApprovedEmail({
         guestName: booking.guestName,
         roomName: booking.room.name,
-        newCheckin: dateChange.requestedCheckin.toISOString().slice(0, 10),
-        newCheckout: dateChange.requestedCheckout.toISOString().slice(0, 10),
+        newCheckin: formatDateET(dateChange.requestedCheckin),
+        newCheckout: formatDateET(dateChange.requestedCheckout),
         newPrice,
         paymentAction,
         refundAmount: priceDiff < 0 ? Math.abs(priceDiff) : undefined,
@@ -336,8 +337,8 @@ export async function declineDateChange(dateChangeId: string, data: unknown) {
       BookingDateChangeDeclinedEmail({
         guestName: booking.guestName,
         roomName: booking.room.name,
-        requestedCheckin: dateChange.requestedCheckin.toISOString().slice(0, 10),
-        requestedCheckout: dateChange.requestedCheckout.toISOString().slice(0, 10),
+        requestedCheckin: formatDateET(dateChange.requestedCheckin),
+        requestedCheckout: formatDateET(dateChange.requestedCheckout),
         declineReason: declineReason ?? null,
         bookingId: booking.id,
         accessToken: booking.accessToken,

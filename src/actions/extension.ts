@@ -7,6 +7,7 @@ import { render } from "@react-email/render"
 import { submitExtensionSchema, cancelExtensionSchema } from "@/lib/validations/extension"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 import { BookingExtensionRequestEmail } from "@/emails/booking-extension-request"
+import { formatDateET } from "@/lib/format-date-et"
 
 export async function submitExtension(bookingId: string, data: unknown) {
   const parsed = submitExtensionSchema.safeParse(data)
@@ -51,7 +52,7 @@ export async function submitExtension(bookingId: string, data: unknown) {
         BookingExtensionRequestEmail({
           guestName: booking.guestName,
           roomName: booking.room.name,
-          requestedCheckout: parsed.data.requestedCheckout,
+          requestedCheckout: formatDateET(new Date(parsed.data.requestedCheckout + "T12:00:00.000Z")),
           noteToLandlord: parsed.data.noteToLandlord ?? null,
           bookingId,
         })

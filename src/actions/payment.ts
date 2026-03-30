@@ -12,6 +12,7 @@ import { markAsPaidSchema } from "@/lib/validations/payment"
 import { BookingPaymentConfirmationEmail } from "@/emails/booking-payment-confirmation"
 import { BookingExtensionPaidEmail } from "@/emails/booking-extension-paid"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
+import { formatDateET } from "@/lib/format-date-et"
 
 async function requireAuth() {
   const supabase = await createClient()
@@ -100,8 +101,8 @@ export async function markBookingAsPaid(bookingId: string) {
         bookingId: booking.id,
         guestName: booking.guestName,
         roomName: booking.room.name,
-        checkin: booking.checkin.toISOString().slice(0, 10),
-        checkout: booking.checkout.toISOString().slice(0, 10),
+        checkin: formatDateET(booking.checkin),
+        checkout: formatDateET(booking.checkout),
         amountPaid: Number(booking.confirmedPrice ?? 0),
       })
     )
@@ -220,8 +221,8 @@ export async function markExtensionAsPaid(extensionId: string) {
       BookingExtensionPaidEmail({
         guestName: extension.booking.guestName,
         roomName: extension.booking.room.name,
-        checkin: extension.booking.checkin.toISOString().slice(0, 10),
-        newCheckout: extension.requestedCheckout.toISOString().slice(0, 10),
+        checkin: formatDateET(extension.booking.checkin),
+        newCheckout: formatDateET(extension.requestedCheckout),
         extensionAmountPaid: Number(extension.extensionPrice ?? 0),
         bookingId: extension.booking.id,
         accessToken: extension.booking.accessToken,

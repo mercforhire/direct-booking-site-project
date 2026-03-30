@@ -8,6 +8,7 @@ import { Resend } from "resend"
 import { render } from "@react-email/render"
 import { BookingConfirmationEmail } from "@/emails/booking-confirmation"
 import { BookingNotificationEmail } from "@/emails/booking-notification"
+import { formatDateET } from "@/lib/format-date-et"
 
 export async function submitBooking(data: unknown) {
   const parsed = bookingSchemaCoerced.safeParse(data)
@@ -99,8 +100,8 @@ export async function submitBooking(data: unknown) {
           guestName,
           bookingId: created.id,
           roomName: created.room.name,
-          checkin,
-          checkout,
+          checkin: formatDateET(new Date(checkin + "T12:00:00.000Z")),
+          checkout: formatDateET(new Date(checkout + "T12:00:00.000Z")),
           numGuests,
           estimatedTotal: Number(estimatedTotal),
         })

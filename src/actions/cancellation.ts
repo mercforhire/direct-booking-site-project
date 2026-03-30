@@ -9,6 +9,7 @@ import { render } from "@react-email/render"
 import { cancelBookingSchema } from "@/lib/validations/cancellation"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 import { BookingCancelledEmail } from "@/emails/booking-cancelled"
+import { formatDateET } from "@/lib/format-date-et"
 
 async function requireAuth() {
   const supabase = await createClient()
@@ -111,8 +112,8 @@ export async function cancelBooking(bookingId: string, data: unknown) {
       BookingCancelledEmail({
         guestName: booking.guestName,
         roomName: booking.room.name,
-        checkin: booking.checkin.toISOString().slice(0, 10),
-        checkout: booking.checkout.toISOString().slice(0, 10),
+        checkin: formatDateET(booking.checkin),
+        checkout: formatDateET(booking.checkout),
         refundAmount: booking.status === "APPROVED" ? null : Number(refundAmount),
         paymentMethod,
         bookingId: booking.id,

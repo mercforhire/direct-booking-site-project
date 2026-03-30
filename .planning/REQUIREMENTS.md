@@ -70,11 +70,11 @@
 
 ### Messaging
 
-- [ ] **MSG-01**: Guest can send a text message to the landlord from their booking page at any time
-- [ ] **MSG-02**: Landlord can send a text message to the guest from the booking detail in the admin dashboard
-- [ ] **MSG-03**: Both guest and landlord can view the full message thread on their respective booking views — thread is scoped to the booking and does not persist across different bookings
-- [ ] **MSG-04**: Landlord receives an email notification when a guest sends a new message
-- [ ] **MSG-05**: Guest receives an email notification when the landlord replies
+- [x] **MSG-01**: Guest can send a text message to the landlord from their booking page at any time
+- [x] **MSG-02**: Landlord can send a text message to the guest from the booking detail in the admin dashboard
+- [x] **MSG-03**: Both guest and landlord can view the full message thread on their respective booking views — thread is scoped to the booking and does not persist across different bookings
+- [x] **MSG-04**: Landlord receives an email notification when a guest sends a new message
+- [x] **MSG-05**: Guest receives an email notification when the landlord replies
 
 ### Admin Dashboard
 
@@ -161,11 +161,11 @@
 | GUEST-01 | Phase 4 | Complete |
 | GUEST-02 | Phase 7 | Complete |
 | GUEST-03 | Phase 7 | Complete |
-| MSG-01 | Phase 9 | Pending |
-| MSG-02 | Phase 9 | Pending |
-| MSG-03 | Phase 9 | Pending |
-| MSG-04 | Phase 9 | Pending |
-| MSG-05 | Phase 9 | Pending |
+| MSG-01 | Phase 9 | Complete |
+| MSG-02 | Phase 9 | Complete |
+| MSG-03 | Phase 9 | Complete |
+| MSG-04 | Phase 9 | Complete |
+| MSG-05 | Phase 9 | Complete |
 | ADMIN-01 | Phase 5 | Complete |
 | ADMIN-02 | Phase 1 | Complete |
 | ADMIN-03 | Phase 1 | Complete |

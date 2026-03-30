@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma"
 import { Resend } from "resend"
 import { BookingPaymentConfirmationEmail } from "@/emails/booking-payment-confirmation"
 import { BookingExtensionPaidEmail } from "@/emails/booking-extension-paid"
+import { BookingDateChangePaidEmail } from "@/emails/booking-date-change-paid"
 import { render } from "@react-email/render"
 
 export async function POST(request: Request) {
@@ -115,6 +116,36 @@ export async function POST(request: Request) {
             },
           }),
         ])
+
+        // Non-fatal email to guest
+        try {
+          const fullBooking = await prisma.booking.findUnique({
+            where: { id: dateChange.bookingId },
+            include: { room: { select: { name: true } } },
+          })
+          if (fullBooking) {
+            const resend = new Resend(process.env.RESEND_API_KEY)
+            const html = await render(
+              BookingDateChangePaidEmail({
+                guestName: fullBooking.guestName,
+                roomName: fullBooking.room.name,
+                newCheckin: fullBooking.checkin.toISOString().slice(0, 10),
+                newCheckout: fullBooking.checkout.toISOString().slice(0, 10),
+                amountPaid: Number(dateChange.newPrice ?? 0),
+                bookingId: fullBooking.id,
+                accessToken: fullBooking.accessToken,
+              })
+            )
+            await resend.emails.send({
+              from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
+              to: fullBooking.guestEmail,
+              subject: `Date change confirmed — ${fullBooking.room.name}`,
+              html,
+            })
+          }
+        } catch {
+          // Non-fatal: webhook always returns 200
+        }
       }
       // Idempotent: skip if status is already PAID or DECLINED
     } else {

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 14-01-PLAN.md
-last_updated: "2026-03-30T18:23:46.110Z"
+stopped_at: Completed 14-02-PLAN.md
+last_updated: "2026-03-30T18:28:20.524Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 15
   completed_phases: 13
   total_plans: 59
-  completed_plans: 57
+  completed_plans: 58
   percent: 97
 ---
 
@@ -107,6 +107,7 @@ Progress: [█████████░] 97%
 | Phase 11-date-change-topup-auth-guards P03 | 4min | 2 tasks | 7 files |
 | Phase 12-email-env-consistency P01 | 2 | 3 tasks | 5 files |
 | Phase 14-force-eastern-time P01 | 4 | 2 tasks | 2 files |
+| Phase 14-force-eastern-time P02 | 3 | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -239,6 +240,9 @@ Recent decisions affecting current work:
 - [Phase 12-email-env-consistency]: Subject line standardized to 'Extension confirmed — {room}' to match Stripe webhook branch (was 'Extension payment confirmed')
 - [Phase 12-email-env-consistency]: EMAIL_FROM documented as deprecated in .env.local.example — all actions now use RESEND_FROM_EMAIL
 - [Phase 14-force-eastern-time]: Wave 0 tests written in intentional RED state — availability.test.ts fails 4/6 on noon-UTC assertions; availability-filter.test.ts GREEN (pure function, UTC server-safe)
+- [Phase 14-force-eastern-time]: Noon-UTC (T12:00:00.000Z) used for all DB date writes — ensures correct YYYY-MM-DD in all timezones
+- [Phase 14-force-eastern-time]: toISOString().slice(0,10) used for all DB date reads — timezone-agnostic, works for legacy midnight-UTC and new noon-UTC rows
+- [Phase 14-force-eastern-time]: availability-filter cursor uses setUTCDate — prevents DST boundary from shifting calendar day during iteration
 
 ### Pending Todos
 
@@ -252,6 +256,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T18:23:46.107Z
-Stopped at: Completed 14-01-PLAN.md
+Last session: 2026-03-30T18:28:20.520Z
+Stopped at: Completed 14-02-PLAN.md
 Resume file: None

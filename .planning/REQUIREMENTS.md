@@ -25,16 +25,16 @@
 - [x] **BOOK-02**: Guest sees a full itemized price estimate before submitting (nightly rate x nights + cleaning fee + extra guest fees + selected add-ons + deposit + service fee)
 - [x] **BOOK-03**: Guest can select per-room add-on options at request time (e.g. parking, sofa bed — each option is free or has a fixed cost set by the landlord)
 - [x] **BOOK-04**: Guest can include a note or message to the landlord with their request
-- [ ] **BOOK-05**: Guest can submit a booking request without creating an account (name, email, phone number required)
-- [ ] **BOOK-06**: Guest can optionally create an account to view their booking history
+- [x] **BOOK-05**: Guest can submit a booking request without creating an account (name, email, phone number required)
+- [x] **BOOK-06**: Guest can optionally create an account to view their booking history
 
 ### Approval Flow
 
 - [x] **APPR-01**: Landlord receives an email notification when a new booking request is submitted
 - [x] **APPR-02**: Landlord can approve a booking request and set the exact confirmed price
 - [x] **APPR-03**: Landlord can decline a booking request with an optional reason
-- [ ] **APPR-04**: Guest receives an email when their request is approved, including the confirmed price and payment instructions
-- [ ] **APPR-05**: Guest receives an email when their request is declined, including the optional reason
+- [x] **APPR-04**: Guest receives an email when their request is approved, including the confirmed price and payment instructions
+- [x] **APPR-05**: Guest receives an email when their request is declined, including the optional reason
 
 ### Payment
 
@@ -64,7 +64,7 @@
 
 ### Guest Booking Page
 
-- [ ] **GUEST-01**: Guest can view a current booking page showing booking details (room, dates, guests, itemized costs, status)
+- [x] **GUEST-01**: Guest can view a current booking page showing booking details (room, dates, guests, itemized costs, status)
 - [ ] **GUEST-02**: Guest can view their extension request status from the booking page *(Deferred — v1.1)*
 - [ ] **GUEST-03**: Guest can submit an extension request directly from the booking page *(Deferred — v1.1)*
 
@@ -134,13 +134,13 @@
 | BOOK-02 | Phase 4 | Complete |
 | BOOK-03 | Phase 4 | Complete |
 | BOOK-04 | Phase 4 | Complete |
-| BOOK-05 | Phase 10 | Pending |
-| BOOK-06 | Phase 10 | Pending |
+| BOOK-05 | Phase 10 | Complete |
+| BOOK-06 | Phase 10 | Complete |
 | APPR-01 | Phase 5 | Complete |
 | APPR-02 | Phase 5 | Complete |
 | APPR-03 | Phase 5 | Complete |
-| APPR-04 | Phase 10 | Pending |
-| APPR-05 | Phase 10 | Pending |
+| APPR-04 | Phase 10 | Complete |
+| APPR-05 | Phase 10 | Complete |
 | PAY-01 | Phase 6 | Complete |
 | PAY-02 | Phase 6 | Complete |
 | PAY-03 | Phase 6 | Complete |
@@ -158,7 +158,7 @@
 | CNCL-05 | Phase 8 | Complete |
 | CNCL-06 | Phase 8 | Complete |
 | CNCL-07 | Phase 8 | Complete |
-| GUEST-01 | Phase 10 | Pending |
+| GUEST-01 | Phase 10 | Complete |
 | GUEST-02 | Phase 7 | Deferred v1.1 |
 | GUEST-03 | Phase 7 | Deferred v1.1 |
 | MSG-01 | Phase 9 | Complete |

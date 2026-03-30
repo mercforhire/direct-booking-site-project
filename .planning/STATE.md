@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 10 context gathered
-last_updated: "2026-03-30T04:04:46.905Z"
+stopped_at: Completed 10-fix-guest-access-middleware-10-01-PLAN.md
+last_updated: "2026-03-30T04:29:25.035Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 15
-  completed_phases: 10
-  total_plans: 51
-  completed_plans: 51
+  completed_phases: 11
+  total_plans: 52
+  completed_plans: 52
   percent: 97
 ---
 
@@ -101,6 +101,7 @@ Progress: [█████████░] 97%
 | Phase 09-messaging P02 | 2 | 2 tasks | 3 files |
 | Phase 09-messaging P03 | 5 | 1 tasks | 4 files |
 | Phase 09-messaging P03 | 5 | 2 tasks | 4 files |
+| Phase 10-fix-guest-access-middleware P01 | 5min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -222,6 +223,9 @@ Recent decisions affecting current work:
 - [Phase 09-messaging]: MessageSection always renders (never hidden) — empty state shows 'No messages yet.' placeholder
 - [Phase 09-messaging]: MessageSection always receives token from URL searchParam on guest page; token=null on admin page (triggers landlord mode)
 - [Phase 09-messaging]: MessageSection always receives token from URL searchParam on guest page; token=null on admin page (triggers landlord mode)
+- [Phase 10-fix-guest-access-middleware]: /bookings removed from middleware adminPaths — admin booking list is at /admin/bookings, bare /bookings prefix was redundant and blocked guest token access
+- [Phase 10-fix-guest-access-middleware]: notFound() replaces redirect('/guest/login') on booking page auth guard — guests with missing/invalid tokens get 404 not a login redirect loop
+- [Phase 10-fix-guest-access-middleware]: Middleware mock targets @supabase/ssr not @/lib/supabase/server — middleware inlines createServerClient directly per Phase 1.5 architectural decision
 
 ### Pending Todos
 
@@ -235,6 +239,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T04:04:46.902Z
-Stopped at: Phase 10 context gathered
-Resume file: .planning/phases/10-fix-guest-access-middleware/10-CONTEXT.md
+Last session: 2026-03-30T04:29:25.032Z
+Stopped at: Completed 10-fix-guest-access-middleware-10-01-PLAN.md
+Resume file: None

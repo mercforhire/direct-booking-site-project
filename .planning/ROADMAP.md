@@ -22,7 +22,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 7: Booking Extensions** - Extension requests, landlord approval, and extension payment (completed 2026-03-29)
 - [x] **Phase 8: Cancellations & Refunds** - Booking cancellation, Stripe refunds, e-transfer refund tracking, and deposit rules (completed 2026-03-29)
 - [x] **Phase 9: Messaging** - Booking-scoped text messaging between guest and landlord with email notifications (completed 2026-03-30)
-- [ ] **Phase 10: Fix Guest Access Middleware** - Fix P0 middleware regression blocking token-only guests from /bookings/[id]; also protect /availability admin route (Gap closure)
+- [x] **Phase 10: Fix Guest Access Middleware** - Fix P0 middleware regression blocking token-only guests from /bookings/[id]; also protect /availability admin route (Gap closure) (completed 2026-03-30)
 - [ ] **Phase 11: Date Change Top-Up + Action Auth Guards** - Handle ?date_change_paid=1 page param, send confirmation email after date change payment, add auth guards to cancelDateChange/cancelExtension (Gap closure)
 - [ ] **Phase 12: Email & Environment Consistency** - Standardize EMAIL_FROM env var, add missing vars to .env.local.example, convert markExtensionAsPaid to React Email template, remove dead BookingPaidEmail file (Gap closure)
 - [ ] **Phase 13: Fix Stale Unit Tests** - Update booking.test.ts mocks to match Phase 6 adminClient.auth.admin.createUser pattern; fix redirect assertion (Gap closure)
@@ -235,7 +235,7 @@ Plans:
   4. `/availability` admin route redirects unauthenticated users to `/login`
   5. All existing middleware-protected routes continue to work (no regression)
 
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
 - [ ] 10-01-PLAN.md — Middleware fix (remove /bookings from adminPaths), page notFound() fallback, and Vitest route protection tests
@@ -302,7 +302,7 @@ Note: Gap closure phases 10-14 are independent of each other and can be executed
 | 7. Booking Extensions | 8/8 | Complete   | 2026-03-29 |
 | 8. Cancellations & Refunds | 8/8 | Complete   | 2026-03-29 |
 | 9. Messaging | 3/3 | Complete   | 2026-03-30 |
-| 10. Fix Guest Access Middleware | 0/1 | Pending |  |
+| 10. Fix Guest Access Middleware | 1/1 | Complete   | 2026-03-30 |
 | 11. Date Change Top-Up + Auth Guards | 0/0 | Pending |  |
 | 12. Email & Environment Consistency | 0/0 | Pending |  |
 | 13. Fix Stale Unit Tests | 0/0 | Pending |  |

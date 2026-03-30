@@ -25,7 +25,7 @@ export async function toggleBlockedDate(
 ): Promise<void> {
   await requireAuth()
 
-  const date = new Date(dateStr + "T00:00:00.000Z")
+  const date = new Date(dateStr + "T12:00:00.000Z")
 
   const existing = await prisma.blockedDate.findUnique({
     where: { roomId_date: { roomId, date } },
@@ -59,8 +59,8 @@ export async function saveBlockedRange(
 
   // Build array of all dates in the range (UTC-safe)
   const dates: Date[] = []
-  const current = new Date(fromStr + "T00:00:00.000Z")
-  const end = new Date(toStr + "T00:00:00.000Z")
+  const current = new Date(fromStr + "T12:00:00.000Z")
+  const end = new Date(toStr + "T12:00:00.000Z")
 
   while (current <= end) {
     dates.push(new Date(current))

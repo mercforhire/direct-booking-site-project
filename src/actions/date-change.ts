@@ -44,8 +44,8 @@ export async function submitDateChange(bookingId: string, data: unknown) {
   await prisma.bookingDateChange.create({
     data: {
       bookingId,
-      requestedCheckin: new Date(requestedCheckin + "T00:00:00.000Z"),
-      requestedCheckout: new Date(requestedCheckout + "T00:00:00.000Z"),
+      requestedCheckin: new Date(requestedCheckin + "T12:00:00.000Z"),
+      requestedCheckout: new Date(requestedCheckout + "T12:00:00.000Z"),
       noteToLandlord: noteToLandlord ?? null,
       status: "PENDING",
     },

@@ -37,7 +37,7 @@ export async function submitExtension(bookingId: string, data: unknown) {
   await prisma.bookingExtension.create({
     data: {
       bookingId,
-      requestedCheckout: new Date(parsed.data.requestedCheckout + "T00:00:00.000Z"),
+      requestedCheckout: new Date(parsed.data.requestedCheckout + "T12:00:00.000Z"),
       noteToLandlord: parsed.data.noteToLandlord ?? null,
       status: "PENDING",
     },

@@ -43,9 +43,9 @@ export function calculatePriceEstimate(input: PriceInput): PriceEstimate | null 
 
   if (!checkin || !checkout) return null
 
-  // Parse as local midnight to prevent DST / UTC off-by-one issues
-  const checkinDate = new Date(checkin + "T00:00:00")
-  const checkoutDate = new Date(checkout + "T00:00:00")
+  // Parse as noon UTC — both dates shift by the same 12h so differenceInDays is unaffected
+  const checkinDate = new Date(checkin + "T12:00:00.000Z")
+  const checkoutDate = new Date(checkout + "T12:00:00.000Z")
   const nights = differenceInDays(checkoutDate, checkinDate)
 
   if (nights <= 0) return null

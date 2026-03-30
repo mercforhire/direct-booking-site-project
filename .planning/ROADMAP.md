@@ -235,6 +235,11 @@ Plans:
   4. `/availability` admin route redirects unauthenticated users to `/login`
   5. All existing middleware-protected routes continue to work (no regression)
 
+**Plans:** 1 plan
+
+Plans:
+- [ ] 10-01-PLAN.md — Middleware fix (remove /bookings from adminPaths), page notFound() fallback, and Vitest route protection tests
+
 ### Phase 11: Date Change Top-Up + Action Auth Guards
 **Goal:** Date change top-up payment flow completes end-to-end with confirmation; cancel actions have consistent auth protection
 **Depends on:** Phase 10 (gap closure)
@@ -297,7 +302,7 @@ Note: Gap closure phases 10-14 are independent of each other and can be executed
 | 7. Booking Extensions | 8/8 | Complete   | 2026-03-29 |
 | 8. Cancellations & Refunds | 8/8 | Complete   | 2026-03-29 |
 | 9. Messaging | 3/3 | Complete   | 2026-03-30 |
-| 10. Fix Guest Access Middleware | 0/0 | Pending |  |
+| 10. Fix Guest Access Middleware | 0/1 | Pending |  |
 | 11. Date Change Top-Up + Auth Guards | 0/0 | Pending |  |
 | 12. Email & Environment Consistency | 0/0 | Pending |  |
 | 13. Fix Stale Unit Tests | 0/0 | Pending |  |

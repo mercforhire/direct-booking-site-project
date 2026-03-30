@@ -22,6 +22,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 7: Booking Extensions** - Extension requests, landlord approval, and extension payment (completed 2026-03-29)
 - [x] **Phase 8: Cancellations & Refunds** - Booking cancellation, Stripe refunds, e-transfer refund tracking, and deposit rules (completed 2026-03-29)
 - [x] **Phase 9: Messaging** - Booking-scoped text messaging between guest and landlord with email notifications (completed 2026-03-30)
+- [ ] **Phase 10: Fix Guest Access Middleware** - Fix P0 middleware regression blocking token-only guests from /bookings/[id]; also protect /availability admin route (Gap closure)
+- [ ] **Phase 11: Date Change Top-Up + Action Auth Guards** - Handle ?date_change_paid=1 page param, send confirmation email after date change payment, add auth guards to cancelDateChange/cancelExtension (Gap closure)
+- [ ] **Phase 12: Email & Environment Consistency** - Standardize EMAIL_FROM env var, add missing vars to .env.local.example, convert markExtensionAsPaid to React Email template, remove dead BookingPaidEmail file (Gap closure)
+- [ ] **Phase 13: Fix Stale Unit Tests** - Update booking.test.ts mocks to match Phase 6 adminClient.auth.admin.createUser pattern; fix redirect assertion (Gap closure)
+- [ ] **Phase 14: Force Eastern Time (ET)** - Pin all date/time display and serialization to Eastern Time throughout the app — admin calendar, guest calendar, booking pages, emails (Gap closure)
 
 ## Phase Details
 
@@ -218,11 +223,67 @@ Plans:
 - [ ] 09-02-PLAN.md — NewMessageLandlordEmail + NewMessageGuestEmail templates + MessageSection client component (polling, send flow, comment-thread display)
 - [ ] 09-03-PLAN.md — RSC page wiring (guest + admin booking pages load and pass messages) + human verification checkpoint
 
+### Phase 10: Fix Guest Access Middleware
+**Goal:** Token-only guests (no Supabase session) can access `/bookings/[id]?token=xxx` without being redirected to the admin login page; `/availability` admin route is protected by middleware
+**Depends on:** Phase 9 (gap closure)
+**Requirements:** BOOK-05, BOOK-06, GUEST-01, APPR-04, APPR-05
+**Gap Closure:** Closes P0 integration gap from v1.0 audit
+**Success Criteria** (what must be TRUE):
+  1. Guest with only a `?token=` param (no session) can load `/bookings/[id]` — middleware does not redirect to `/login`
+  2. All guest email CTAs (confirmation, approval, decline) resolve correctly for no-account guests
+  3. Admin booking list at `/bookings` remains protected for unauthenticated users
+  4. `/availability` admin route redirects unauthenticated users to `/login`
+  5. All existing middleware-protected routes continue to work (no regression)
+
+### Phase 11: Date Change Top-Up + Action Auth Guards
+**Goal:** Date change top-up payment flow completes end-to-end with confirmation; cancel actions have consistent auth protection
+**Depends on:** Phase 10 (gap closure)
+**Requirements:** (integration gaps — no new requirement IDs)
+**Gap Closure:** Closes P1 and P3 integration gaps from v1.0 audit
+**Success Criteria** (what must be TRUE):
+  1. Guest returning to `/bookings/[id]?date_change_paid=1` after Stripe sees a success state (toast/banner/status update)
+  2. Webhook handler for `date_change_topup` sends a confirmation email to the guest
+  3. `cancelDateChange` and `cancelExtension` server actions verify auth (requireAuth or token check) before executing
+
+### Phase 12: Email & Environment Consistency
+**Goal:** All server actions use the same env var for the sender address; all required env vars are documented; `markExtensionAsPaid` uses a React Email template; dead code removed
+**Depends on:** Phase 9 (gap closure)
+**Requirements:** (integration gaps — no new requirement IDs)
+**Gap Closure:** Closes P2 and P3 integration gaps from v1.0 audit
+**Success Criteria** (what must be TRUE):
+  1. `src/actions/booking.ts` uses `RESEND_FROM_EMAIL` (not `EMAIL_FROM`) — consistent with all other actions
+  2. `.env.local.example` includes `NEXT_PUBLIC_SITE_URL` and `RESEND_FROM_EMAIL` entries
+  3. `markExtensionAsPaid` sends a React Email template (not raw HTML string)
+  4. `src/emails/booking-paid.tsx` is deleted (never imported, dead file)
+
+### Phase 13: Fix Stale Unit Tests
+**Goal:** All unit tests pass — stale mocks and redirect assertions updated to reflect Phase 6 auth changes
+**Depends on:** Phase 9 (gap closure)
+**Requirements:** (tech debt — no new requirement IDs)
+**Gap Closure:** Closes Phase 04 tech debt from v1.0 audit
+**Success Criteria** (what must be TRUE):
+  1. All 4 previously failing tests in `tests/actions/booking.test.ts` pass
+  2. Mocks reference `adminClient.auth.admin.createUser` instead of old `signUp` pattern
+  3. Redirect assertion checks for `?token=...&new=1` pattern
+  4. Full test suite passes with no regressions
+
+### Phase 14: Force Eastern Time (ET)
+**Goal:** All dates and times displayed or serialized in the app use Eastern Time (ET) — no UTC midnight drift for ET users
+**Depends on:** Phase 9 (gap closure)
+**Requirements:** AVAIL-01, AVAIL-02 (display correctness)
+**Gap Closure:** Closes timezone tech debt from v1.0 audit
+**Success Criteria** (what must be TRUE):
+  1. Admin availability calendar displays blocked dates in ET — no off-by-one vs. what was saved
+  2. Guest availability calendar displays the same blocked dates as the admin calendar
+  3. Booking page check-in/check-out dates display in ET
+  4. Email date strings use ET (not UTC)
+  5. Date serialization between admin and guest calendar uses a consistent ET-aware format
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
-Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. Phase 7 and 8 both depend on Phase 6. Phase 9 depends on Phase 4.
+Phases execute in numeric order: 1 -> 1.5 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 -> 10 -> 11 -> 12 -> 13 -> 14
+Note: Gap closure phases 10-14 are independent of each other and can be executed in any order.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -236,3 +297,8 @@ Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. P
 | 7. Booking Extensions | 8/8 | Complete   | 2026-03-29 |
 | 8. Cancellations & Refunds | 8/8 | Complete   | 2026-03-29 |
 | 9. Messaging | 3/3 | Complete   | 2026-03-30 |
+| 10. Fix Guest Access Middleware | 0/0 | Pending |  |
+| 11. Date Change Top-Up + Auth Guards | 0/0 | Pending |  |
+| 12. Email & Environment Consistency | 0/0 | Pending |  |
+| 13. Fix Stale Unit Tests | 0/0 | Pending |  |
+| 14. Force Eastern Time (ET) | 0/0 | Pending |  |

@@ -25,16 +25,16 @@
 - [x] **BOOK-02**: Guest sees a full itemized price estimate before submitting (nightly rate x nights + cleaning fee + extra guest fees + selected add-ons + deposit + service fee)
 - [x] **BOOK-03**: Guest can select per-room add-on options at request time (e.g. parking, sofa bed — each option is free or has a fixed cost set by the landlord)
 - [x] **BOOK-04**: Guest can include a note or message to the landlord with their request
-- [x] **BOOK-05**: Guest can submit a booking request without creating an account (name, email, phone number required)
-- [x] **BOOK-06**: Guest can optionally create an account to view their booking history
+- [ ] **BOOK-05**: Guest can submit a booking request without creating an account (name, email, phone number required)
+- [ ] **BOOK-06**: Guest can optionally create an account to view their booking history
 
 ### Approval Flow
 
 - [x] **APPR-01**: Landlord receives an email notification when a new booking request is submitted
 - [x] **APPR-02**: Landlord can approve a booking request and set the exact confirmed price
 - [x] **APPR-03**: Landlord can decline a booking request with an optional reason
-- [x] **APPR-04**: Guest receives an email when their request is approved, including the confirmed price and payment instructions
-- [x] **APPR-05**: Guest receives an email when their request is declined, including the optional reason
+- [ ] **APPR-04**: Guest receives an email when their request is approved, including the confirmed price and payment instructions
+- [ ] **APPR-05**: Guest receives an email when their request is declined, including the optional reason
 
 ### Payment
 
@@ -45,12 +45,12 @@
 
 ### Booking Extensions
 
-- [x] **EXT-01**: Guest can submit a request to extend an existing approved or active booking (before or during the stay)
-- [x] **EXT-02**: Landlord receives an email notification when an extension request is submitted
-- [x] **EXT-03**: Landlord can approve an extension request and set the additional price for the extended nights
-- [x] **EXT-04**: Landlord can decline an extension request
-- [x] **EXT-05**: Guest receives email notification of extension approval (with price) or decline
-- [x] **EXT-06**: Guest can pay the extension amount via Stripe or e-transfer (same flow as original payment)
+- [ ] **EXT-01**: Guest can submit a request to extend an existing approved or active booking (before or during the stay) *(Deferred — v1.1)*
+- [ ] **EXT-02**: Landlord receives an email notification when an extension request is submitted *(Deferred — v1.1)*
+- [ ] **EXT-03**: Landlord can approve an extension request and set the additional price for the extended nights *(Deferred — v1.1)*
+- [ ] **EXT-04**: Landlord can decline an extension request *(Deferred — v1.1)*
+- [ ] **EXT-05**: Guest receives email notification of extension approval (with price) or decline *(Deferred — v1.1)*
+- [ ] **EXT-06**: Guest can pay the extension amount via Stripe or e-transfer (same flow as original payment) *(Deferred — v1.1)*
 
 ### Cancellations & Refunds
 
@@ -64,9 +64,9 @@
 
 ### Guest Booking Page
 
-- [x] **GUEST-01**: Guest can view a current booking page showing booking details (room, dates, guests, itemized costs, status)
-- [x] **GUEST-02**: Guest can view their extension request status from the booking page
-- [x] **GUEST-03**: Guest can submit an extension request directly from the booking page
+- [ ] **GUEST-01**: Guest can view a current booking page showing booking details (room, dates, guests, itemized costs, status)
+- [ ] **GUEST-02**: Guest can view their extension request status from the booking page *(Deferred — v1.1)*
+- [ ] **GUEST-03**: Guest can submit an extension request directly from the booking page *(Deferred — v1.1)*
 
 ### Messaging
 
@@ -134,23 +134,23 @@
 | BOOK-02 | Phase 4 | Complete |
 | BOOK-03 | Phase 4 | Complete |
 | BOOK-04 | Phase 4 | Complete |
-| BOOK-05 | Phase 4 | Complete |
-| BOOK-06 | Phase 4 | Complete |
+| BOOK-05 | Phase 10 | Pending |
+| BOOK-06 | Phase 10 | Pending |
 | APPR-01 | Phase 5 | Complete |
 | APPR-02 | Phase 5 | Complete |
 | APPR-03 | Phase 5 | Complete |
-| APPR-04 | Phase 5 | Complete |
-| APPR-05 | Phase 5 | Complete |
+| APPR-04 | Phase 10 | Pending |
+| APPR-05 | Phase 10 | Pending |
 | PAY-01 | Phase 6 | Complete |
 | PAY-02 | Phase 6 | Complete |
 | PAY-03 | Phase 6 | Complete |
 | PAY-04 | Phase 6 | Complete |
-| EXT-01 | Phase 7 | Complete |
-| EXT-02 | Phase 7 | Complete |
-| EXT-03 | Phase 7 | Complete |
-| EXT-04 | Phase 7 | Complete |
-| EXT-05 | Phase 7 | Complete |
-| EXT-06 | Phase 7 | Complete |
+| EXT-01 | Phase 7 | Deferred v1.1 |
+| EXT-02 | Phase 7 | Deferred v1.1 |
+| EXT-03 | Phase 7 | Deferred v1.1 |
+| EXT-04 | Phase 7 | Deferred v1.1 |
+| EXT-05 | Phase 7 | Deferred v1.1 |
+| EXT-06 | Phase 7 | Deferred v1.1 |
 | CNCL-01 | Phase 8 | Complete |
 | CNCL-02 | Phase 8 | Complete |
 | CNCL-03 | Phase 8 | Complete |
@@ -158,9 +158,9 @@
 | CNCL-05 | Phase 8 | Complete |
 | CNCL-06 | Phase 8 | Complete |
 | CNCL-07 | Phase 8 | Complete |
-| GUEST-01 | Phase 4 | Complete |
-| GUEST-02 | Phase 7 | Complete |
-| GUEST-03 | Phase 7 | Complete |
+| GUEST-01 | Phase 10 | Pending |
+| GUEST-02 | Phase 7 | Deferred v1.1 |
+| GUEST-03 | Phase 7 | Deferred v1.1 |
 | MSG-01 | Phase 9 | Complete |
 | MSG-02 | Phase 9 | Complete |
 | MSG-03 | Phase 9 | Complete |
@@ -172,9 +172,14 @@
 | ADMIN-04 | Phase 2 | Complete |
 | ADMIN-05 | Phase 1 | Complete |
 
+| AVAIL-01 | Phase 14 | Pending |
+| AVAIL-02 | Phase 14 | Pending |
+
 **Coverage:**
 - v1 requirements: 49 total
-- Mapped to phases: 49
+- Satisfied: 39
+- Pending (gap closure phases 10–14): 6 (BOOK-05, BOOK-06, GUEST-01, APPR-04, APPR-05 → Phase 10; AVAIL-01/02 display correctness → Phase 14)
+- Deferred v1.1: 8 (EXT-01 through EXT-06, GUEST-02, GUEST-03)
 - Unmapped: 0
 
 ---

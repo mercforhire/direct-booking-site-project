@@ -218,12 +218,7 @@ export function BookingStatusView({
         </div>
       )}
 
-      {/* Extension paid banner — redirected back from Stripe with ?extension_paid=1 */}
-      {showExtensionPaidBanner && (
-        <div className="mb-6 rounded-md bg-green-50 border border-green-200 p-4 text-green-800 text-sm font-medium">
-          Extension payment confirmed — your checkout date has been updated.
-        </div>
-      )}
+      {/* Extension paid banner — disabled for v1.0 */}
 
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
@@ -311,13 +306,7 @@ export function BookingStatusView({
       {/* Payment section */}
       <PaymentSection booking={booking} etransferEmail={etransferEmail} />
 
-      {/* Extension section */}
-      <ExtensionSection
-        booking={{ id: booking.id, status: booking.status, checkout: booking.checkout }}
-        activeExtension={activeExtension ?? null}
-        blockedDates={blockedDates}
-        etransferEmail={etransferEmail}
-      />
+      {/* Extension section — disabled for v1.0 */}
 
       {/* Date change section */}
       {booking.status !== "CANCELLED" && booking.status !== "DECLINED" && booking.status !== "COMPLETED" && (

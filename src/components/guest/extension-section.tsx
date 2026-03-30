@@ -1,5 +1,9 @@
 "use client"
 
+// v1.0: booking extensions disabled — reserved for a future version
+export function ExtensionSection() { return null }
+export default ExtensionSection
+
 import { useState, useTransition } from "react"
 import { DayPicker } from "react-day-picker"
 import "react-day-picker/style.css"

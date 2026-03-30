@@ -162,11 +162,7 @@ function BookingsTable({ bookings }: { bookings: SerializedBooking[] }) {
                 >
                   {b.guestName}
                 </Link>
-                {b.hasPendingExtension && (
-                  <Badge variant="secondary" className="ml-2 text-xs">
-                    Extension pending
-                  </Badge>
-                )}
+                {/* Extension pending badge — disabled for v1.0 */}
               </div>
               <div className="text-xs text-muted-foreground font-mono mt-0.5">{b.id}</div>
             </TableCell>
@@ -176,14 +172,11 @@ function BookingsTable({ bookings }: { bookings: SerializedBooking[] }) {
             <TableCell>{b.numGuests}</TableCell>
             <TableCell>
               {(() => {
-                const base = b.status === "PAID" && b.confirmedPrice != null ? b.confirmedPrice : b.estimatedTotal
-                const total = base + b.paidExtensionsTotal
+                const total = b.status === "PAID" && b.confirmedPrice != null ? b.confirmedPrice : b.estimatedTotal
                 return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(total)
               })()}
               {b.status === "PAID" && b.confirmedPrice != null && (
-                <div className="text-xs text-muted-foreground mt-0.5">
-                  {b.paidExtensionsTotal > 0 ? "incl. extension" : "paid"}
-                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">paid</div>
               )}
             </TableCell>
             <TableCell>

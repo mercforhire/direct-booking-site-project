@@ -776,8 +776,8 @@ export function BookingAdminDetail({
         </section>
       )}
 
-      {/* Extension Request Section */}
-      {activeExtension && (
+      {/* Extension Request Section — disabled for v1.0 */}
+      {false && activeExtension && (
         <div className="border rounded-lg p-4 space-y-3">
           <h2 className="font-semibold">Extension Request</h2>
           <div className="grid grid-cols-2 gap-3 text-sm">

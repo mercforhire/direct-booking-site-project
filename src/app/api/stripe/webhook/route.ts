@@ -8,6 +8,7 @@ import { BookingPaymentConfirmationEmail } from "@/emails/booking-payment-confir
 import { BookingExtensionPaidEmail } from "@/emails/booking-extension-paid"
 import { BookingDateChangePaidEmail } from "@/emails/booking-date-change-paid"
 import { render } from "@react-email/render"
+import { formatDateET } from "@/lib/format-date-et"
 
 export async function POST(request: Request) {
   const body = await request.text() // MUST be text() — raw body for HMAC verification
@@ -71,8 +72,8 @@ export async function POST(request: Request) {
               BookingExtensionPaidEmail({
                 guestName: fullBooking.guestName,
                 roomName: fullBooking.room.name,
-                checkin: fullBooking.checkin.toISOString().slice(0, 10),
-                newCheckout: extension.requestedCheckout.toISOString().slice(0, 10),
+                checkin: formatDateET(fullBooking.checkin),
+                newCheckout: formatDateET(extension.requestedCheckout),
                 extensionAmountPaid: Number(extension.extensionPrice ?? 0),
                 bookingId: fullBooking.id,
                 accessToken: fullBooking.accessToken,
@@ -129,8 +130,8 @@ export async function POST(request: Request) {
               BookingDateChangePaidEmail({
                 guestName: fullBooking.guestName,
                 roomName: fullBooking.room.name,
-                newCheckin: fullBooking.checkin.toISOString().slice(0, 10),
-                newCheckout: fullBooking.checkout.toISOString().slice(0, 10),
+                newCheckin: formatDateET(fullBooking.checkin),
+                newCheckout: formatDateET(fullBooking.checkout),
                 amountPaid: Number(dateChange.newPrice ?? 0),
                 bookingId: fullBooking.id,
                 accessToken: fullBooking.accessToken,
@@ -179,8 +180,8 @@ export async function POST(request: Request) {
               react: BookingPaymentConfirmationEmail({
                 guestName: booking.guestName,
                 roomName: booking.room.name,
-                checkin: booking.checkin.toISOString().slice(0, 10),
-                checkout: booking.checkout.toISOString().slice(0, 10),
+                checkin: formatDateET(booking.checkin),
+                checkout: formatDateET(booking.checkout),
                 amountPaid: Number(booking.confirmedPrice),
                 bookingId: booking.id,
               }),

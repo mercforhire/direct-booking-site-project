@@ -80,6 +80,19 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
 
   const settings = await prisma.settings.findUnique({ where: { id: "global" } })
 
+  // Load messages ordered oldest-first
+  const messages = await prisma.message.findMany({
+    where: { bookingId: id },
+    orderBy: { createdAt: "asc" },
+  })
+  const serializedMessages = messages.map((m) => ({
+    id: m.id,
+    sender: m.sender as "GUEST" | "LANDLORD",
+    senderName: m.senderName,
+    body: m.body,
+    createdAt: m.createdAt.toISOString(),
+  }))
+
   return (
     <BookingAdminDetail
       booking={serialized}
@@ -87,6 +100,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
       activeDateChange={activeDateChange}
       depositAmount={Number(settings?.depositAmount ?? 0)}
       totalPaid={totalPaid}
+      messages={serializedMessages}
     />
   )
 }

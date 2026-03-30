@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { createStripeCheckoutSession } from "@/actions/payment"
 import { ExtensionSection, type SerializedExtension } from "./extension-section"
 import { DateChangeSection } from "./date-change-section"
+import { MessageSection, type SerializedMessage } from "./message-section"
 
 // All Decimal fields coerced to number at RSC boundary
 export type SerializedBooking = {
@@ -57,6 +58,8 @@ type Props = {
   activeExtension?: SerializedExtension | null
   activeDateChange?: SerializedDateChange | null
   blockedDates?: string[]
+  messages: SerializedMessage[]
+  token: string | null
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -191,6 +194,8 @@ export function BookingStatusView({
   activeExtension,
   activeDateChange,
   blockedDates = [],
+  messages,
+  token,
 }: Props) {
   const checkinStr = booking.checkin.slice(0, 10) // "YYYY-MM-DD"
   const checkoutStr = booking.checkout.slice(0, 10)
@@ -315,6 +320,9 @@ export function BookingStatusView({
           activeDateChange={activeDateChange ?? null}
         />
       )}
+
+      {/* Messages section */}
+      <MessageSection bookingId={booking.id} token={token} messages={messages} />
 
       {/* Booking reference */}
       <p className="text-xs text-gray-400 mt-4 text-center">

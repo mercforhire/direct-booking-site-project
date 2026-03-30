@@ -162,6 +162,19 @@ export default async function BookingPage({
     }
   }
 
+  // Load messages ordered oldest-first
+  const messages = await prisma.message.findMany({
+    where: { bookingId: booking.id },
+    orderBy: { createdAt: "asc" },
+  })
+  const serializedMessages = messages.map((m) => ({
+    id: m.id,
+    sender: m.sender as "GUEST" | "LANDLORD",
+    senderName: m.senderName,
+    body: m.body,
+    createdAt: m.createdAt.toISOString(),
+  }))
+
   // Load active date change request (PENDING or APPROVED)
   const activeDateChangeRecord = await prisma.bookingDateChange.findFirst({
     where: { bookingId: id, status: { in: ["PENDING", "APPROVED"] } },
@@ -231,6 +244,8 @@ export default async function BookingPage({
       activeExtension={serializedExtension}
       activeDateChange={serializedDateChange}
       blockedDates={blockedDateStrings}
+      messages={serializedMessages}
+      token={token ?? null}
     />
   )
 }

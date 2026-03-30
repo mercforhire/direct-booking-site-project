@@ -23,6 +23,7 @@ import { approveExtension, declineExtension } from "@/actions/extension-admin"
 import { markExtensionAsPaid } from "@/actions/payment"
 import { cancelBooking } from "@/actions/cancellation"
 import { approveDateChange, declineDateChange } from "@/actions/date-change"
+import { MessageSection, type SerializedMessage } from "@/components/guest/message-section"
 
 export type SerializedDateChange = {
   id: string
@@ -118,12 +119,14 @@ export function BookingAdminDetail({
   activeDateChange,
   depositAmount,
   totalPaid,
+  messages,
 }: {
   booking: SerializedBooking
   activeExtension?: SerializedExtension | null
   activeDateChange?: SerializedDateChange | null
   depositAmount: number
   totalPaid?: number | null
+  messages: SerializedMessage[]
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -930,6 +933,9 @@ export function BookingAdminDetail({
           )}
         </div>
       )}
+
+      {/* Messages section */}
+      <MessageSection bookingId={booking.id} token={null} messages={messages} />
     </div>
   )
 }

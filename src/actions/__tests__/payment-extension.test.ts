@@ -77,6 +77,7 @@ const mockExtension = {
     guestEmail: "guest@example.com",
     guestName: "Jane Guest",
     accessToken: "token-abc",
+    checkin: new Date("2026-04-01T00:00:00.000Z"),
     checkout: new Date("2026-05-05T00:00:00.000Z"),
     room: { name: "Ocean View Suite" },
   },

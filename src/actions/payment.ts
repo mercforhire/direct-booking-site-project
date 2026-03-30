@@ -10,6 +10,7 @@ import { Resend } from "resend"
 import { render } from "@react-email/render"
 import { markAsPaidSchema } from "@/lib/validations/payment"
 import { BookingPaymentConfirmationEmail } from "@/emails/booking-payment-confirmation"
+import { BookingExtensionPaidEmail } from "@/emails/booking-extension-paid"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 
 async function requireAuth() {
@@ -185,6 +186,7 @@ export async function markExtensionAsPaid(extensionId: string) {
       guestEmail: string
       guestName: string
       accessToken: string
+      checkin: Date
       room: { name: string }
     }
   }
@@ -214,11 +216,22 @@ export async function markExtensionAsPaid(extensionId: string) {
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
+    const html = await render(
+      BookingExtensionPaidEmail({
+        guestName: extension.booking.guestName,
+        roomName: extension.booking.room.name,
+        checkin: extension.booking.checkin.toISOString().slice(0, 10),
+        newCheckout: extension.requestedCheckout.toISOString().slice(0, 10),
+        extensionAmountPaid: Number(extension.extensionPrice ?? 0),
+        bookingId: extension.booking.id,
+        accessToken: extension.booking.accessToken,
+      })
+    )
     await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
       to: extension.booking.guestEmail,
-      subject: `Extension payment confirmed — ${extension.booking.room.name}`,
-      html: `<p>Hi ${extension.booking.guestName}, your extension payment has been received. New checkout: ${extension.requestedCheckout.toISOString().slice(0, 10)}.</p>`,
+      subject: `Extension confirmed — ${extension.booking.room.name}`,
+      html,
     })
   } catch (emailErr) {
     console.error("[markExtensionAsPaid] email send failed:", emailErr)

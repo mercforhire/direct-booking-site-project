@@ -71,9 +71,18 @@ export async function submitExtension(bookingId: string, data: unknown) {
   return { success: true }
 }
 
-export async function cancelExtension(bookingId: string, extensionId: string) {
+export async function cancelExtension(bookingId: string, extensionId: string, token: string | null) {
   const parsed = cancelExtensionSchema.safeParse({ extensionId })
   if (!parsed.success) return { error: parsed.error.flatten() }
+
+  // Token auth guard — guest-facing action, no Supabase session required
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: { accessToken: true },
+  })
+  if (!booking || !token || token !== booking.accessToken) {
+    return { error: "unauthorized" }
+  }
 
   try {
     await prisma.bookingExtension.delete({

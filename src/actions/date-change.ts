@@ -81,7 +81,16 @@ export async function submitDateChange(bookingId: string, data: unknown) {
   return { success: true }
 }
 
-export async function cancelDateChange(bookingId: string) {
+export async function cancelDateChange(bookingId: string, token: string | null) {
+  // Token auth guard — guest-facing action, no Supabase session required
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: { accessToken: true },
+  })
+  if (!booking || !token || token !== booking.accessToken) {
+    return { error: "unauthorized" }
+  }
+
   const pending = await prisma.bookingDateChange.findFirst({
     where: { bookingId, status: "PENDING" },
   })

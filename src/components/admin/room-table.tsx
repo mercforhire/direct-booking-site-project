@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,6 +19,7 @@ interface RoomRow {
   location: string
   baseNightlyRate: number
   isActive: boolean
+  coverPhoto: string | null
 }
 
 interface RoomTableProps {
@@ -37,6 +39,7 @@ export function RoomTable({ rooms }: RoomTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[64px]"></TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Base Rate</TableHead>
@@ -47,13 +50,28 @@ export function RoomTable({ rooms }: RoomTableProps) {
           <TableBody>
             {rooms.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                   No rooms yet. Create your first room.
                 </TableCell>
               </TableRow>
             )}
             {rooms.map((room) => (
               <TableRow key={room.id}>
+                <TableCell className="p-2">
+                  {room.coverPhoto ? (
+                    <Image
+                      src={room.coverPhoto}
+                      alt={room.name}
+                      width={56}
+                      height={48}
+                      className="rounded object-cover w-14 h-12"
+                    />
+                  ) : (
+                    <div className="w-14 h-12 rounded bg-gray-100 flex items-center justify-center text-gray-300 text-xs">
+                      No photo
+                    </div>
+                  )}
+                </TableCell>
                 <TableCell className="font-medium">{room.name}</TableCell>
                 <TableCell>{room.location}</TableCell>
                 <TableCell>${Number(room.baseNightlyRate).toFixed(2)}/night</TableCell>

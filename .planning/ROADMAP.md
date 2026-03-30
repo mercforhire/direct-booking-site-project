@@ -214,7 +214,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 09-01: TBD
+- [ ] 09-01-PLAN.md — Message Prisma model + SenderRole enum + db push + messageSchema/messageSchemaCoerced + submitMessage + sendMessageAsLandlord server actions (TDD)
+- [ ] 09-02-PLAN.md — NewMessageLandlordEmail + NewMessageGuestEmail templates + MessageSection client component (polling, send flow, comment-thread display)
+- [ ] 09-03-PLAN.md — RSC page wiring (guest + admin booking pages load and pass messages) + human verification checkpoint
 
 ## Progress
 
@@ -233,4 +235,4 @@ Note: Phases 7, 8, and 9 have independent dependencies and could be reordered. P
 | 6. Payment | 3/3 | Complete   | 2026-03-28 |
 | 7. Booking Extensions | 8/8 | Complete   | 2026-03-29 |
 | 8. Cancellations & Refunds | 8/8 | Complete   | 2026-03-29 |
-| 9. Messaging | 0/? | Not started | - |
+| 9. Messaging | 0/3 | Not started | - |

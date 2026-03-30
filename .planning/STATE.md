@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 11 context gathered
-last_updated: "2026-03-30T04:52:41.999Z"
+stopped_at: Completed 11-01-PLAN.md
+last_updated: "2026-03-30T05:22:15.951Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 15
   completed_phases: 11
-  total_plans: 52
-  completed_plans: 52
+  total_plans: 55
+  completed_plans: 53
   percent: 97
 ---
 
@@ -102,6 +102,7 @@ Progress: [█████████░] 97%
 | Phase 09-messaging P03 | 5 | 1 tasks | 4 files |
 | Phase 09-messaging P03 | 5 | 2 tasks | 4 files |
 | Phase 10-fix-guest-access-middleware P01 | 5min | 2 tasks | 3 files |
+| Phase 11-date-change-topup-auth-guards P01 | 1 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -226,6 +227,7 @@ Recent decisions affecting current work:
 - [Phase 10-fix-guest-access-middleware]: /bookings removed from middleware adminPaths — admin booking list is at /admin/bookings, bare /bookings prefix was redundant and blocked guest token access
 - [Phase 10-fix-guest-access-middleware]: notFound() replaces redirect('/guest/login') on booking page auth guard — guests with missing/invalid tokens get 404 not a login redirect loop
 - [Phase 10-fix-guest-access-middleware]: Middleware mock targets @supabase/ssr not @/lib/supabase/server — middleware inlines createServerClient directly per Phase 1.5 architectural decision
+- [Phase 11-date-change-topup-auth-guards]: BookingDateChangePaidEmail has newCheckin + newCheckout props — date change updates both dates unlike extension which only changes checkout
 
 ### Pending Todos
 
@@ -239,6 +241,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T04:52:41.995Z
-Stopped at: Phase 11 context gathered
-Resume file: .planning/phases/11-date-change-topup-auth-guards/11-CONTEXT.md
+Last session: 2026-03-30T05:22:15.948Z
+Stopped at: Completed 11-01-PLAN.md
+Resume file: None

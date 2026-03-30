@@ -108,7 +108,7 @@ export function RoomForm({ room }: RoomFormProps) {
       return
     }
 
-    router.push("/rooms")
+    router.push("/admin/rooms")
   }
 
   async function handleDelete() {
@@ -116,7 +116,7 @@ export function RoomForm({ room }: RoomFormProps) {
     if (!confirm("Are you sure you want to delete this room? This cannot be undone.")) return
     setIsDeleting(true)
     await deleteRoom(room.id)
-    router.push("/rooms")
+    router.push("/admin/rooms")
   }
 
   return (
@@ -396,7 +396,7 @@ export function RoomForm({ room }: RoomFormProps) {
             <Button type="submit" disabled={form.formState.isSubmitting}>
               {form.formState.isSubmitting ? "Saving..." : "Save Room"}
             </Button>
-            <Button type="button" variant="outline" onClick={() => router.push("/rooms")}>
+            <Button type="button" variant="outline" onClick={() => router.push("/admin/rooms")}>
               Cancel
             </Button>
           </div>

@@ -34,6 +34,7 @@ export async function createRoom(data: unknown) {
     return created
   })
   revalidatePath("/rooms")
+  revalidatePath("/admin/rooms")
   return { room }
 }
 
@@ -54,6 +55,8 @@ export async function updateRoom(id: string, data: unknown) {
   })
   revalidatePath("/rooms")
   revalidatePath(`/rooms/${id}`)
+  revalidatePath("/admin/rooms")
+  revalidatePath(`/admin/rooms/${id}`)
   return { room }
 }
 
@@ -61,5 +64,6 @@ export async function deleteRoom(id: string) {
   await requireAuth()
   await prisma.room.delete({ where: { id } })
   revalidatePath("/rooms")
+  revalidatePath("/admin/rooms")
   return { success: true }
 }

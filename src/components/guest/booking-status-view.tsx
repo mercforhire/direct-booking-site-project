@@ -327,6 +327,7 @@ export function BookingStatusView({
         <DateChangeSection
           booking={{ id: booking.id, status: booking.status, checkin: booking.checkin, checkout: booking.checkout }}
           activeDateChange={activeDateChange ?? null}
+          token={token}
         />
       )}
 

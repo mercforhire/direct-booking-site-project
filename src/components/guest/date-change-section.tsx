@@ -27,6 +27,7 @@ type Props = {
     checkout: string  // ISO string
   }
   activeDateChange: SerializedDateChange | null
+  token: string | null
 }
 
 function formatDate(iso: string): string {
@@ -40,7 +41,7 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
-export function DateChangeSection({ booking, activeDateChange }: Props) {
+export function DateChangeSection({ booking, activeDateChange, token }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [requestedCheckin, setRequestedCheckin] = useState("")
   const [requestedCheckout, setRequestedCheckout] = useState("")
@@ -95,7 +96,7 @@ export function DateChangeSection({ booking, activeDateChange }: Props) {
 
   function handleCancel() {
     startTransition(async () => {
-      await cancelDateChange(booking.id)
+      await cancelDateChange(booking.id, token)
     })
   }
 

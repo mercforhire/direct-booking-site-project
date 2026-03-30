@@ -1,7 +1,7 @@
 "use client"
 
 // v1.0: booking extensions disabled — reserved for a future version
-export function ExtensionSection() { return null }
+export function ExtensionSection({ token: _token }: { token?: string | null }) { return null }
 export default ExtensionSection
 
 import { useState, useTransition } from "react"
@@ -46,6 +46,7 @@ type Props = {
   activeExtension: SerializedExtension | null
   blockedDates: string[]
   etransferEmail: string | null
+  token?: string | null
 }
 
 function formatDate(iso: string): string {
@@ -64,6 +65,7 @@ export function ExtensionSection({
   activeExtension,
   blockedDates,
   etransferEmail,
+  token,
 }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
@@ -100,7 +102,7 @@ export function ExtensionSection({
 
   function handleCancel(extensionId: string) {
     startTransition(async () => {
-      await cancelExtension(booking.id, extensionId)
+      await cancelExtension(booking.id, extensionId, token ?? null)
     })
   }
 

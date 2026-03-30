@@ -24,7 +24,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 9: Messaging** - Booking-scoped text messaging between guest and landlord with email notifications (completed 2026-03-30)
 - [x] **Phase 10: Fix Guest Access Middleware** - Fix P0 middleware regression blocking token-only guests from /bookings/[id]; also protect /availability admin route (Gap closure) (completed 2026-03-30)
 - [x] **Phase 11: Date Change Top-Up + Action Auth Guards** - Handle ?date_change_paid=1 page param, send confirmation email after date change payment, add auth guards to cancelDateChange/cancelExtension (Gap closure) (completed 2026-03-30)
-- [ ] **Phase 12: Email & Environment Consistency** - Standardize EMAIL_FROM env var, add missing vars to .env.local.example, convert markExtensionAsPaid to React Email template, remove dead BookingPaidEmail file (Gap closure)
+- [x] **Phase 12: Email & Environment Consistency** - Standardize EMAIL_FROM env var, add missing vars to .env.local.example, convert markExtensionAsPaid to React Email template, remove dead BookingPaidEmail file (Gap closure) (completed 2026-03-30)
 - [ ] **Phase 13: Fix Stale Unit Tests** - Update booking.test.ts mocks to match Phase 6 adminClient.auth.admin.createUser pattern; fix redirect assertion (Gap closure)
 - [ ] **Phase 14: Force Eastern Time (ET)** - Pin all date/time display and serialization to Eastern Time throughout the app — admin calendar, guest calendar, booking pages, emails (Gap closure)
 
@@ -268,7 +268,7 @@ Plans:
   3. `markExtensionAsPaid` sends a React Email template (not raw HTML string)
   4. `src/emails/booking-paid.tsx` is deleted (never imported, dead file)
 
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
 - [ ] 12-01-PLAN.md — Env var unification (EMAIL_FROM -> RESEND_FROM_EMAIL), .env.local.example additions, markExtensionAsPaid React Email upgrade, delete booking-paid.tsx
@@ -316,6 +316,6 @@ Note: Gap closure phases 10-14 are independent of each other and can be executed
 | 9. Messaging | 3/3 | Complete   | 2026-03-30 |
 | 10. Fix Guest Access Middleware | 1/1 | Complete    | 2026-03-30 |
 | 11. Date Change Top-Up + Auth Guards | 3/3 | Complete    | 2026-03-30 |
-| 12. Email & Environment Consistency | 0/1 | Pending |  |
+| 12. Email & Environment Consistency | 1/1 | Complete   | 2026-03-30 |
 | 13. Fix Stale Unit Tests | 0/0 | Pending |  |
 | 14. Force Eastern Time (ET) | 0/0 | Pending |  |

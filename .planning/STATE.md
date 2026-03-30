@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 12 context gathered
-last_updated: "2026-03-30T17:17:17.095Z"
+stopped_at: Completed 12-email-env-consistency-12-01-PLAN.md
+last_updated: "2026-03-30T17:29:29.765Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 15
-  completed_phases: 12
-  total_plans: 55
-  completed_plans: 55
+  completed_phases: 13
+  total_plans: 56
+  completed_plans: 56
   percent: 97
 ---
 
@@ -105,6 +105,7 @@ Progress: [█████████░] 97%
 | Phase 11-date-change-topup-auth-guards P01 | 1 | 2 tasks | 2 files |
 | Phase 11-date-change-topup-auth-guards P02 | 12 | 2 tasks | 4 files |
 | Phase 11-date-change-topup-auth-guards P03 | 4min | 2 tasks | 7 files |
+| Phase 12-email-env-consistency P01 | 2 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -234,6 +235,8 @@ Recent decisions affecting current work:
 - [Phase 11-date-change-topup-auth-guards]: SerializedDateChange.status extended to include PAID — required for page fallback and DateChangeSection PAID branch
 - [Phase 11-date-change-topup-auth-guards]: cancelDateChange token check placed before PENDING date change lookup — booking auth guard evaluated first
 - [Phase 11-date-change-topup-auth-guards]: cancelExtension token check placed after schema parse and before delete — schema validates input shape first, then auth guard
+- [Phase 12-email-env-consistency]: Subject line standardized to 'Extension confirmed — {room}' to match Stripe webhook branch (was 'Extension payment confirmed')
+- [Phase 12-email-env-consistency]: EMAIL_FROM documented as deprecated in .env.local.example — all actions now use RESEND_FROM_EMAIL
 
 ### Pending Todos
 
@@ -247,6 +250,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T17:17:17.091Z
-Stopped at: Phase 12 context gathered
-Resume file: .planning/phases/12-email-env-consistency/12-CONTEXT.md
+Last session: 2026-03-30T17:29:29.762Z
+Stopped at: Completed 12-email-env-consistency-12-01-PLAN.md
+Resume file: None

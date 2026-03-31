@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 16 context gathered
-last_updated: "2026-03-31T05:27:48.270Z"
-last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
+status: executing
+stopped_at: Completed 16-01-PLAN.md
+last_updated: "2026-03-31T16:30:33.387Z"
+last_activity: 2026-03-31
 progress:
   total_phases: 17
   completed_phases: 15
-  total_plans: 65
-  completed_plans: 65
+  total_plans: 68
+  completed_plans: 66
   percent: 97
 ---
 
@@ -21,20 +21,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** Repeat guests can book a room directly with the landlord without going through Airbnb, saving both parties on platform fees.
-**Current focus:** Phase 3: Booking Requests
+**Current focus:** Phase 16 — guest-booking-history
 
 ## Current Position
 
-Phase: 3 of 9 (Booking Requests)
-Plan: 0 of ? in current phase
-Status: Ready to plan
-Last activity: 2026-03-26 — Phase 2 availability management fully verified and complete
+Phase: 16 (guest-booking-history) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-03-31
 
 Progress: [█████████░] 97%
 
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed: 0
 - Average duration: -
 - Total execution time: 0 hours
@@ -46,6 +47,7 @@ Progress: [█████████░] 97%
 | - | - | - | - |
 
 **Recent Trend:**
+
 - Last 5 plans: -
 - Trend: -
 
@@ -115,6 +117,7 @@ Progress: [█████████░] 97%
 | Phase 15-per-day-pricing P04 | 15 | 2 tasks | 3 files |
 | Phase 15-per-day-pricing P05 | 5 | 2 tasks | 3 files |
 | Phase 15-per-day-pricing P06 | 15 | 2 tasks | 2 files |
+| Phase 16-guest-booking-history P01 | 1 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -267,6 +270,7 @@ Recent decisions affecting current work:
 - [Phase 15-per-day-pricing]: confirmedPrice in admin approval pre-populated from String(booking.estimatedTotal) — estimatedTotal is the per-day sum stored verbatim by submitBooking
 - [Phase 15-per-day-pricing]: clearRangePriceOverride added as separate server action — keeps action contracts explicit and type-safe
 - [Phase 15-per-day-pricing]: Clear Range Price button placed at same level as Set Range Price — both options visible before opening price input
+- [Phase 16-guest-booking-history]: Removed Prisma query from /my-booking — all paths redirect to /my-bookings list page which handles empty state itself
 
 ### Pending Todos
 
@@ -280,6 +284,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T05:27:48.267Z
-Stopped at: Phase 16 context gathered
-Resume file: .planning/phases/16-guest-booking-history/16-CONTEXT.md
+Last session: 2026-03-31T16:30:33.383Z
+Stopped at: Completed 16-01-PLAN.md
+Resume file: None

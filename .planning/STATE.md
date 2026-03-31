@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 15-per-day-pricing 15-04-PLAN.md
-last_updated: "2026-03-31T03:57:27.971Z"
+stopped_at: Completed 15-per-day-pricing 15-05-PLAN.md
+last_updated: "2026-03-31T04:01:35.470Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 16
   completed_phases: 14
   total_plans: 65
-  completed_plans: 63
+  completed_plans: 64
   percent: 97
 ---
 
@@ -113,6 +113,7 @@ Progress: [█████████░] 97%
 | Phase 15-per-day-pricing P02 | 1 | 1 tasks | 1 files |
 | Phase 15-per-day-pricing P03 | 2 | 1 tasks | 1 files |
 | Phase 15-per-day-pricing P04 | 15 | 2 tasks | 3 files |
+| Phase 15-per-day-pricing P05 | 5 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -260,6 +261,8 @@ Recent decisions affecting current work:
 - [Phase 15-per-day-pricing]: pricing.ts separate from availability.ts — keeps blocked-date concerns separate from price override concerns
 - [Phase 15-per-day-pricing]: Inline edit panel is a plain positioned div below the calendar — avoids positioning complexity on mobile
 - [Phase 15-per-day-pricing]: priceOverrideMap and baseNightlyRate kept fresh in DayButton useCallback via refs to avoid stale closure without breaking memoization
+- [Phase 15-per-day-pricing]: perDayRates fetched for entire room in booking RSC (not date-range-filtered) and passed as serialized prop to BookingForm — avoids re-fetching when guest changes dates
+- [Phase 15-per-day-pricing]: confirmedPrice in admin approval pre-populated from String(booking.estimatedTotal) — estimatedTotal is the per-day sum stored verbatim by submitBooking
 
 ### Pending Todos
 
@@ -273,6 +276,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T03:57:27.968Z
-Stopped at: Completed 15-per-day-pricing 15-04-PLAN.md
+Last session: 2026-03-31T04:01:35.466Z
+Stopped at: Completed 15-per-day-pricing 15-05-PLAN.md
 Resume file: None

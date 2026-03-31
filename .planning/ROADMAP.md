@@ -347,9 +347,11 @@ Plans:
 ### Phase 16: Guest Booking History
 
 **Goal:** Home page shows a guest login link; authenticated guests can view a page listing their past and upcoming bookings
-**Requirements**: TBD
+**Requirements**: HIST-01, HIST-02, HIST-03, HIST-04
 **Depends on:** Phase 15
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 16 to break down)
+- [ ] 16-01-PLAN.md — Home page returning-guest section + /my-booking redirect update
+- [ ] 16-02-PLAN.md — /my-bookings RSC page with booking history list (auth-gated, personalised heading, upcoming/past sections, booking cards)
+- [ ] 16-03-PLAN.md — Full test suite run + 6-scenario human verification checkpoint

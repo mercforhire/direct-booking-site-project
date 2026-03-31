@@ -118,3 +118,41 @@ describe("calculatePriceEstimate", () => {
     expect(result!.total).toBe(462)
   })
 })
+
+// NOTE: These tests will be RED until Plan 02 adds perDayRates support to calculatePriceEstimate
+// and PriceInput. This is intentional — the describe block establishes the contract.
+describe("calculatePriceEstimate with perDayRates", () => {
+  // 3-night stay: 2025-06-01 to 2025-06-04, rates per night: 200, 150, 175
+  const basePerDayInput = {
+    ...baseInput,
+    perDayRates: { "2025-06-01": 200, "2025-06-02": 150, "2025-06-03": 175 },
+  } as unknown as PriceInput & { perDayRates: Record<string, number> }
+
+  it("nightlyTotal = sum of per-night rates (200 + 150 + 175 = 525) for 3-night stay", () => {
+    const result = calculatePriceEstimate(basePerDayInput as unknown as PriceInput)
+    expect(result).not.toBeNull()
+    expect(result!.nightlyTotal).toBe(525)
+  })
+
+  it("nights count is still 3 when perDayRates are provided", () => {
+    const result = calculatePriceEstimate(basePerDayInput as unknown as PriceInput)
+    expect(result!.nights).toBe(3)
+  })
+
+  it("partial perDayRates: only '2025-06-01': 200 provided, others fall back to baseNightlyRate (120); nightlyTotal = 200 + 120 + 120 = 440", () => {
+    const partialInput = {
+      ...baseInput,
+      perDayRates: { "2025-06-01": 200 },
+    } as unknown as PriceInput
+    const result = calculatePriceEstimate(partialInput)
+    expect(result).not.toBeNull()
+    expect(result!.nightlyTotal).toBe(440)
+  })
+
+  it("perDayRates undefined → nightlyTotal = nights * baseNightlyRate = 3 * 120 = 360 (regression)", () => {
+    // No perDayRates — should behave exactly like existing scalar path
+    const result = calculatePriceEstimate(baseInput)
+    expect(result).not.toBeNull()
+    expect(result!.nightlyTotal).toBe(360)
+  })
+})

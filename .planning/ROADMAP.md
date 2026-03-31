@@ -327,7 +327,7 @@ Note: Gap closure phases 10-14 are independent of each other and can be executed
 | 12. Email & Environment Consistency | 1/1 | Complete    | 2026-03-30 |
 | 13. Fix Stale Unit Tests | 0/0 | Complete    | 2026-03-30 |
 | 14. Force Eastern Time (ET) | 3/3 | Complete    | 2026-03-30 |
-| 15. Per-Day Pricing | 6/6 | Complete   | 2026-03-31 |
+| 15. Per-Day Pricing | 6/6 | Complete    | 2026-03-31 |
 
 ### Phase 15: Per-Day Pricing
 **Goal:** Admin can view and override the nightly price for any individual date in the availability calendar; dates with no override use the room's Base Nightly Rate by default

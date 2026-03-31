@@ -28,7 +28,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 13: Fix Stale Unit Tests** - Update booking.test.ts mocks to match Phase 6 adminClient.auth.admin.createUser pattern; fix redirect assertion (Gap closure) (completed 2026-03-30)
 - [x] **Phase 14: Force Eastern Time (ET)** - Pin all date/time display and serialization to Eastern Time throughout the app — admin calendar, guest calendar, booking pages, emails (Gap closure) (completed 2026-03-30)
 - [x] **Phase 15: Per-Day Pricing** - Admin can view and override the nightly price per individual date in the availability calendar; per-day rates feed into guest booking price estimate (completed 2026-03-31)
-- [ ] **Phase 16: Guest Booking History** - Home page guest login link; authenticated guests can view past and upcoming bookings
+- [x] **Phase 16: Guest Booking History** - Home page guest login link; authenticated guests can view past and upcoming bookings (completed 2026-03-31)
 
 ## Phase Details
 
@@ -349,9 +349,9 @@ Plans:
 **Goal:** Home page shows a guest login link; authenticated guests can view a page listing their past and upcoming bookings
 **Requirements**: HIST-01, HIST-02, HIST-03, HIST-04
 **Depends on:** Phase 15
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 16-01-PLAN.md — Home page returning-guest section + /my-booking redirect update
 - [x] 16-02-PLAN.md — /my-bookings RSC page with booking history list (auth-gated, personalised heading, upcoming/past sections, booking cards)
-- [ ] 16-03-PLAN.md — Full test suite run + 6-scenario human verification checkpoint
+- [x] 16-03-PLAN.md — Full test suite run + 6-scenario human verification checkpoint

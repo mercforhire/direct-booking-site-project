@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useCallback } from "react"
+import { useRef, useCallback, useEffect } from "react"
 import { DayPicker, type DayButtonProps } from "react-day-picker"
 import "react-day-picker/style.css"
 
@@ -12,6 +12,9 @@ interface AvailabilityCalendarProps {
   rangeStart: Date | undefined
   rangeEnd: Date | undefined
   isSaving: boolean
+  // NEW:
+  priceOverrideMap: Record<string, number>
+  baseNightlyRate: number
 }
 
 /** Returns all dates strictly between two dates (exclusive of both endpoints). */
@@ -37,6 +40,8 @@ export function AvailabilityCalendar({
   rangeStart,
   rangeEnd,
   isSaving,
+  priceOverrideMap,
+  baseNightlyRate,
 }: AvailabilityCalendarProps) {
   const rangeMidDates =
     rangeStart && rangeEnd ? getDatesInRange(rangeStart, rangeEnd) : []
@@ -62,6 +67,12 @@ export function AvailabilityCalendar({
   const dragStart = useRef<Date | null>(null)
   const dragEnd = useRef<Date | null>(null)
 
+  // Refs to keep priceOverrideMap and baseNightlyRate fresh inside the DayButton useCallback
+  const priceOverrideMapRef = useRef(priceOverrideMap)
+  const baseNightlyRateRef = useRef(baseNightlyRate)
+  useEffect(() => { priceOverrideMapRef.current = priceOverrideMap }, [priceOverrideMap])
+  useEffect(() => { baseNightlyRateRef.current = baseNightlyRate }, [baseNightlyRate])
+
   const handleDragStart = useCallback((date: Date) => {
     isDragging.current = true
     dragStart.current = date
@@ -81,7 +92,7 @@ export function AvailabilityCalendar({
     // dragStart/dragEnd already committed via onRangeSelect during move
   }, [])
 
-  // Custom DayButton that adds drag + touch handlers
+  // Custom DayButton that adds drag + touch handlers and price badge
   const DayButton = useCallback(({ children, modifiers: _m, day, ...props }: DayButtonProps) => {
     const date = day.date
 
@@ -120,11 +131,16 @@ export function AvailabilityCalendar({
     const y = date.getFullYear()
     const m = String(date.getMonth() + 1).padStart(2, "0")
     const d = String(date.getDate()).padStart(2, "0")
+    const dateKey = `${y}-${m}-${d}`
+
+    const isBlocked = !!_m.blocked
+    const overridePrice = priceOverrideMapRef.current[dateKey]
+    const displayPrice = overridePrice ?? baseNightlyRateRef.current
 
     return (
       <button
         {...props}
-        data-drag-date={`${y}-${m}-${d}`}
+        data-drag-date={dateKey}
         onMouseDown={onMouseDown}
         onMouseEnter={onMouseEnter}
         onMouseUp={onMouseUp}
@@ -133,6 +149,15 @@ export function AvailabilityCalendar({
         onTouchEnd={onTouchEnd}
       >
         {children}
+        {!isBlocked && (
+          <span className={
+            overridePrice !== undefined
+              ? "block text-[9px] font-semibold text-blue-600 leading-tight"
+              : "block text-[9px] text-gray-400 leading-tight"
+          }>
+            ${displayPrice}
+          </span>
+        )}
       </button>
     )
   }, [handleDragStart, handleDragMove, handleDragEnd])

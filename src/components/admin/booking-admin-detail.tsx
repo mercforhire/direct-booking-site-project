@@ -130,7 +130,9 @@ export function BookingAdminDetail({
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [confirmedPrice, setConfirmedPrice] = useState("")
+  const [confirmedPrice, setConfirmedPrice] = useState(
+    String(booking.estimatedTotal)
+  )
   const [declineReason, setDeclineReason] = useState("")
   const [approveError, setApproveError] = useState<string | null>(null)
   const [declineError, setDeclineError] = useState<string | null>(null)

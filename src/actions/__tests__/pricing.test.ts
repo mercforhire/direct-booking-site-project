@@ -31,13 +31,13 @@ describe("setDatePriceOverride", () => {
       id: "dpo-1",
       roomId: ROOM_ID,
       date: new Date("2026-05-01T12:00:00.000Z"),
-      price: 150 as unknown as ReturnType<typeof mockPrisma.datePriceOverride.upsert>,
-    })
+      price: 150,
+    } as any)
 
     await setDatePriceOverride(ROOM_ID, "2026-05-01", 150)
 
     expect(mockPrisma.datePriceOverride.upsert).toHaveBeenCalledOnce()
-    const callArgs = mockPrisma.datePriceOverride.upsert.mock.calls[0][0]
+    const callArgs = mockPrisma.datePriceOverride.upsert.mock.calls[0][0] as any
     const usedDate: Date = callArgs.where.roomId_date.date
     expect(usedDate.toISOString()).toBe("2026-05-01T12:00:00.000Z")
   })
@@ -56,7 +56,7 @@ describe("clearDatePriceOverride", () => {
     await clearDatePriceOverride(ROOM_ID, "2026-05-01")
 
     expect(mockPrisma.datePriceOverride.deleteMany).toHaveBeenCalledOnce()
-    const callArgs = mockPrisma.datePriceOverride.deleteMany.mock.calls[0][0]
+    const callArgs = mockPrisma.datePriceOverride.deleteMany.mock.calls[0][0] as any
     const usedDate: Date = callArgs.where.date
     expect(usedDate.toISOString()).toBe("2026-05-01T12:00:00.000Z")
   })
@@ -83,7 +83,7 @@ describe("setRangePriceOverride", () => {
 
     // deleteMany called with the range dates
     expect(mockPrisma.datePriceOverride.deleteMany).toHaveBeenCalledOnce()
-    const deleteManyArgs = mockPrisma.datePriceOverride.deleteMany.mock.calls[0][0]
+    const deleteManyArgs = mockPrisma.datePriceOverride.deleteMany.mock.calls[0][0] as any
     expect(deleteManyArgs).toMatchObject({
       where: {
         roomId: ROOM_ID,
@@ -102,7 +102,7 @@ describe("setRangePriceOverride", () => {
 
     // createMany called with 3 rows at price 150
     expect(mockPrisma.datePriceOverride.createMany).toHaveBeenCalledOnce()
-    const createManyArgs = mockPrisma.datePriceOverride.createMany.mock.calls[0][0]
+    const createManyArgs = mockPrisma.datePriceOverride.createMany.mock.calls[0][0] as any
     const data: Array<{ roomId: string; date: Date; price: number }> = createManyArgs.data
     expect(data).toHaveLength(3)
     expect(data[0].date.toISOString()).toBe("2026-05-01T12:00:00.000Z")

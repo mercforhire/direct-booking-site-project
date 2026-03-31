@@ -60,7 +60,8 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
-export function ExtensionSection({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function _ExtensionSectionFull({
   booking,
   activeExtension,
   blockedDates,

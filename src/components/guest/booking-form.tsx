@@ -39,6 +39,7 @@ interface BookingFormProps {
   room: BookingFormRoom
   settings: BookingFormSettings
   blockedDateStrings: string[]
+  perDayRates?: Record<string, number>
   defaultCheckin?: string
   defaultCheckout?: string
   defaultGuests?: number
@@ -48,6 +49,7 @@ export function BookingForm({
   room,
   settings,
   blockedDateStrings,
+  perDayRates,
   defaultCheckin,
   defaultCheckout,
   defaultGuests = 1,
@@ -120,6 +122,7 @@ export function BookingForm({
       baseGuests: room.baseGuests,
       serviceFeePercent: settings.serviceFeePercent,
       depositAmount: settings.depositAmount,
+      perDayRates,
     })
   }, [
     checkin,
@@ -133,6 +136,7 @@ export function BookingForm({
     room.baseGuests,
     settings.serviceFeePercent,
     settings.depositAmount,
+    perDayRates,
   ])
 
   // Keep estimatedTotal in sync with the live estimate

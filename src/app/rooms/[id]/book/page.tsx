@@ -65,6 +65,16 @@ export default async function BookPage({
     b.date.toISOString().slice(0, 10)
   )
 
+  // Fetch all price overrides for this room (covers any date the guest may select)
+  const rawPriceOverrides = await prisma.datePriceOverride.findMany({
+    where: { roomId: room.id },
+    select: { date: true, price: true },
+  })
+  const perDayRates: Record<string, number> = {}
+  for (const o of rawPriceOverrides) {
+    perDayRates[o.date.toISOString().slice(0, 10)] = Number(o.price)
+  }
+
   const coverPhoto = room.photos[0]?.url ?? null
 
   return (
@@ -106,6 +116,7 @@ export default async function BookPage({
         }}
         settings={{ serviceFeePercent, depositAmount }}
         blockedDateStrings={blockedDateStrings}
+        perDayRates={perDayRates}
         defaultCheckin={checkin}
         defaultCheckout={checkout}
         defaultGuests={guests ? parseInt(guests, 10) : 1}

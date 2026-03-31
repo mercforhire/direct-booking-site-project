@@ -36,8 +36,9 @@ export function BookingPriceSummary({
         {/* Nightly rate */}
         <div className="flex justify-between">
           <span>
-            ${baseNightlyRate.toFixed(2)} &times; {estimate.nights}{" "}
-            {estimate.nights === 1 ? "night" : "nights"}
+            {estimate.nightlyTotal === baseNightlyRate * estimate.nights
+              ? `$${baseNightlyRate.toFixed(2)} \u00d7 ${estimate.nights} ${estimate.nights === 1 ? "night" : "nights"}`
+              : `${estimate.nights} ${estimate.nights === 1 ? "night" : "nights"} (per-day pricing)`}
           </span>
           <span>${estimate.nightlyTotal.toFixed(2)}</span>
         </div>

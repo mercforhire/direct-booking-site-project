@@ -218,6 +218,8 @@ export function BookingForm({
               maxStayNights={room.maxStayNights}
               value={dateRangeValue}
               onChange={handleDateRangeChange}
+              perDayRates={perDayRates}
+              baseNightlyRate={room.baseNightlyRate}
             />
             <div className="mt-4 max-w-xs">
               <Label htmlFor="numGuests" className="text-sm font-medium">

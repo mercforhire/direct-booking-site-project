@@ -1,6 +1,7 @@
 "use client"
 
-import { DayPicker, type DateRange } from "react-day-picker"
+import { useCallback, useRef, useEffect } from "react"
+import { DayPicker, type DateRange, type DayButtonProps } from "react-day-picker"
 import "react-day-picker/style.css"
 import { addMonths } from "date-fns"
 
@@ -11,6 +12,8 @@ interface BookingRangePickerProps {
   maxStayNights: number
   value: DateRange | undefined
   onChange: (range: DateRange | undefined) => void
+  perDayRates?: Record<string, number>
+  baseNightlyRate?: number
 }
 
 export function BookingRangePicker({
@@ -20,6 +23,8 @@ export function BookingRangePicker({
   maxStayNights,
   value,
   onChange,
+  perDayRates,
+  baseNightlyRate,
 }: BookingRangePickerProps) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -28,6 +33,40 @@ export function BookingRangePicker({
 
   // Parse each blocked date string as local midnight — prevents UTC off-by-one
   const blockedDates = blockedDateStrings.map((s) => new Date(s + "T00:00:00"))
+
+  // Refs keep price data fresh inside the memoised DayButton
+  const perDayRatesRef = useRef(perDayRates)
+  const baseNightlyRateRef = useRef(baseNightlyRate)
+  useEffect(() => { perDayRatesRef.current = perDayRates }, [perDayRates])
+  useEffect(() => { baseNightlyRateRef.current = baseNightlyRate }, [baseNightlyRate])
+
+  const DayButton = useCallback(({ children, modifiers: _m, day, ...props }: DayButtonProps) => {
+    const date = day.date
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, "0")
+    const d = String(date.getDate()).padStart(2, "0")
+    const dateKey = `${y}-${m}-${d}`
+
+    const isBlocked = !!_m.blocked || !!_m.disabled
+    const base = baseNightlyRateRef.current
+    const override = perDayRatesRef.current?.[dateKey]
+    const displayPrice = override ?? base
+
+    return (
+      <button {...props}>
+        {children}
+        {!isBlocked && displayPrice !== undefined && (
+          <span className={
+            override !== undefined
+              ? "block text-[9px] font-semibold text-blue-600 leading-tight"
+              : "block text-[9px] text-gray-400 leading-tight"
+          }>
+            ${displayPrice}
+          </span>
+        )}
+      </button>
+    )
+  }, [])
 
   return (
     <DayPicker
@@ -40,6 +79,7 @@ export function BookingRangePicker({
       excludeDisabled
       modifiers={{ blocked: blockedDates }}
       modifiersClassNames={{ blocked: "line-through opacity-50" }}
+      components={{ DayButton }}
     />
   )
 }

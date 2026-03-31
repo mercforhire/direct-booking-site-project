@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 15-per-day-pricing 15-01-PLAN.md
-last_updated: "2026-03-31T03:46:10.046Z"
+stopped_at: Completed 15-per-day-pricing 15-02-PLAN.md
+last_updated: "2026-03-31T03:49:08.771Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 16
   completed_phases: 14
   total_plans: 65
-  completed_plans: 60
+  completed_plans: 61
   percent: 97
 ---
 
@@ -110,6 +110,7 @@ Progress: [█████████░] 97%
 | Phase 14-force-eastern-time P02 | 3 | 2 tasks | 10 files |
 | Phase 14-force-eastern-time P03 | 3 | 2 tasks | 8 files |
 | Phase 15-per-day-pricing P01 | 3min | 2 tasks | 3 files |
+| Phase 15-per-day-pricing P02 | 1 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -252,6 +253,7 @@ Recent decisions affecting current work:
 - [Phase 14-force-eastern-time]: All email date props now use formatDateET (output: 'Fri, May 1, 2026' in ET); Stripe product name strings left as YYYY-MM-DD (internal-only)
 - [Phase 15-per-day-pricing]: DatePriceOverride uses noon-UTC (T12:00:00.000Z) for all DB date writes — consistent with Phase 14 noon-UTC pattern for BlockedDate
 - [Phase 15-per-day-pricing]: Wave 0 test stubs import from @/actions/pricing (nonexistent until Plan 03) — intentional RED state to establish action contracts before implementation
+- [Phase 15-per-day-pricing]: perDayRates is optional on PriceInput — no breaking change to existing callers
 
 ### Pending Todos
 
@@ -265,6 +267,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T03:46:10.041Z
-Stopped at: Completed 15-per-day-pricing 15-01-PLAN.md
+Last session: 2026-03-31T03:49:08.768Z
+Stopped at: Completed 15-per-day-pricing 15-02-PLAN.md
 Resume file: None

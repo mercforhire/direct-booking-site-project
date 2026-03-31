@@ -204,10 +204,40 @@ function BookingsTable({ bookings }: { bookings: SerializedBooking[] }) {
   )
 }
 
-export function BookingAdminList({ bookings }: { bookings: SerializedBooking[] }) {
+function SectionTable({ bookings, emptyLabel }: { bookings: SerializedBooking[]; emptyLabel: string }) {
+  if (bookings.length === 0) {
+    return (
+      <div className="py-6 text-center text-sm text-muted-foreground">{emptyLabel}</div>
+    )
+  }
+  return <BookingsTable bookings={bookings} />
+}
+
+export function BookingAdminList({ bookings, todayET }: { bookings: SerializedBooking[]; todayET: string }) {
+  const actionRequired = bookings.filter(
+    (b) => b.status === "PENDING" || b.status === "APPROVED"
+  )
+
+  const currentlyStaying = bookings.filter(
+    (b) => b.status === "PAID" && b.checkin.slice(0, 10) <= todayET && todayET <= b.checkout.slice(0, 10)
+  )
+
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-6 space-y-8">
       <h1 className="text-2xl font-bold">Bookings</h1>
+
+      <section className="space-y-2">
+        <h2 className="text-lg font-semibold">Action Required</h2>
+        <SectionTable bookings={actionRequired} emptyLabel="No bookings require action." />
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-lg font-semibold">Currently Staying</h2>
+        <SectionTable bookings={currentlyStaying} emptyLabel="No guests currently staying." />
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-lg font-semibold">All Bookings</h2>
       <Tabs defaultValue="all">
         <TabsList className="flex-wrap h-auto gap-1">
           {STATUS_TABS.map((tab) => (
@@ -236,6 +266,7 @@ export function BookingAdminList({ bookings }: { bookings: SerializedBooking[] }
           )
         })}
       </Tabs>
+      </section>
     </div>
   )
 }

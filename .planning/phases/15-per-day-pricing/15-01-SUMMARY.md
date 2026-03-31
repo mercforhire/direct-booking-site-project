@@ -68,7 +68,7 @@ Each task was committed atomically:
 1. **Task 1: Add DatePriceOverride model to Prisma schema and push to DB** - `de0c5c5` (feat)
 2. **Task 2: Create Wave 0 test stubs — RED tests for pricing actions and perDayRates** - `740efc5` (test)
 
-**Plan metadata:** (to be added after final commit)
+**Plan metadata:** `18f9c2f` (docs: complete plan)
 
 ## Files Created/Modified
 - `prisma/schema.prisma` - DatePriceOverride model added, priceOverrides relation on Room

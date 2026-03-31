@@ -29,5 +29,7 @@ export default async function BookingsPage() {
       .reduce((sum, e) => sum + Number(e.extensionPrice), 0),
   }))
 
-  return <BookingAdminList bookings={serialized} />
+  const todayET = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" })
+
+  return <BookingAdminList bookings={serialized} todayET={todayET} />
 }

@@ -29,6 +29,22 @@ export default async function AvailabilityPage({
       ).map((b) => b.date.toISOString().slice(0, 10))
     : []
 
+  // Query price overrides for the selected room
+  const rawPriceOverrides = selectedRoom
+    ? await prisma.datePriceOverride.findMany({
+        where: { roomId: selectedRoom.id },
+        select: { date: true, price: true },
+      })
+    : []
+
+  const priceOverrideMap: Record<string, number> = {}
+  for (const o of rawPriceOverrides) {
+    priceOverrideMap[o.date.toISOString().slice(0, 10)] = Number(o.price)
+  }
+
+  // Serialize baseNightlyRate to number (Decimal cannot cross RSC boundary)
+  const baseNightlyRate = selectedRoom ? Number(selectedRoom.baseNightlyRate) : 0
+
   const roomsForClient = rooms.map((r) => ({ id: r.id, name: r.name }))
 
   const selectedRoomForClient = selectedRoom
@@ -52,6 +68,8 @@ export default async function AvailabilityPage({
           rooms={roomsForClient}
           selectedRoom={selectedRoomForClient}
           blockedDateStrings={blockedDateStrings}
+          priceOverrideMap={priceOverrideMap}
+          baseNightlyRate={baseNightlyRate}
         />
       </div>
     </div>

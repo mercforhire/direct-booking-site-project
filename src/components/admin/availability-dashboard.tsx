@@ -9,12 +9,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
 import { AvailabilityCalendar } from "@/components/admin/availability-calendar"
 import { AvailabilitySettingsPanel } from "@/components/admin/availability-settings-panel"
 import {
   toggleBlockedDate,
   saveBlockedRange,
 } from "@/actions/availability"
+import {
+  setDatePriceOverride,
+  clearDatePriceOverride,
+  setRangePriceOverride,
+} from "@/actions/pricing"
 
 /**
  * Format a Date to a YYYY-MM-DD string using LOCAL timezone.
@@ -41,12 +47,16 @@ interface AvailabilityDashboardProps {
   rooms: { id: string; name: string }[]
   selectedRoom: RoomForAvailability | null
   blockedDateStrings: string[]
+  priceOverrideMap: Record<string, number>
+  baseNightlyRate: number
 }
 
 export function AvailabilityDashboard({
   rooms,
   selectedRoom,
   blockedDateStrings,
+  priceOverrideMap,
+  baseNightlyRate,
 }: AvailabilityDashboardProps) {
   const router = useRouter()
 
@@ -68,6 +78,21 @@ export function AvailabilityDashboard({
   const [localBlockedDates, setLocalBlockedDates] = useState<Date[]>(() =>
     blockedDateStrings.map((s) => new Date(s + "T00:00:00"))
   )
+
+  // Optimistic local state for price overrides — mirrors localBlockedDates pattern
+  const [localPriceOverrides, setLocalPriceOverrides] = useState<Record<string, number>>(
+    () => priceOverrideMap
+  )
+
+  // Inline edit panel state
+  const [popoverDate, setPopoverDate] = useState<string | null>(null)
+  const [popoverIsBlocked, setPopoverIsBlocked] = useState(false)
+  const [popoverWantsBlocked, setPopoverWantsBlocked] = useState(false)
+  const [popoverPriceInput, setPopoverPriceInput] = useState("")
+
+  // Range price input state
+  const [showRangePriceInput, setShowRangePriceInput] = useState(false)
+  const [rangePriceInput, setRangePriceInput] = useState("")
 
   function handleRoomChange(value: string) {
     router.push(`/availability?roomId=${value}`)
@@ -95,39 +120,21 @@ export function AvailabilityDashboard({
     setRangeStart(undefined)
     setRangeEnd(undefined)
     setError(null)
+    setShowRangePriceInput(false)
+    setRangePriceInput("")
   }
 
   async function handleDayClick(date: Date, isCurrentlyBlocked: boolean) {
     if (!selectedRoom) return
     const dateStr = toLocalDateString(date)
 
-    // ── Single mode: immediate toggle ──────────────────────────────────────
+    // ── Single mode: open inline edit panel instead of immediate toggle ──
     if (mode === "single") {
-      // Optimistic update: toggle this date in local state immediately
-      const dateTime = date.getTime()
-      setLocalBlockedDates((prev) => {
-        const exists = prev.some((d) => d.getTime() === dateTime)
-        return exists
-          ? prev.filter((d) => d.getTime() !== dateTime)
-          : [...prev, date]
-      })
-      setError(null)
-      setIsSaving(true)
-      try {
-        await toggleBlockedDate(selectedRoom.id, dateStr)
-        router.refresh()
-      } catch {
-        // Revert optimistic update on error
-        setLocalBlockedDates((prev) => {
-          const exists = prev.some((d) => d.getTime() === dateTime)
-          return exists
-            ? prev.filter((d) => d.getTime() !== dateTime)
-            : [...prev, date]
-        })
-        setError("Failed to save. Please try again.")
-      } finally {
-        setIsSaving(false)
-      }
+      const currentOverride = localPriceOverrides[dateStr]
+      setPopoverDate(dateStr)
+      setPopoverIsBlocked(isCurrentlyBlocked)
+      setPopoverWantsBlocked(isCurrentlyBlocked)
+      setPopoverPriceInput(currentOverride !== undefined ? String(currentOverride) : "")
       return
     }
 
@@ -148,6 +155,64 @@ export function AvailabilityDashboard({
 
     // Different date — set range end
     setRangeEnd(date)
+  }
+
+  async function handlePopoverClose() {
+    if (!selectedRoom || !popoverDate) { setPopoverDate(null); return }
+    const dateStr = popoverDate
+    const priceNum = popoverPriceInput.trim() === "" ? null : Number(popoverPriceInput)
+    const isValid = priceNum === null || (!isNaN(priceNum) && priceNum > 0)
+
+    setPopoverDate(null)
+
+    // Handle block toggle if changed
+    if (popoverWantsBlocked !== popoverIsBlocked) {
+      const date = new Date(dateStr + "T00:00:00")
+      const dateTime = date.getTime()
+      // Optimistic update
+      setLocalBlockedDates((prev) => {
+        const exists = prev.some((d) => d.getTime() === dateTime)
+        return exists
+          ? prev.filter((d) => d.getTime() !== dateTime)
+          : [...prev, date]
+      })
+      setIsSaving(true)
+      try {
+        await toggleBlockedDate(selectedRoom.id, dateStr)
+        router.refresh()
+      } catch {
+        // Revert optimistic update on error
+        setLocalBlockedDates((prev) => {
+          const exists = prev.some((d) => d.getTime() === dateTime)
+          return exists
+            ? prev.filter((d) => d.getTime() !== dateTime)
+            : [...prev, date]
+        })
+        setError("Failed to save block state. Please try again.")
+      } finally {
+        setIsSaving(false)
+      }
+    }
+
+    // Handle price override
+    if (isValid) {
+      if (priceNum === null) {
+        setLocalPriceOverrides(prev => { const next = { ...prev }; delete next[dateStr]; return next })
+        setIsSaving(true)
+        try { await clearDatePriceOverride(selectedRoom.id, dateStr); router.refresh() }
+        catch { setError("Failed to save price. Please try again.") }
+        finally { setIsSaving(false) }
+      } else {
+        setLocalPriceOverrides(prev => ({ ...prev, [dateStr]: priceNum }))
+        setIsSaving(true)
+        try { await setDatePriceOverride(selectedRoom.id, dateStr, priceNum); router.refresh() }
+        catch {
+          setLocalPriceOverrides(prev => { const next = { ...prev }; delete next[dateStr]; return next })
+          setError("Failed to save price. Please try again.")
+        }
+        finally { setIsSaving(false) }
+      }
+    }
   }
 
   async function handleBlockRange(block: boolean) {
@@ -205,6 +270,44 @@ export function AvailabilityDashboard({
     }
   }
 
+  async function handleSetRangePrice() {
+    if (!selectedRoom || !rangeStart || !rangeEnd) return
+    const price = Number(rangePriceInput)
+    if (isNaN(price) || price <= 0) return
+    const from = rangeStart <= rangeEnd ? rangeStart : rangeEnd
+    const to = rangeStart <= rangeEnd ? rangeEnd : rangeStart
+    const fromStr = toLocalDateString(from)
+    const toStr = toLocalDateString(to)
+
+    // Optimistic update: overwrite all dates in range
+    const rangeDates: Record<string, number> = {}
+    const cursor = new Date(from.getFullYear(), from.getMonth(), from.getDate())
+    const limit = new Date(to.getFullYear(), to.getMonth(), to.getDate())
+    while (cursor <= limit) {
+      rangeDates[toLocalDateString(cursor)] = price
+      cursor.setDate(cursor.getDate() + 1)
+    }
+    setLocalPriceOverrides(prev => ({ ...prev, ...rangeDates }))
+
+    setShowRangePriceInput(false)
+    setRangePriceInput("")
+    exitRangeMode()
+    setIsSaving(true)
+    try {
+      await setRangePriceOverride(selectedRoom.id, fromStr, toStr, price)
+      router.refresh()
+    } catch {
+      setLocalPriceOverrides(prev => {
+        const next = { ...prev }
+        Object.keys(rangeDates).forEach(k => delete next[k])
+        return next
+      })
+      setError("Failed to save range price. Please try again.")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   if (rooms.length === 0) {
     return (
       <div className="text-gray-500 text-sm">
@@ -250,7 +353,7 @@ export function AvailabilityDashboard({
             <div className="flex items-center justify-between mb-2">
               <div className="text-sm text-gray-500">
                 {mode === "single"
-                  ? "Click any date to toggle blocked / unblocked"
+                  ? "Click any date to edit price or block/unblock"
                   : null}
               </div>
               {mode === "single" ? (
@@ -285,7 +388,40 @@ export function AvailabilityDashboard({
               rangeStart={mode === "range" ? rangeStart : undefined}
               rangeEnd={mode === "range" ? rangeEnd : undefined}
               isSaving={isSaving}
+              priceOverrideMap={localPriceOverrides}
+              baseNightlyRate={baseNightlyRate}
             />
+
+            {/* Inline edit panel — rendered below the calendar, not floating */}
+            {popoverDate && (
+              <div className="mt-3 p-3 border rounded-lg bg-white shadow-sm space-y-3 w-64">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Edit {popoverDate}</span>
+                  <button onClick={handlePopoverClose} className="text-xs text-gray-500 hover:text-gray-800">Done</button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-600">Blocked</label>
+                  <input
+                    type="checkbox"
+                    checked={popoverWantsBlocked}
+                    onChange={e => setPopoverWantsBlocked(e.target.checked)}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 block mb-1">Price per night (empty = base rate)</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder={`${baseNightlyRate} (base rate)`}
+                    value={popoverPriceInput}
+                    onChange={e => setPopoverPriceInput(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && handlePopoverClose()}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Reserved space — always rendered so the calendar never jumps */}
             <div className="min-h-[2rem] mt-2 text-sm text-gray-600">
@@ -310,30 +446,69 @@ export function AvailabilityDashboard({
 
             {/* Range action buttons — only shown in range mode once both ends set */}
             {mode === "range" && rangeStart && rangeEnd && (
-              <div className="flex items-center gap-2 mt-2">
-                <button
-                  onClick={() => handleBlockRange(true)}
-                  disabled={isSaving}
-                  className="px-3 py-1.5 text-sm font-medium rounded-md bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50"
-                >
-                  Block Range
-                </button>
-                <button
-                  onClick={() => handleBlockRange(false)}
-                  disabled={isSaving}
-                  className="px-3 py-1.5 text-sm font-medium rounded-md bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50"
-                >
-                  Unblock Range
-                </button>
-                <button
-                  onClick={() => {
-                    setRangeStart(undefined)
-                    setRangeEnd(undefined)
-                  }}
-                  className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50"
-                >
-                  Clear
-                </button>
+              <div className="space-y-2 mt-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleBlockRange(true)}
+                    disabled={isSaving}
+                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50"
+                  >
+                    Block Range
+                  </button>
+                  <button
+                    onClick={() => handleBlockRange(false)}
+                    disabled={isSaving}
+                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50"
+                  >
+                    Unblock Range
+                  </button>
+                  <button
+                    onClick={() => {
+                      setRangeStart(undefined)
+                      setRangeEnd(undefined)
+                    }}
+                    className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50"
+                  >
+                    Clear
+                  </button>
+                </div>
+                {!showRangePriceInput && (
+                  <div>
+                    <button
+                      onClick={() => setShowRangePriceInput(true)}
+                      disabled={isSaving}
+                      className="px-3 py-1.5 text-sm font-medium rounded-md border border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+                    >
+                      Set Range Price
+                    </button>
+                  </div>
+                )}
+                {showRangePriceInput && (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="Price per night"
+                      value={rangePriceInput}
+                      onChange={e => setRangePriceInput(e.target.value)}
+                      className="w-36"
+                    />
+                    <button
+                      onClick={handleSetRangePrice}
+                      disabled={isSaving || !rangePriceInput}
+                      className="px-3 py-1.5 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      Apply
+                    </button>
+                    <button
+                      onClick={() => setShowRangePriceInput(false)}
+                      className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -20,6 +20,7 @@ import {
   setDatePriceOverride,
   clearDatePriceOverride,
   setRangePriceOverride,
+  clearRangePriceOverride,
 } from "@/actions/pricing"
 
 /**
@@ -308,6 +309,44 @@ export function AvailabilityDashboard({
     }
   }
 
+  async function handleClearRangePrice() {
+    if (!selectedRoom || !rangeStart || !rangeEnd) return
+    const from = rangeStart <= rangeEnd ? rangeStart : rangeEnd
+    const to = rangeStart <= rangeEnd ? rangeEnd : rangeStart
+    const fromStr = toLocalDateString(from)
+    const toStr = toLocalDateString(to)
+
+    // Build list of dateKeys to remove from local state
+    const rangeDateKeys: string[] = []
+    const cursor = new Date(from.getFullYear(), from.getMonth(), from.getDate())
+    const limit = new Date(to.getFullYear(), to.getMonth(), to.getDate())
+    while (cursor <= limit) {
+      rangeDateKeys.push(toLocalDateString(cursor))
+      cursor.setDate(cursor.getDate() + 1)
+    }
+
+    // Optimistic update: remove all overrides in range
+    const removed: Record<string, number> = {}
+    setLocalPriceOverrides(prev => {
+      const next = { ...prev }
+      rangeDateKeys.forEach(k => { if (next[k] !== undefined) { removed[k] = next[k]; delete next[k] } })
+      return next
+    })
+
+    exitRangeMode()
+    setIsSaving(true)
+    try {
+      await clearRangePriceOverride(selectedRoom.id, fromStr, toStr)
+      router.refresh()
+    } catch {
+      // Revert optimistic update on error
+      setLocalPriceOverrides(prev => ({ ...prev, ...removed }))
+      setError("Failed to clear range price. Please try again.")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   if (rooms.length === 0) {
     return (
       <div className="text-gray-500 text-sm">
@@ -473,13 +512,20 @@ export function AvailabilityDashboard({
                   </button>
                 </div>
                 {!showRangePriceInput && (
-                  <div>
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowRangePriceInput(true)}
                       disabled={isSaving}
                       className="px-3 py-1.5 text-sm font-medium rounded-md border border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-50"
                     >
                       Set Range Price
+                    </button>
+                    <button
+                      onClick={handleClearRangePrice}
+                      disabled={isSaving}
+                      className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Clear Range Price
                     </button>
                   </div>
                 )}

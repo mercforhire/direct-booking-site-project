@@ -61,3 +61,20 @@ export async function setRangePriceOverride(
   })
   revalidatePath("/availability")
 }
+
+export async function clearRangePriceOverride(
+  roomId: string,
+  fromStr: string,
+  toStr: string
+): Promise<void> {
+  await requireAuth()
+  const dates: Date[] = []
+  const current = new Date(fromStr + "T12:00:00.000Z")
+  const end = new Date(toStr + "T12:00:00.000Z")
+  while (current <= end) {
+    dates.push(new Date(current))
+    current.setUTCDate(current.getUTCDate() + 1)
+  }
+  await prisma.datePriceOverride.deleteMany({ where: { roomId, date: { in: dates } } })
+  revalidatePath("/availability")
+}

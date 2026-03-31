@@ -2,7 +2,7 @@
 phase: 15
 slug: per-day-pricing
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-03-30
 ---
@@ -19,7 +19,7 @@ created: 2026-03-30
 |----------|-------|
 | **Framework** | Vitest 4.x |
 | **Config file** | `vitest.config.ts` (project root) |
-| **Quick run command** | `npx vitest run src/actions/__tests__/pricing.test.ts src/lib/__tests__/price-estimate.test.ts` |
+| **Quick run command** | `npx vitest run src/actions/__tests__/pricing.test.ts tests/lib/price-estimate.test.ts` |
 | **Full suite command** | `npx vitest run` |
 | **Estimated runtime** | ~10 seconds |
 
@@ -27,7 +27,7 @@ created: 2026-03-30
 
 ## Sampling Rate
 
-- **After every task commit:** Run `npx vitest run src/actions/__tests__/pricing.test.ts src/lib/__tests__/price-estimate.test.ts`
+- **After every task commit:** Run `npx vitest run src/actions/__tests__/pricing.test.ts tests/lib/price-estimate.test.ts`
 - **After every plan wave:** Run `npx vitest run`
 - **Before `/gsd:verify-work`:** Full suite must be green
 - **Max feedback latency:** 15 seconds
@@ -39,19 +39,20 @@ created: 2026-03-30
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
 | 15-W0-01 | Wave 0 | 0 | DB/Actions | unit stubs | `npx vitest run src/actions/__tests__/pricing.test.ts` | ❌ W0 | ⬜ pending |
-| 15-W0-02 | Wave 0 | 0 | Price estimate | unit stubs | `npx vitest run src/lib/__tests__/price-estimate.test.ts` | ❌ W0 | ⬜ pending |
+| 15-W0-02 | Wave 0 | 0 | Price estimate | unit stubs | `npx vitest run tests/lib/price-estimate.test.ts` | ❌ W0 | ⬜ pending |
 | 15-01-01 | 01 | 1 | DB schema | unit | `npx vitest run src/actions/__tests__/pricing.test.ts` | ❌ W0 | ⬜ pending |
 | 15-01-02 | 01 | 1 | setDatePriceOverride | unit | `npx vitest run src/actions/__tests__/pricing.test.ts` | ❌ W0 | ⬜ pending |
 | 15-01-03 | 01 | 1 | clearDatePriceOverride | unit | `npx vitest run src/actions/__tests__/pricing.test.ts` | ❌ W0 | ⬜ pending |
 | 15-01-04 | 01 | 1 | setRangePriceOverride | unit | `npx vitest run src/actions/__tests__/pricing.test.ts` | ❌ W0 | ⬜ pending |
-| 15-02-01 | 02 | 1 | price-estimate per-day | unit | `npx vitest run src/lib/__tests__/price-estimate.test.ts` | ❌ W0 | ⬜ pending |
-| 15-02-02 | 02 | 1 | price-estimate fallback | unit | `npx vitest run src/lib/__tests__/price-estimate.test.ts` | ❌ W0 | ⬜ pending |
-| 15-02-03 | 02 | 1 | price-estimate regression | unit | `npx vitest run src/lib/__tests__/price-estimate.test.ts` | ❌ W0 | ⬜ pending |
-| 15-03-01 | 03 | 2 | Calendar tile display | manual | — | N/A | ⬜ pending |
-| 15-03-02 | 03 | 2 | Popover open/close | manual | — | N/A | ⬜ pending |
-| 15-04-01 | 04 | 2 | Range price button | manual | — | N/A | ⬜ pending |
-| 15-05-01 | 05 | 3 | Guest booking price | manual | — | N/A | ⬜ pending |
-| 15-06-01 | 06 | 3 | Admin approval price | manual | — | N/A | ⬜ pending |
+| 15-02-01 | 02 | 1 | price-estimate per-day | unit | `npx vitest run tests/lib/price-estimate.test.ts` | ❌ W0 | ⬜ pending |
+| 15-02-02 | 02 | 1 | price-estimate fallback | unit | `npx vitest run tests/lib/price-estimate.test.ts` | ❌ W0 | ⬜ pending |
+| 15-02-03 | 02 | 1 | price-estimate regression | unit | `npx vitest run tests/lib/price-estimate.test.ts` | ❌ W0 | ⬜ pending |
+| 15-03-01 | 03 | 2 | Server actions (setDatePriceOverride, clearDatePriceOverride, setRangePriceOverride) | unit | `npx vitest run src/actions/__tests__/pricing.test.ts` | ❌ W0 | ⬜ pending |
+| 15-04-01 | 04 | 3 | Calendar tile display (price badges, visual distinction) | manual | — | N/A | ⬜ pending |
+| 15-04-02 | 04 | 3 | Popover/edit panel open/close + range price button | manual | — | N/A | ⬜ pending |
+| 15-05-01 | 05 | 3 | Guest booking price (perDayRates wiring) | manual | — | N/A | ⬜ pending |
+| 15-05-02 | 05 | 3 | Admin approval pre-populated with per-day sum | manual | — | N/A | ⬜ pending |
+| 15-06-01 | 06 | 4 | Full test suite green | unit | `npx vitest run` | ✅ | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -60,7 +61,7 @@ created: 2026-03-30
 ## Wave 0 Requirements
 
 - [ ] `src/actions/__tests__/pricing.test.ts` — stubs for `setDatePriceOverride`, `clearDatePriceOverride`, `setRangePriceOverride` using `mockDeep<PrismaClient>`
-- [ ] `src/lib/__tests__/price-estimate.test.ts` — new cases for `calculatePriceEstimate` with `perDayRates` + regression cases (existing test file exists; add new describe block)
+- [ ] `tests/lib/price-estimate.test.ts` — new cases for `calculatePriceEstimate` with `perDayRates` + regression cases (existing test file exists; add new describe block)
 
 ---
 

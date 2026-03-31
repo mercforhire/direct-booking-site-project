@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 14-03-PLAN.md
-last_updated: "2026-03-30T18:36:40.346Z"
+stopped_at: Phase 15 context gathered
+last_updated: "2026-03-31T03:05:11.148Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
-  total_phases: 15
+  total_phases: 16
   completed_phases: 14
   total_plans: 59
   completed_plans: 59
@@ -111,6 +111,10 @@ Progress: [█████████░] 97%
 | Phase 14-force-eastern-time P03 | 3 | 2 tasks | 8 files |
 
 ## Accumulated Context
+
+### Roadmap Evolution
+
+- Phase 15 added: Per-Day Pricing — admin can view and override nightly price per date in the availability calendar; defaults to room's Base Nightly Rate
 
 ### Decisions
 
@@ -258,6 +262,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T18:32:56.224Z
-Stopped at: Completed 14-03-PLAN.md
-Resume file: None
+Last session: 2026-03-31T03:05:11.142Z
+Stopped at: Phase 15 context gathered
+Resume file: .planning/phases/15-per-day-pricing/15-CONTEXT.md

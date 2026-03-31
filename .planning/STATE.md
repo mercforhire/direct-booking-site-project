@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 16-01-PLAN.md
-last_updated: "2026-03-31T16:30:33.387Z"
+stopped_at: Completed 16-02-PLAN.md
+last_updated: "2026-03-31T16:34:43.290Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 17
   completed_phases: 15
   total_plans: 68
-  completed_plans: 66
+  completed_plans: 67
   percent: 97
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-25)
 ## Current Position
 
 Phase: 16 (guest-booking-history) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-03-31
 
@@ -118,6 +118,7 @@ Progress: [█████████░] 97%
 | Phase 15-per-day-pricing P05 | 5 | 2 tasks | 3 files |
 | Phase 15-per-day-pricing P06 | 15 | 2 tasks | 2 files |
 | Phase 16-guest-booking-history P01 | 1 | 2 tasks | 2 files |
+| Phase 16 P02 | 2 | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -271,6 +272,8 @@ Recent decisions affecting current work:
 - [Phase 15-per-day-pricing]: clearRangePriceOverride added as separate server action — keeps action contracts explicit and type-safe
 - [Phase 15-per-day-pricing]: Clear Range Price button placed at same level as Set Range Price — both options visible before opening price input
 - [Phase 16-guest-booking-history]: Removed Prisma query from /my-booking — all paths redirect to /my-bookings list page which handles empty state itself
+- [Phase 16]: COMPLETED status added to statusConfig (not in plan but exists in BookingStatus enum)
+- [Phase 16]: SignOutButton uses existing @/lib/supabase/client createClient instead of inline createBrowserClient — follows established pattern
 
 ### Pending Todos
 
@@ -284,6 +287,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T16:30:33.383Z
-Stopped at: Completed 16-01-PLAN.md
+Last session: 2026-03-31T16:34:43.285Z
+Stopped at: Completed 16-02-PLAN.md
 Resume file: None

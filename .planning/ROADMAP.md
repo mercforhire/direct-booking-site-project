@@ -27,7 +27,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 12: Email & Environment Consistency** - Standardize EMAIL_FROM env var, add missing vars to .env.local.example, convert markExtensionAsPaid to React Email template, remove dead BookingPaidEmail file (Gap closure) (completed 2026-03-30)
 - [x] **Phase 13: Fix Stale Unit Tests** - Update booking.test.ts mocks to match Phase 6 adminClient.auth.admin.createUser pattern; fix redirect assertion (Gap closure) (completed 2026-03-30)
 - [x] **Phase 14: Force Eastern Time (ET)** - Pin all date/time display and serialization to Eastern Time throughout the app — admin calendar, guest calendar, booking pages, emails (Gap closure) (completed 2026-03-30)
-- [ ] **Phase 15: Per-Day Pricing** - Admin can view and override the nightly price per individual date in the availability calendar; per-day rates feed into guest booking price estimate
+- [x] **Phase 15: Per-Day Pricing** - Admin can view and override the nightly price per individual date in the availability calendar; per-day rates feed into guest booking price estimate (completed 2026-03-31)
 
 ## Phase Details
 
@@ -327,13 +327,13 @@ Note: Gap closure phases 10-14 are independent of each other and can be executed
 | 12. Email & Environment Consistency | 1/1 | Complete    | 2026-03-30 |
 | 13. Fix Stale Unit Tests | 0/0 | Complete    | 2026-03-30 |
 | 14. Force Eastern Time (ET) | 3/3 | Complete    | 2026-03-30 |
-| 15. Per-Day Pricing | 5/6 | In Progress|  |
+| 15. Per-Day Pricing | 6/6 | Complete   | 2026-03-31 |
 
 ### Phase 15: Per-Day Pricing
 **Goal:** Admin can view and override the nightly price for any individual date in the availability calendar; dates with no override use the room's Base Nightly Rate by default
 **Requirements**: PRICE-01, PRICE-02, PRICE-03, PRICE-04, PRICE-05, PRICE-06
 **Depends on:** Phase 14
-**Plans:** 5/6 plans executed
+**Plans:** 6/6 plans complete
 
 Plans:
 - [ ] 15-01-PLAN.md — DatePriceOverride Prisma model + db push + Wave 0 test stubs

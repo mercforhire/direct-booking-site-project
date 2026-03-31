@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 15-per-day-pricing 15-05-PLAN.md
-last_updated: "2026-03-31T04:01:35.470Z"
+stopped_at: Completed 15-per-day-pricing 15-06-PLAN.md
+last_updated: "2026-03-31T04:12:49.475Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 16
-  completed_phases: 14
+  completed_phases: 15
   total_plans: 65
-  completed_plans: 64
+  completed_plans: 65
   percent: 97
 ---
 
@@ -114,6 +114,7 @@ Progress: [█████████░] 97%
 | Phase 15-per-day-pricing P03 | 2 | 1 tasks | 1 files |
 | Phase 15-per-day-pricing P04 | 15 | 2 tasks | 3 files |
 | Phase 15-per-day-pricing P05 | 5 | 2 tasks | 3 files |
+| Phase 15-per-day-pricing P06 | 15 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -263,6 +264,8 @@ Recent decisions affecting current work:
 - [Phase 15-per-day-pricing]: priceOverrideMap and baseNightlyRate kept fresh in DayButton useCallback via refs to avoid stale closure without breaking memoization
 - [Phase 15-per-day-pricing]: perDayRates fetched for entire room in booking RSC (not date-range-filtered) and passed as serialized prop to BookingForm — avoids re-fetching when guest changes dates
 - [Phase 15-per-day-pricing]: confirmedPrice in admin approval pre-populated from String(booking.estimatedTotal) — estimatedTotal is the per-day sum stored verbatim by submitBooking
+- [Phase 15-per-day-pricing]: clearRangePriceOverride added as separate server action — keeps action contracts explicit and type-safe
+- [Phase 15-per-day-pricing]: Clear Range Price button placed at same level as Set Range Price — both options visible before opening price input
 
 ### Pending Todos
 
@@ -276,6 +279,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T04:01:35.466Z
-Stopped at: Completed 15-per-day-pricing 15-05-PLAN.md
+Last session: 2026-03-31T04:12:49.472Z
+Stopped at: Completed 15-per-day-pricing 15-06-PLAN.md
 Resume file: None

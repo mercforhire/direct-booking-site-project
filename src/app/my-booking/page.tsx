@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
 
-// Redirect authenticated guests to their most recent booking.
-// Unauthenticated users are sent to login, which bounces back here after auth.
+// Legacy compatibility redirect — sends all visitors to /my-bookings.
+// Unauthenticated users are sent to login, which bounces back to /my-bookings after auth.
 export default async function MyBookingPage() {
   const supabase = await createClient()
   const {
@@ -13,20 +12,8 @@ export default async function MyBookingPage() {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect("/guest/login?next=/my-booking")
+    redirect("/guest/login?next=/my-bookings")
   }
 
-  const booking = await prisma.booking.findFirst({
-    where: {
-      OR: [{ guestUserId: user.id }, { guestEmail: user.email }],
-    },
-    orderBy: { createdAt: "desc" },
-    select: { id: true },
-  })
-
-  if (!booking) {
-    redirect("/")
-  }
-
-  redirect(`/bookings/${booking.id}`)
+  redirect("/my-bookings")
 }

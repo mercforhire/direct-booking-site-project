@@ -121,6 +121,7 @@ Progress: [█████████░] 97%
 ### Roadmap Evolution
 
 - Phase 15 added: Per-Day Pricing — admin can view and override nightly price per date in the availability calendar; defaults to room's Base Nightly Rate
+- Phase 16 added: Guest Booking History — home page guest login link; authenticated guests can view past and upcoming bookings
 
 ### Decisions
 

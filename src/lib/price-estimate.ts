@@ -12,6 +12,7 @@ export type PriceInput = {
   baseGuests: number
   serviceFeePercent: number
   depositAmount: number
+  perDayRates?: Record<string, number>
 }
 
 export type PriceEstimate = {
@@ -50,7 +51,18 @@ export function calculatePriceEstimate(input: PriceInput): PriceEstimate | null 
 
   if (nights <= 0) return null
 
-  const nightlyTotal = nights * baseNightlyRate
+  let nightlyTotal: number
+  if (input.perDayRates) {
+    nightlyTotal = 0
+    const cursor = new Date(checkinDate)
+    while (cursor < checkoutDate) {
+      const key = cursor.toISOString().slice(0, 10)
+      nightlyTotal += input.perDayRates[key] ?? baseNightlyRate
+      cursor.setUTCDate(cursor.getUTCDate() + 1)
+    }
+  } else {
+    nightlyTotal = nights * baseNightlyRate
+  }
   const extraGuestTotal = Math.max(0, numGuests - baseGuests) * extraGuestFee * nights
 
   const addOnTotal = addOns

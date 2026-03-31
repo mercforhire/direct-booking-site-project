@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 15-per-day-pricing 15-03-PLAN.md
-last_updated: "2026-03-31T03:52:02.131Z"
+stopped_at: Completed 15-per-day-pricing 15-04-PLAN.md
+last_updated: "2026-03-31T03:57:27.971Z"
 last_activity: 2026-03-26 — Phase 2 availability management fully verified and complete
 progress:
   total_phases: 16
   completed_phases: 14
   total_plans: 65
-  completed_plans: 62
+  completed_plans: 63
   percent: 97
 ---
 
@@ -112,6 +112,7 @@ Progress: [█████████░] 97%
 | Phase 15-per-day-pricing P01 | 3min | 2 tasks | 3 files |
 | Phase 15-per-day-pricing P02 | 1 | 1 tasks | 1 files |
 | Phase 15-per-day-pricing P03 | 2 | 1 tasks | 1 files |
+| Phase 15-per-day-pricing P04 | 15 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -257,6 +258,8 @@ Recent decisions affecting current work:
 - [Phase 15-per-day-pricing]: perDayRates is optional on PriceInput — no breaking change to existing callers
 - [Phase 15-per-day-pricing]: Use clearDatePriceOverride with deleteMany (not delete) — idempotent, no P2025 error if row absent
 - [Phase 15-per-day-pricing]: pricing.ts separate from availability.ts — keeps blocked-date concerns separate from price override concerns
+- [Phase 15-per-day-pricing]: Inline edit panel is a plain positioned div below the calendar — avoids positioning complexity on mobile
+- [Phase 15-per-day-pricing]: priceOverrideMap and baseNightlyRate kept fresh in DayButton useCallback via refs to avoid stale closure without breaking memoization
 
 ### Pending Todos
 
@@ -270,6 +273,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T03:52:02.128Z
-Stopped at: Completed 15-per-day-pricing 15-03-PLAN.md
+Last session: 2026-03-31T03:57:27.968Z
+Stopped at: Completed 15-per-day-pricing 15-04-PLAN.md
 Resume file: None

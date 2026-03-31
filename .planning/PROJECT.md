@@ -90,4 +90,4 @@ Repeat guests can book a room directly with the landlord without going through A
 | Adjustable service fee | Allows landlord to offset Stripe costs; can be 0 for e-transfer | — Pending |
 
 ---
-*Last updated: 2026-03-25 after initialization*
+*Last updated: 2026-03-31 — Phase 16 complete (guest-booking-history). Guests can now view upcoming and past bookings at /my-bookings after signing in.*

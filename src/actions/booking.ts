@@ -17,6 +17,7 @@ export async function submitBooking(data: unknown) {
   const {
     createAccount,
     password,
+    guestUserId: providedUserId,
     guestName,
     guestEmail,
     guestPhone,
@@ -29,9 +30,9 @@ export async function submitBooking(data: unknown) {
     estimatedTotal,
   } = parsed.data
 
-  let guestUserId: string | null = null
+  let guestUserId: string | null = providedUserId ?? null
 
-  if (createAccount && password) {
+  if (!guestUserId && createAccount && password) {
     // Use admin client so the guest account is auto-confirmed — no email verification
     // required before sign-in, which would block guests from accessing their booking.
     const adminClient = createSupabaseClient(

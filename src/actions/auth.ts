@@ -40,8 +40,10 @@ export async function createGuestAccount(data: {
   })
 
   if (createError) {
+    const code = (createError as { code?: string }).code ?? ""
     const msg = createError.message.toLowerCase()
     if (
+      code === "email_exists" ||
       msg.includes("already registered") ||
       msg.includes("already exists") ||
       msg.includes("duplicate")

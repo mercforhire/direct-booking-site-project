@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 16-03-PLAN.md
-last_updated: "2026-03-31T17:43:43.246Z"
-last_activity: 2026-03-31
+status: executing
+stopped_at: Completed 17-add-guest-sign-up-flow/17-02-PLAN.md
+last_updated: "2026-04-01T03:37:56.655Z"
+last_activity: 2026-04-01
 progress:
-  total_phases: 17
+  total_phases: 18
   completed_phases: 16
-  total_plans: 68
-  completed_plans: 68
+  total_plans: 72
+  completed_plans: 69
   percent: 97
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** Repeat guests can book a room directly with the landlord without going through Airbnb, saving both parties on platform fees.
-**Current focus:** Phase 16 — guest-booking-history
+**Current focus:** Phase 17 — add-guest-sign-up-flow-let-logged-in-guest-book-a-room-with-information-prefilled-and-hide-the-create-account-option-for-logged-in-guests
 
 ## Current Position
 
-Phase: 16
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-03-31
+Phase: 17 (add-guest-sign-up-flow-let-logged-in-guest-book-a-room-with-information-prefilled-and-hide-the-create-account-option-for-logged-in-guests) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-04-01
 
 Progress: [█████████░] 97%
 
@@ -120,6 +120,7 @@ Progress: [█████████░] 97%
 | Phase 16-guest-booking-history P01 | 1 | 2 tasks | 2 files |
 | Phase 16 P02 | 2 | 3 tasks | 3 files |
 | Phase 16-guest-booking-history P03 | 3 | 2 tasks | 4 files |
+| Phase 17 P02 | 3min | 4 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -127,6 +128,7 @@ Progress: [█████████░] 97%
 
 - Phase 15 added: Per-Day Pricing — admin can view and override nightly price per date in the availability calendar; defaults to room's Base Nightly Rate
 - Phase 16 added: Guest Booking History — home page guest login link; authenticated guests can view past and upcoming bookings
+- Phase 17 added: add guest sign up flow, let logged in guest book a room with information prefilled and hide the create account option for logged in guests
 
 ### Decisions
 
@@ -276,6 +278,7 @@ Recent decisions affecting current work:
 - [Phase 16]: COMPLETED status added to statusConfig (not in plan but exists in BookingStatus enum)
 - [Phase 16]: SignOutButton uses existing @/lib/supabase/client createClient instead of inline createBrowserClient — follows established pattern
 - [Phase 16-guest-booking-history]: Pre-existing TypeScript errors fixed as Rule 3 deviation to unblock tsc --noEmit gate
+- [Phase 17]: SignOutButton uses default export; readOnly + dimmed opacity for logged-in guest fields; hidden input for guestUserId passthrough
 
 ### Pending Todos
 
@@ -289,6 +292,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T17:39:36.956Z
-Stopped at: Completed 16-03-PLAN.md
+Last session: 2026-04-01T03:37:56.651Z
+Stopped at: Completed 17-add-guest-sign-up-flow/17-02-PLAN.md
 Resume file: None

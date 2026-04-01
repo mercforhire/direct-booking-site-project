@@ -355,3 +355,13 @@ Plans:
 - [x] 16-01-PLAN.md — Home page returning-guest section + /my-booking redirect update
 - [x] 16-02-PLAN.md — /my-bookings RSC page with booking history list (auth-gated, personalised heading, upcoming/past sections, booking cards)
 - [x] 16-03-PLAN.md — Full test suite run + 6-scenario human verification checkpoint
+
+### Phase 17: add guest sign up flow, let logged in guest book a room with information prefilled and hide the create account option for logged in guests
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 16
+**Plans:** 1/4 plans executed
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 17 to break down)

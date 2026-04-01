@@ -52,19 +52,18 @@ export default async function MyBookingsPage() {
 
   const firstName = serialized[0]?.guestName?.split(" ")[0] ?? null
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const twelveMonthsAgo = new Date(today)
-  twelveMonthsAgo.setMonth(today.getMonth() - 12)
+  const now = new Date()
+  const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  const twelveMonthsAgoUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 12, now.getUTCDate())
 
   const upcoming = serialized
-    .filter((b) => new Date(b.checkin) >= today)
+    .filter((b) => new Date(b.checkin).getTime() >= todayUTC)
     .sort((a, b) => new Date(a.checkin).getTime() - new Date(b.checkin).getTime())
 
   const past = serialized
     .filter((b) => {
-      const c = new Date(b.checkin)
-      return c < today && c >= twelveMonthsAgo
+      const t = new Date(b.checkin).getTime()
+      return t < todayUTC && t >= twelveMonthsAgoUTC
     })
     .sort((a, b) => new Date(b.checkin).getTime() - new Date(a.checkin).getTime())
 

@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox" // shadcn checkbox (Radix based)
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import SignOutButton from "@/components/guest/sign-out-button"
 
 interface BookingFormRoom {
   id: string
@@ -43,6 +44,9 @@ interface BookingFormProps {
   defaultCheckin?: string
   defaultCheckout?: string
   defaultGuests?: number
+  isLoggedIn?: boolean
+  prefillData?: { name: string; email: string; phone: string }
+  guestUserId?: string
 }
 
 export function BookingForm({
@@ -53,6 +57,9 @@ export function BookingForm({
   defaultCheckin,
   defaultCheckout,
   defaultGuests = 1,
+  isLoggedIn = false,
+  prefillData,
+  guestUserId,
 }: BookingFormProps) {
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -72,12 +79,13 @@ export function BookingForm({
       numGuests: defaultGuests,
       selectedAddOnIds: [],
       noteToLandlord: "",
-      guestName: "",
-      guestEmail: "",
-      guestPhone: "",
+      guestName: prefillData?.name ?? "",
+      guestEmail: prefillData?.email ?? "",
+      guestPhone: prefillData?.phone ?? "",
       estimatedTotal: 0,
       createAccount: false,
       password: "",
+      guestUserId: guestUserId ?? "",
     },
   })
 
@@ -202,15 +210,14 @@ export function BookingForm({
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-8 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-6 items-start">
         {/* Left column — form fields */}
-        <div className="space-y-8">
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
 
           {/* Section 1: Dates + guests */}
-          <section>
-            <h2 className="text-base font-semibold text-gray-900 mb-3">
-              Dates &amp; guests
-            </h2>
+          <section className="bk-section">
+            <div className="bk-section-label">Step 1</div>
+            <h2>Dates &amp; guests</h2>
             <BookingRangePicker
               blockedDateStrings={blockedDateStrings}
               bookingWindowMonths={room.bookingWindowMonths}
@@ -221,16 +228,16 @@ export function BookingForm({
               perDayRates={perDayRates}
               baseNightlyRate={room.baseNightlyRate}
             />
-            <div className="mt-4 max-w-xs">
-              <Label htmlFor="numGuests" className="text-sm font-medium">
-                Guests
+            <div style={{ marginTop: "1rem", maxWidth: "200px" }}>
+              <Label htmlFor="numGuests">
+                Number of guests
               </Label>
               <Input
                 id="numGuests"
                 type="number"
                 min={1}
                 max={room.maxGuests}
-                className="mt-1"
+                style={{ marginTop: "0.35rem" }}
                 {...register("numGuests", { valueAsNumber: true })}
               />
               {errors.numGuests && (
@@ -243,39 +250,52 @@ export function BookingForm({
 
           {/* Section 2: Add-ons */}
           {room.addOns.length > 0 && (
-            <section>
-              <h2 className="text-base font-semibold text-gray-900 mb-3">
-                Add-ons
-              </h2>
-              <div className="space-y-3">
+            <section className="bk-section">
+              <div className="bk-section-label">Optional</div>
+              <h2>Add-ons</h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 {room.addOns.map((addOn) => {
                   const isChecked = selectedAddOnIds.includes(addOn.id)
                   return (
-                    <div key={addOn.id} className="flex items-center gap-3">
+                    <div
+                      key={addOn.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.75rem",
+                        padding: "0.6rem 0.75rem",
+                        borderRadius: "8px",
+                        background: isChecked ? "rgba(212,149,106,0.08)" : "transparent",
+                        border: `1px solid ${isChecked ? "rgba(212,149,106,0.3)" : "rgba(255,255,255,0.06)"}`,
+                        transition: "all 0.15s ease",
+                      }}
+                    >
                       <Checkbox
                         id={`addon-${addOn.id}`}
                         checked={isChecked}
                         onCheckedChange={(checked: boolean | "indeterminate") => {
                           if (checked === true) {
-                            setValue("selectedAddOnIds", [
-                              ...selectedAddOnIds,
-                              addOn.id,
-                            ])
+                            setValue("selectedAddOnIds", [...selectedAddOnIds, addOn.id])
                           } else {
-                            setValue(
-                              "selectedAddOnIds",
-                              selectedAddOnIds.filter((id) => id !== addOn.id)
-                            )
+                            setValue("selectedAddOnIds", selectedAddOnIds.filter((id) => id !== addOn.id))
                           }
                         }}
                       />
                       <Label
                         htmlFor={`addon-${addOn.id}`}
-                        className="text-sm cursor-pointer"
+                        style={{ cursor: "pointer", flex: 1, margin: 0 }}
                       >
-                        {addOn.name} &mdash;{" "}
-                        {addOn.price === 0 ? "Free" : `$${addOn.price.toFixed(2)}`}
+                        {addOn.name}
                       </Label>
+                      <span
+                        style={{
+                          fontSize: "0.75rem",
+                          color: addOn.price === 0 ? "rgba(212,149,106,0.8)" : "rgba(240,235,224,0.55)",
+                          letterSpacing: "0.04em",
+                        }}
+                      >
+                        {addOn.price === 0 ? "Free" : `+$${addOn.price.toFixed(2)}`}
+                      </span>
                     </div>
                   )
                 })}
@@ -284,32 +304,32 @@ export function BookingForm({
           )}
 
           {/* Section 3: Note to landlord */}
-          <section>
-            <h2 className="text-base font-semibold text-gray-900 mb-3">
-              Note to landlord
-            </h2>
+          <section className="bk-section">
+            <div className="bk-section-label">Optional</div>
+            <h2>Note to landlord</h2>
             <Textarea
               placeholder="Any questions or special requests?"
-              className="min-h-[100px]"
+              style={{ minHeight: "90px" }}
               {...register("noteToLandlord")}
             />
           </section>
 
           {/* Section 4: Guest info */}
-          <section>
-            <h2 className="text-base font-semibold text-gray-900 mb-3">
-              Your information
-            </h2>
-            <div className="space-y-4">
+          <section className="bk-section">
+            <div className="bk-section-label">Step 2</div>
+            <h2>Your information</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div>
-                <Label htmlFor="guestName" className="text-sm font-medium">
-                  Name
-                </Label>
+                <Label htmlFor="guestName">Name</Label>
                 <Input
                   id="guestName"
                   type="text"
                   autoComplete="name"
-                  className="mt-1"
+                  style={{
+                    marginTop: "0.35rem",
+                    ...(isLoggedIn ? { opacity: 0.6, cursor: "default" } : {}),
+                  }}
+                  readOnly={isLoggedIn}
                   {...register("guestName")}
                 />
                 {errors.guestName && (
@@ -320,14 +340,16 @@ export function BookingForm({
               </div>
 
               <div>
-                <Label htmlFor="guestEmail" className="text-sm font-medium">
-                  Email
-                </Label>
+                <Label htmlFor="guestEmail">Email</Label>
                 <Input
                   id="guestEmail"
                   type="email"
                   autoComplete="email"
-                  className="mt-1"
+                  style={{
+                    marginTop: "0.35rem",
+                    ...(isLoggedIn ? { opacity: 0.6, cursor: "default" } : {}),
+                  }}
+                  readOnly={isLoggedIn}
                   {...register("guestEmail")}
                 />
                 {errors.guestEmail && (
@@ -338,14 +360,16 @@ export function BookingForm({
               </div>
 
               <div>
-                <Label htmlFor="guestPhone" className="text-sm font-medium">
-                  Phone
-                </Label>
+                <Label htmlFor="guestPhone">Phone</Label>
                 <Input
                   id="guestPhone"
                   type="tel"
                   autoComplete="tel"
-                  className="mt-1"
+                  style={{
+                    marginTop: "0.35rem",
+                    ...(isLoggedIn ? { opacity: 0.6, cursor: "default" } : {}),
+                  }}
+                  readOnly={isLoggedIn}
                   {...register("guestPhone")}
                 />
                 {errors.guestPhone && (
@@ -357,53 +381,78 @@ export function BookingForm({
             </div>
           </section>
 
-          {/* Section 5: Optional account creation */}
-          <section>
-            <div className="flex items-center gap-3">
-              <Checkbox
-                id="createAccount"
-                checked={createAccount}
-                onCheckedChange={(checked: boolean | "indeterminate") => {
-                  setValue("createAccount", checked === true)
-                }}
-              />
-              <Label
-                htmlFor="createAccount"
-                className="text-sm cursor-pointer"
-              >
-                Create a free account to view this booking anytime
-              </Label>
-            </div>
-
-            {createAccount && (
-              <div className="mt-3 ml-7">
-                <Label htmlFor="password" className="text-sm font-medium">
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete="new-password"
-                  className="mt-1 max-w-xs"
-                  {...register("password")}
-                />
-                {errors.password && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.password.message}
-                  </p>
-                )}
+          {/* Section 5: Signed-in banner OR account creation */}
+          {isLoggedIn ? (
+            <section className="bk-section" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <span style={{ color: "#d4956a", fontSize: "1rem", flexShrink: 0 }}>&#10003;</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: "0.82rem", fontWeight: 600 }}>
+                  Signed in as {prefillData?.name}
+                </div>
+                <div style={{ fontSize: "0.72rem", opacity: 0.45, marginTop: "2px" }}>
+                  {prefillData?.email}
+                </div>
               </div>
-            )}
-          </section>
+              <SignOutButton />
+            </section>
+          ) : (
+            <section className="bk-section">
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "0.75rem",
+                }}
+              >
+                <Checkbox
+                  id="createAccount"
+                  checked={createAccount}
+                  onCheckedChange={(checked: boolean | "indeterminate") => {
+                    setValue("createAccount", checked === true)
+                  }}
+                  style={{ marginTop: "1px", flexShrink: 0 }}
+                />
+                <div>
+                  <Label htmlFor="createAccount" style={{ cursor: "pointer", display: "block" }}>
+                    Save my booking to an account
+                  </Label>
+                  <p style={{ fontSize: "0.72rem", opacity: 0.4, marginTop: "2px", margin: "2px 0 0" }}>
+                    Free — lets you view this booking and future ones anytime
+                  </p>
+                </div>
+              </div>
+
+              {createAccount && (
+                <div style={{ marginTop: "1rem", marginLeft: "1.75rem", maxWidth: "240px" }}>
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    autoComplete="new-password"
+                    style={{ marginTop: "0.35rem" }}
+                    {...register("password")}
+                  />
+                  {errors.password && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Hidden field for guestUserId */}
+          <input type="hidden" {...register("guestUserId")} />
 
           {/* Submit button */}
-          <Button
+          <button
             type="submit"
             disabled={isSubmitDisabled}
-            className="w-full"
+            className="bk-submit-btn"
           >
             {isSubmitting ? "Submitting…" : "Request to Book"}
-          </Button>
+          </button>
         </div>
 
         {/* Right column — sticky price summary (desktop) */}
@@ -412,7 +461,7 @@ export function BookingForm({
           addOns={room.addOns}
           selectedAddOnIds={selectedAddOnIds}
           baseNightlyRate={room.baseNightlyRate}
-          className="md:sticky md:top-8"
+          className="md:sticky md:top-8 price-card"
         />
       </div>
     </form>

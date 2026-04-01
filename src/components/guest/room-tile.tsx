@@ -32,7 +32,7 @@ export function RoomTile({ room, isAvailable, searchParams }: RoomTileProps) {
   return (
     <Link
       href={href}
-      className="room-tile"
+      className="room-tile tile-grid"
       style={{
         textDecoration: "none",
         color: "#f0ebe0",
@@ -49,7 +49,7 @@ export function RoomTile({ room, isAvailable, searchParams }: RoomTileProps) {
     >
       {/* ── Photo ────────────────────────────────── */}
       <div
-        className="tile-grid tile-photo-wrap"
+        className="tile-photo-wrap"
         style={{
           position: "relative",
           overflow: "hidden",

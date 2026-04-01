@@ -27,9 +27,9 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; b
   COMPLETED: { label: "Completed", color: "#7abf8e", bg: "rgba(122,191,142,0.1)",  border: "rgba(122,191,142,0.3)" },
 }
 
-function formatDateET(date: Date, includeYear: boolean): string {
+function formatDate(date: Date, includeYear: boolean): string {
   return date.toLocaleDateString("en-US", {
-    timeZone: "America/New_York",
+    timeZone: "UTC",
     month: "short",
     day: "numeric",
     ...(includeYear ? { year: "numeric" } : {}),
@@ -39,12 +39,12 @@ function formatDateET(date: Date, includeYear: boolean): string {
 function formatDateRange(checkin: Date | string, checkout: Date | string) {
   const ci = new Date(checkin)
   const co = new Date(checkout)
-  const ciYear = ci.toLocaleDateString("en-US", { timeZone: "America/New_York", year: "numeric" })
-  const coYear = co.toLocaleDateString("en-US", { timeZone: "America/New_York", year: "numeric" })
+  const ciYear = ci.getUTCFullYear()
+  const coYear = co.getUTCFullYear()
   if (ciYear === coYear) {
-    return `${formatDateET(ci, false)} – ${formatDateET(co, true)}`
+    return `${formatDate(ci, false)} – ${formatDate(co, true)}`
   }
-  return `${formatDateET(ci, true)} – ${formatDateET(co, true)}`
+  return `${formatDate(ci, true)} – ${formatDate(co, true)}`
 }
 
 function formatPrice(amount: number) {

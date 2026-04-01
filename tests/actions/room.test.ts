@@ -17,6 +17,22 @@ vi.mock("@/lib/supabase/server", () => ({
 
 import { createRoom, updateRoom, deleteRoom } from "@/actions/room"
 
+const mockLandlord = {
+  id: "landlord-1",
+  slug: "highhill",
+  name: "Leon's Home",
+  ownerName: "Leon",
+  address: "9 Highhill Dr",
+  email: "test@test.com",
+  phone: null,
+  bgColor: "#3a392a",
+  textColor: "#f0ebe0",
+  accentColor: "#d4956a",
+  adminUserId: "user-1",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+}
+
 const validRoomData = {
   name: "Ocean View Suite",
   description: "A beautiful suite with ocean views",
@@ -41,10 +57,20 @@ const mockRoomRecord = {
   baseGuests: 2,
   maxGuests: 4,
   isActive: true,
+  landlordId: "landlord-1",
   createdAt: new Date(),
   updatedAt: new Date(),
   photos: [],
   addOns: [],
+}
+
+function mockAuthenticatedAdmin() {
+  mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
+  mockPrisma.landlord.findUnique.mockResolvedValue(mockLandlord as any)
+}
+
+function mockUnauthenticated() {
+  mockGetUser.mockResolvedValue({ data: { user: null }, error: new Error("Not authenticated") })
 }
 
 describe("room actions", () => {
@@ -54,7 +80,7 @@ describe("room actions", () => {
 
   describe("createRoom", () => {
     it("createRoom with valid data creates a Room and returns { room }", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
+      mockAuthenticatedAdmin()
 
       const txMock = {
         room: { create: vi.fn().mockResolvedValue(mockRoomRecord) },
@@ -65,10 +91,16 @@ describe("room actions", () => {
       const result = await createRoom(validRoomData)
       expect(result).toHaveProperty("room")
       expect(txMock.room.create).toHaveBeenCalledOnce()
+      // Verify landlordId is passed
+      expect(txMock.room.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ landlordId: "landlord-1" }),
+        })
+      )
     })
 
     it("createRoom with add-ons creates them in the transaction", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
+      mockAuthenticatedAdmin()
 
       const dataWithAddOns = {
         ...validRoomData,
@@ -88,14 +120,14 @@ describe("room actions", () => {
     })
 
     it("createRoom with missing required fields returns { error } with field-level messages", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
+      mockAuthenticatedAdmin()
 
       const result = await createRoom({ name: "", description: "" })
       expect(result).toHaveProperty("error")
     })
 
     it("createRoom called without a session throws Unauthorized", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: null }, error: new Error("Not authenticated") })
+      mockUnauthenticated()
 
       await expect(createRoom(validRoomData)).rejects.toThrow("Unauthorized")
     })
@@ -103,7 +135,9 @@ describe("room actions", () => {
 
   describe("updateRoom", () => {
     it("updateRoom with valid data updates the Room and returns { room }", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
+      mockAuthenticatedAdmin()
+      // Mock the ownership check
+      mockPrisma.room.findUnique.mockResolvedValue({ landlordId: "landlord-1" } as any)
 
       const txMock = {
         room: { update: vi.fn().mockResolvedValue(mockRoomRecord) },
@@ -123,7 +157,8 @@ describe("room actions", () => {
     })
 
     it("updateRoom replaces add-ons via deleteMany + createMany in a transaction", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
+      mockAuthenticatedAdmin()
+      mockPrisma.room.findUnique.mockResolvedValue({ landlordId: "landlord-1" } as any)
 
       const dataWithAddOns = {
         ...validRoomData,
@@ -147,7 +182,7 @@ describe("room actions", () => {
     })
 
     it("updateRoom called without a session throws Unauthorized", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: null }, error: new Error("Not authenticated") })
+      mockUnauthenticated()
 
       await expect(updateRoom("room-1", validRoomData)).rejects.toThrow("Unauthorized")
     })
@@ -155,7 +190,10 @@ describe("room actions", () => {
 
   describe("deleteRoom", () => {
     it("deleteRoom removes the Room record and returns { success: true }", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
+      mockAuthenticatedAdmin()
+      // Mock the ownership check
+      mockPrisma.room.findUnique.mockResolvedValue({ landlordId: "landlord-1" } as any)
+      mockPrisma.booking.count.mockResolvedValue(0)
       mockPrisma.room.delete.mockResolvedValue(mockRoomRecord as any)
 
       const result = await deleteRoom("room-1")
@@ -164,7 +202,7 @@ describe("room actions", () => {
     })
 
     it("deleteRoom called without a session throws Unauthorized", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: null }, error: new Error("Not authenticated") })
+      mockUnauthenticated()
 
       await expect(deleteRoom("room-1")).rejects.toThrow("Unauthorized")
     })

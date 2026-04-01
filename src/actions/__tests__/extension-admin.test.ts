@@ -67,6 +67,8 @@ function makePrismaNotFoundError() {
 describe("approveExtension", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.bookingExtension.findUnique.mockResolvedValue({ id: "ext-1", booking: { room: { landlordId: "landlord-1" } } } as any)
     mockGetUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null })
     mockPrisma.bookingExtension.update.mockResolvedValue(mockExtensionApproved as any)
   })
@@ -110,6 +112,8 @@ describe("approveExtension", () => {
 describe("declineExtension", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.bookingExtension.findUnique.mockResolvedValue({ id: "ext-1", booking: { room: { landlordId: "landlord-1" } } } as any)
     mockGetUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null })
     mockPrisma.bookingExtension.update.mockResolvedValue(mockExtensionDeclined as any)
   })

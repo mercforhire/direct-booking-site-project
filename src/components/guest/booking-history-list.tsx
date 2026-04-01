@@ -51,7 +51,7 @@ function formatPrice(amount: number) {
   return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
 }
 
-function BookingCard({ booking }: { booking: SerializedBooking }) {
+function BookingCard({ booking, basePath = "" }: { booking: SerializedBooking; basePath?: string }) {
   const photo = booking.room.photos[0]?.url
   const price = booking.confirmedPrice ?? booking.estimatedTotal
   const badge = statusConfig[booking.status] ?? {
@@ -63,7 +63,7 @@ function BookingCard({ booking }: { booking: SerializedBooking }) {
 
   return (
     <Link
-      href={`/bookings/${booking.id}`}
+      href={`${basePath}/bookings/${booking.id}`}
       className="booking-card"
       style={{
         display: "flex",
@@ -174,9 +174,10 @@ function BookingCard({ booking }: { booking: SerializedBooking }) {
 type BookingHistoryListProps = {
   upcoming: SerializedBooking[]
   past: SerializedBooking[]
+  basePath?: string
 }
 
-export default function BookingHistoryList({ upcoming, past }: BookingHistoryListProps) {
+export default function BookingHistoryList({ upcoming, past, basePath = "" }: BookingHistoryListProps) {
   if (upcoming.length === 0 && past.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "3rem 0" }}>
@@ -184,7 +185,7 @@ export default function BookingHistoryList({ upcoming, past }: BookingHistoryLis
           You don&apos;t have any bookings yet.
         </p>
         <Link
-          href="/rooms"
+          href={`${basePath}/rooms`}
           className="browse-btn"
           style={{
             display: "inline-block",
@@ -230,7 +231,7 @@ export default function BookingHistoryList({ upcoming, past }: BookingHistoryLis
           {upcoming.length > 0 ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               {upcoming.map((b) => (
-                <BookingCard key={b.id} booking={b} />
+                <BookingCard key={b.id} booking={b} basePath={basePath} />
               ))}
             </div>
           ) : (
@@ -244,7 +245,7 @@ export default function BookingHistoryList({ upcoming, past }: BookingHistoryLis
           {past.length > 0 ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               {past.map((b) => (
-                <BookingCard key={b.id} booking={b} />
+                <BookingCard key={b.id} booking={b} basePath={basePath} />
               ))}
             </div>
           ) : (

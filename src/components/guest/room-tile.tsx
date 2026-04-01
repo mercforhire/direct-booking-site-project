@@ -23,10 +23,11 @@ interface RoomTileProps {
   room: RoomTileRoom
   isAvailable: boolean
   searchParams: string
+  basePath?: string
 }
 
-export function RoomTile({ room, isAvailable, searchParams }: RoomTileProps) {
-  const href = `/rooms/${room.id}${searchParams ? `?${searchParams}` : ""}`
+export function RoomTile({ room, isAvailable, searchParams, basePath = "" }: RoomTileProps) {
+  const href = `${basePath}/rooms/${room.id}${searchParams ? `?${searchParams}` : ""}`
   const coverPhoto = room.photos[0]
 
   return (

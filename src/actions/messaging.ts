@@ -1,23 +1,13 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { prisma } from "@/lib/prisma"
+import { getLandlordForAdmin } from "@/lib/landlord"
 import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
 import { render } from "@react-email/render"
 import { messageSchemaCoerced } from "@/lib/validations/messaging"
 import { NewMessageLandlordEmail } from "@/emails/new-message-landlord"
 import { NewMessageGuestEmail } from "@/emails/new-message-guest"
-
-async function requireAuth() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || !user) throw new Error("Unauthorized")
-  return user
-}
 
 function formatDate(date: Date): string {
   return date.toISOString().slice(0, 10)
@@ -77,7 +67,7 @@ export async function submitMessage(bookingId: string, token: string, data: unkn
 }
 
 export async function sendMessageAsLandlord(bookingId: string, data: unknown) {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
 
   const parsed = messageSchemaCoerced.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
@@ -85,22 +75,23 @@ export async function sendMessageAsLandlord(bookingId: string, data: unknown) {
 
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    include: { room: { select: { name: true } } },
+    include: { room: { select: { name: true, landlordId: true } } },
   })
   if (!booking) return { error: "booking_not_found" }
+  if (booking.room.landlordId !== landlord.id) throw new Error("Booking not found")
 
   await prisma.message.create({
     data: {
       bookingId,
       sender: "LANDLORD",
-      senderName: "Host",
+      senderName: landlord.ownerName,
       body,
     },
   })
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const subject = `New message from Host — ${booking.room.name}, ${formatDate(booking.checkin)}–${formatDate(booking.checkout)}`
+    const subject = `New message from ${landlord.ownerName} — ${booking.room.name}, ${formatDate(booking.checkin)}–${formatDate(booking.checkout)}`
     const html = await render(
       NewMessageGuestEmail({
         guestName: booking.guestName,

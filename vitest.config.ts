@@ -5,6 +5,11 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.claude/**",
+    ],
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },

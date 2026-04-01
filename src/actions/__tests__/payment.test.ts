@@ -144,6 +144,8 @@ describe("createStripeCheckoutSession", () => {
 describe("markBookingAsPaid", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.booking.findUnique.mockResolvedValue({ id: "booking-1", room: { landlordId: "landlord-1", name: "Ocean View" } } as any)
     mockGetUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null })
     mockPrisma.booking.update.mockResolvedValue({ ...mockBooking, status: "PAID" } as any)
   })

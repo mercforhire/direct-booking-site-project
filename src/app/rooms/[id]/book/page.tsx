@@ -47,6 +47,7 @@ export default async function BookPage({
       bookingWindowMonths: true,
       minStayNights: true,
       maxStayNights: true,
+      landlordId: true,
       photos: {
         select: { url: true, position: true },
         orderBy: { position: "asc" },
@@ -62,7 +63,7 @@ export default async function BookPage({
 
   if (!room) notFound()
 
-  const settings = await prisma.settings.findUnique({ where: { id: "global" } })
+  const settings = await prisma.settings.findUnique({ where: { landlordId: room.landlordId } })
 
   if (!settings) notFound()
 

@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/prisma"
+import { requireLandlordForAdmin } from "@/lib/landlord"
 import { BookingAdminList } from "@/components/admin/booking-admin-list"
 
 export const dynamic = "force-dynamic"
 
 export default async function BookingsPage() {
+  const landlord = await requireLandlordForAdmin()
   const bookings = await prisma.booking.findMany({
+    where: { room: { landlordId: landlord.id } },
     orderBy: { createdAt: "desc" },
     include: {
       room: { select: { name: true } },

@@ -8,6 +8,24 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model Landlord {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  ownerName   String
+  address     String
+  email       String
+  phone       String?
+  bgColor     String    @default("#3a392a")
+  textColor   String    @default("#f0ebe0")
+  accentColor String    @default("#d4956a")
+  adminUserId String    @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  rooms       Room[]
+  settings    Settings?
+}
+
 model Room {
   id                  String              @id @default(cuid())
   name                String
@@ -24,11 +42,15 @@ model Room {
   bookingWindowMonths Int                 @default(3)
   minStayNights       Int                 @default(1)
   maxStayNights       Int                 @default(30)
+  landlordId          String
+  landlord            Landlord            @relation(fields: [landlordId], references: [id])
   addOns              AddOn[]
   photos              RoomPhoto[]
   blockedDates        BlockedDate[]
   priceOverrides      DatePriceOverride[]
   bookings            Booking[]
+
+  @@index([landlordId])
 }
 
 model RoomPhoto {
@@ -51,11 +73,13 @@ model AddOn {
 }
 
 model Settings {
-  id                String   @id @default("global")
-  serviceFeePercent Decimal  @db.Decimal(5, 2)
-  depositAmount     Decimal  @db.Decimal(10, 2)
+  id                String    @id @default(cuid())
+  landlordId        String    @unique
+  landlord          Landlord  @relation(fields: [landlordId], references: [id])
+  serviceFeePercent Decimal   @db.Decimal(5, 2)
+  depositAmount     Decimal   @db.Decimal(10, 2)
   etransferEmail    String?
-  updatedAt         DateTime @updatedAt
+  updatedAt         DateTime  @updatedAt
 }
 
 model BlockedDate {

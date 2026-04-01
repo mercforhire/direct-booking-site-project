@@ -1,22 +1,21 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { prisma } from "@/lib/prisma"
+import { getLandlordForAdmin } from "@/lib/landlord"
 import { revalidatePath } from "next/cache"
 import { UTApi } from "uploadthing/server"
 
 const utapi = new UTApi()
 
-async function requireAuth() {
-  const supabase = await createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
-  if (error || !user) throw new Error("Unauthorized")
-  return user
+async function verifyRoomOwnership(roomId: string, landlordId: string) {
+  const room = await prisma.room.findUnique({ where: { id: roomId }, select: { landlordId: true } })
+  if (!room || room.landlordId !== landlordId) throw new Error("Room not found")
 }
 
 // Called after UploadThing completes — persists photo to DB with next position
 export async function addPhoto(roomId: string, url: string, key: string) {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+  await verifyRoomOwnership(roomId, landlord.id)
   const existing = await prisma.roomPhoto.findMany({
     where: { roomId },
     orderBy: { position: "desc" },
@@ -26,25 +25,27 @@ export async function addPhoto(roomId: string, url: string, key: string) {
   const photo = await prisma.roomPhoto.create({
     data: { roomId, url, key, position: nextPosition },
   })
-  revalidatePath(`/rooms/${roomId}`)
+  revalidatePath(`/admin/rooms/${roomId}`)
   return { photo }
 }
 
 // Called after drag-to-reorder — updates all position integers in a transaction
 export async function savePhotoOrder(roomId: string, orderedIds: string[]) {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+  await verifyRoomOwnership(roomId, landlord.id)
   await prisma.$transaction(
     orderedIds.map((id, position) =>
       prisma.roomPhoto.update({ where: { id }, data: { position } })
     )
   )
-  revalidatePath(`/rooms/${roomId}`)
+  revalidatePath(`/admin/rooms/${roomId}`)
   return { success: true }
 }
 
 // Deletes photo from DB and UploadThing CDN
 export async function deletePhoto(photoId: string, key: string, roomId: string) {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+  await verifyRoomOwnership(roomId, landlord.id)
   await prisma.roomPhoto.delete({ where: { id: photoId } })
   // Renumber remaining photos to keep positions contiguous
   const remaining = await prisma.roomPhoto.findMany({
@@ -58,6 +59,6 @@ export async function deletePhoto(photoId: string, key: string, roomId: string) 
   )
   // Delete from CDN
   await utapi.deleteFiles([key])
-  revalidatePath(`/rooms/${roomId}`)
+  revalidatePath(`/admin/rooms/${roomId}`)
   return { success: true }
 }

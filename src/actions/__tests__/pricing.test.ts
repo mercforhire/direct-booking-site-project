@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect, vi, beforeEach } from "vitest"
 
 // --- Prisma mock (shared helper registers vi.mock + exports mockPrisma) ---
 import "../../../tests/lib/prisma-mock"
@@ -26,6 +26,11 @@ import {
 const ROOM_ID = "room-1"
 
 describe("setDatePriceOverride", () => {
+  beforeEach(() => {
+    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.room.findUnique.mockResolvedValue({ id: "room-1", landlordId: "landlord-1" } as any)
+  })
+
   it("upserts with noon-UTC date key for '2026-05-01'", async () => {
     mockPrisma.datePriceOverride.upsert.mockResolvedValue({
       id: "dpo-1",
@@ -50,6 +55,11 @@ describe("setDatePriceOverride", () => {
 })
 
 describe("clearDatePriceOverride", () => {
+  beforeEach(() => {
+    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.room.findUnique.mockResolvedValue({ id: "room-1", landlordId: "landlord-1" } as any)
+  })
+
   it("calls deleteMany with correct noon-UTC date for '2026-05-01'", async () => {
     mockPrisma.datePriceOverride.deleteMany.mockResolvedValue({ count: 1 })
 

@@ -1,19 +1,12 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { prisma } from "@/lib/prisma"
+import { getLandlordForAdmin } from "@/lib/landlord"
 import { roomSchemaCoerced } from "@/lib/validations/room"
 import { revalidatePath } from "next/cache"
 
-async function requireAuth() {
-  const supabase = await createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
-  if (error || !user) throw new Error("Unauthorized")
-  return user
-}
-
 export async function createRoom(data: unknown) {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
   const parsed = roomSchemaCoerced.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
   const { addOns, ...roomData } = parsed.data
@@ -24,6 +17,7 @@ export async function createRoom(data: unknown) {
         baseNightlyRate: roomData.baseNightlyRate,
         cleaningFee: roomData.cleaningFee,
         extraGuestFee: roomData.extraGuestFee,
+        landlordId: landlord.id,
       },
     })
     if (addOns.length > 0) {
@@ -39,9 +33,14 @@ export async function createRoom(data: unknown) {
 }
 
 export async function updateRoom(id: string, data: unknown) {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
   const parsed = roomSchemaCoerced.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
+
+  // Verify room belongs to this landlord
+  const existing = await prisma.room.findUnique({ where: { id }, select: { landlordId: true } })
+  if (!existing || existing.landlordId !== landlord.id) throw new Error("Room not found")
+
   const { addOns, ...roomData } = parsed.data
   const room = await prisma.$transaction(async (tx) => {
     const updated = await tx.room.update({ where: { id }, data: roomData })
@@ -61,7 +60,16 @@ export async function updateRoom(id: string, data: unknown) {
 }
 
 export async function deleteRoom(id: string) {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+
+  // Verify room belongs to this landlord
+  const existing = await prisma.room.findUnique({ where: { id }, select: { landlordId: true } })
+  if (!existing || existing.landlordId !== landlord.id) throw new Error("Room not found")
+
+  const bookingCount = await prisma.booking.count({ where: { roomId: id } })
+  if (bookingCount > 0) {
+    return { error: `Cannot delete room with ${bookingCount} existing booking${bookingCount !== 1 ? "s" : ""}. Cancel all bookings first, or mark the room as inactive instead.` }
+  }
   await prisma.room.delete({ where: { id } })
   revalidatePath("/rooms")
   revalidatePath("/admin/rooms")

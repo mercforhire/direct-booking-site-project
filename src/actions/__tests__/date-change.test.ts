@@ -249,6 +249,8 @@ function makePrismaNotFoundError() {
 describe("approveDateChange", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.bookingDateChange.findUnique.mockResolvedValue({ id: "dc-1", booking: { room: { landlordId: "landlord-1" } } } as any)
     process.env.RESEND_API_KEY = "re_test_key"
     process.env.RESEND_FROM_EMAIL = "noreply@example.com"
     process.env.NEXT_PUBLIC_SITE_URL = "https://example.com"
@@ -388,6 +390,8 @@ describe("approveDateChange", () => {
 describe("declineDateChange", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.bookingDateChange.findUnique.mockResolvedValue({ id: "dc-1", booking: { room: { landlordId: "landlord-1" } } } as any)
     process.env.RESEND_API_KEY = "re_test_key"
     process.env.RESEND_FROM_EMAIL = "noreply@example.com"
     process.env.NEXT_PUBLIC_SITE_URL = "https://example.com"

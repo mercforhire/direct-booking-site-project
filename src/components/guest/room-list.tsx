@@ -27,9 +27,10 @@ interface Room {
 
 interface RoomListProps {
   rooms: Room[]
+  basePath?: string
 }
 
-export function RoomList({ rooms }: RoomListProps) {
+export function RoomList({ rooms, basePath = "" }: RoomListProps) {
   const searchParams = useSearchParams()
 
   const checkin = searchParams.get("checkin") ?? ""
@@ -76,7 +77,7 @@ export function RoomList({ rooms }: RoomListProps) {
           </p>
           <button
             type="button"
-            onClick={() => { window.location.href = "/rooms" }}
+            onClick={() => { window.location.href = `${basePath}/rooms` }}
             style={{
               border: "1px solid rgba(255,255,255,0.2)",
               color: "rgba(240,235,224,0.65)",
@@ -100,6 +101,7 @@ export function RoomList({ rooms }: RoomListProps) {
               room={room}
               isAvailable={isAvailable}
               searchParams={searchParamsStr}
+              basePath={basePath}
             />
           ))}
         </div>

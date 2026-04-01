@@ -1,7 +1,7 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { prisma } from "@/lib/prisma"
+import { getLandlordForAdmin } from "@/lib/landlord"
 import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
 import { render } from "@react-email/render"
@@ -13,18 +13,15 @@ import { BookingApprovedEmail } from "@/emails/booking-approved"
 import { BookingDeclinedEmail } from "@/emails/booking-declined"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 
-async function requireAuth() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || !user) throw new Error("Unauthorized")
-  return user
-}
-
 export async function approveBooking(bookingId: string, data: unknown) {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+
+  // Ownership check
+  const check = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: { room: { select: { landlordId: true } } },
+  })
+  if (!check || check.room.landlordId !== landlord.id) throw new Error("Booking not found")
 
   const parsed = approveBookingSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
@@ -65,14 +62,21 @@ export async function approveBooking(bookingId: string, data: unknown) {
     console.error("[approveBooking] email send failed:", emailErr)
   }
 
-  revalidatePath("/bookings")
-  revalidatePath(`/bookings/${bookingId}`)
+  revalidatePath("/admin/bookings")
+  revalidatePath(`/admin/bookings/${bookingId}`)
 
   return { success: true }
 }
 
 export async function declineBooking(bookingId: string, data: unknown) {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+
+  // Ownership check
+  const check = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: { room: { select: { landlordId: true } } },
+  })
+  if (!check || check.room.landlordId !== landlord.id) throw new Error("Booking not found")
 
   const parsed = declineBookingSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
@@ -113,8 +117,8 @@ export async function declineBooking(bookingId: string, data: unknown) {
     console.error("[declineBooking] email send failed:", emailErr)
   }
 
-  revalidatePath("/bookings")
-  revalidatePath(`/bookings/${bookingId}`)
+  revalidatePath("/admin/bookings")
+  revalidatePath(`/admin/bookings/${bookingId}`)
 
   return { success: true }
 }

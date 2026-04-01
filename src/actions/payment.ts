@@ -1,7 +1,7 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { prisma } from "@/lib/prisma"
+import { getLandlordForAdmin } from "@/lib/landlord"
 import { stripe } from "@/lib/stripe"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -13,16 +13,6 @@ import { BookingPaymentConfirmationEmail } from "@/emails/booking-payment-confir
 import { BookingExtensionPaidEmail } from "@/emails/booking-extension-paid"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 import { formatDateET } from "@/lib/format-date-et"
-
-async function requireAuth() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || !user) throw new Error("Unauthorized")
-  return user
-}
 
 export async function createStripeCheckoutSession(bookingId: string) {
   const booking = await prisma.booking.findUnique({
@@ -66,7 +56,14 @@ export async function createStripeCheckoutSession(bookingId: string) {
 }
 
 export async function markBookingAsPaid(bookingId: string) {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+
+  // Ownership check
+  const check = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: { room: { select: { landlordId: true } } },
+  })
+  if (!check || check.room.landlordId !== landlord.id) throw new Error("Booking not found")
 
   markAsPaidSchema.parse({ bookingId })
 
@@ -175,7 +172,14 @@ export async function createExtensionStripeCheckoutSession(extensionId: string) 
 }
 
 export async function markExtensionAsPaid(extensionId: string) {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+
+  // Ownership check
+  const extCheck = await prisma.bookingExtension.findUnique({
+    where: { id: extensionId },
+    select: { booking: { select: { room: { select: { landlordId: true } } } } },
+  })
+  if (!extCheck || extCheck.booking.room.landlordId !== landlord.id) throw new Error("Extension not found")
 
   let extension: {
     id: string

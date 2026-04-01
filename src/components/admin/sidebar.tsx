@@ -16,7 +16,7 @@ const navItems = [
   { href: "/settings", label: "Settings", icon: Settings },
 ]
 
-export function Sidebar() {
+export function Sidebar({ landlordName }: { landlordName: string }) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -30,8 +30,9 @@ export function Sidebar() {
     <aside className="w-56 min-h-screen border-r bg-white flex flex-col">
       <div className="p-4 border-b">
         <h1 className="font-semibold text-sm text-gray-900">
-          Direct Booking Admin
+          {landlordName}
         </h1>
+        <p className="text-xs text-gray-500 mt-0.5">Admin</p>
       </div>
       <nav className="flex-1 p-2 space-y-1">
         {navItems.map(({ href, label, icon: Icon }) => (

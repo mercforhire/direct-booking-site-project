@@ -1,18 +1,13 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { prisma } from "@/lib/prisma"
+import { getLandlordForAdmin } from "@/lib/landlord"
 import { roomAvailabilitySettingsSchemaCoerced } from "@/lib/validations/availability"
 import { revalidatePath } from "next/cache"
 
-async function requireAuth() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || !user) throw new Error("Unauthorized")
-  return user
+async function verifyRoomOwnership(roomId: string, landlordId: string) {
+  const room = await prisma.room.findUnique({ where: { id: roomId }, select: { landlordId: true } })
+  if (!room || room.landlordId !== landlordId) throw new Error("Room not found")
 }
 
 /**
@@ -23,7 +18,8 @@ export async function toggleBlockedDate(
   roomId: string,
   dateStr: string
 ): Promise<void> {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+  await verifyRoomOwnership(roomId, landlord.id)
 
   const date = new Date(dateStr + "T12:00:00.000Z")
 
@@ -55,7 +51,8 @@ export async function saveBlockedRange(
   toStr: string,
   block: boolean
 ): Promise<void> {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+  await verifyRoomOwnership(roomId, landlord.id)
 
   // Build array of all dates in the range (UTC-safe)
   const dates: Date[] = []
@@ -92,7 +89,8 @@ export async function updateRoomAvailabilitySettings(
   roomId: string,
   data: unknown
 ): Promise<{ room: object } | { error: object }> {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+  await verifyRoomOwnership(roomId, landlord.id)
 
   const parsed = roomAvailabilitySettingsSchemaCoerced.safeParse(data)
   if (!parsed.success) {
@@ -107,7 +105,6 @@ export async function updateRoomAvailabilitySettings(
   })
 
   revalidatePath("/availability")
-  revalidatePath(`/rooms/${roomId}`)
 
   return { room }
 }

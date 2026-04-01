@@ -24,6 +24,8 @@ import {
 describe("availability actions", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.room.findUnique.mockResolvedValue({ id: "room-1", landlordId: "landlord-1" } as any)
   })
 
   describe("toggleBlockedDate", () => {

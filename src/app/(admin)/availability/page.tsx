@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic"
 
 import { prisma } from "@/lib/prisma"
+import { requireLandlordForAdmin } from "@/lib/landlord"
 import { AvailabilityDashboard } from "@/components/admin/availability-dashboard"
 
 interface AvailabilityPageProps {
@@ -12,8 +13,9 @@ export default async function AvailabilityPage({
 }: AvailabilityPageProps) {
   const { roomId } = await searchParams
 
+  const landlord = await requireLandlordForAdmin()
   const rooms = await prisma.room.findMany({
-    where: { isActive: true },
+    where: { isActive: true, landlordId: landlord.id },
     orderBy: { name: "asc" },
   })
 

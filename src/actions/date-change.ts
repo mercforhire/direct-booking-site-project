@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { prisma } from "@/lib/prisma"
+import { getLandlordForAdmin } from "@/lib/landlord"
 import { stripe } from "@/lib/stripe"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -14,16 +15,6 @@ import { BookingDateChangeRequestEmail } from "@/emails/booking-date-change-requ
 import { BookingDateChangeApprovedEmail } from "@/emails/booking-date-change-approved"
 import { BookingDateChangeDeclinedEmail } from "@/emails/booking-date-change-declined"
 import { formatDateET } from "@/lib/format-date-et"
-
-async function requireAuth() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || !user) throw new Error("Unauthorized")
-  return user
-}
 
 export async function submitDateChange(bookingId: string, data: unknown) {
   const parsed = submitDateChangeSchema.safeParse(data)
@@ -107,7 +98,14 @@ export async function cancelDateChange(bookingId: string, token: string | null) 
 }
 
 export async function approveDateChange(dateChangeId: string, data: unknown) {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+
+  // Ownership check
+  const dcCheck = await prisma.bookingDateChange.findUnique({
+    where: { id: dateChangeId },
+    select: { booking: { select: { room: { select: { landlordId: true } } } } },
+  })
+  if (!dcCheck || dcCheck.booking.room.landlordId !== landlord.id) throw new Error("Date change not found")
 
   const parsed = approveDateChangeSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
@@ -283,7 +281,14 @@ export async function approveDateChange(dateChangeId: string, data: unknown) {
 }
 
 export async function declineDateChange(dateChangeId: string, data: unknown) {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+
+  // Ownership check
+  const dcCheck = await prisma.bookingDateChange.findUnique({
+    where: { id: dateChangeId },
+    select: { booking: { select: { room: { select: { landlordId: true } } } } },
+  })
+  if (!dcCheck || dcCheck.booking.room.landlordId !== landlord.id) throw new Error("Date change not found")
 
   const parsed = declineDateChangeSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }

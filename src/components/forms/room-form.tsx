@@ -115,7 +115,12 @@ export function RoomForm({ room }: RoomFormProps) {
     if (!room) return
     if (!confirm("Are you sure you want to delete this room? This cannot be undone.")) return
     setIsDeleting(true)
-    await deleteRoom(room.id)
+    const result = await deleteRoom(room.id)
+    if (result && "error" in result) {
+      setServerError(result.error ?? null)
+      setIsDeleting(false)
+      return
+    }
     router.push("/admin/rooms")
   }
 

@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/prisma"
+import { requireLandlordForAdmin } from "@/lib/landlord"
 import { RoomTable } from "@/components/admin/room-table"
 
 export const dynamic = "force-dynamic"
 
 export default async function RoomsPage() {
+  const landlord = await requireLandlordForAdmin()
   const rooms = await prisma.room.findMany({
+    where: { landlordId: landlord.id },
     orderBy: { createdAt: "desc" },
     include: { photos: { orderBy: { position: "asc" }, take: 1 } },
   })

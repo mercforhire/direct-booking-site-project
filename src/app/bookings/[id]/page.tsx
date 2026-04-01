@@ -48,6 +48,7 @@ export default async function BookingPage({
         select: {
           name: true,
           location: true,
+          landlordId: true,
           addOns: {
             select: { id: true, name: true, price: true },
           },
@@ -123,7 +124,7 @@ export default async function BookingPage({
   }
 
   // Fetch settings for etransferEmail
-  const settings = await prisma.settings.findUnique({ where: { id: "global" } })
+  const settings = await prisma.settings.findUnique({ where: { landlordId: booking.room.landlordId } })
 
   // Load the most recent extension (if any)
   let activeExtension = await prisma.bookingExtension.findFirst({

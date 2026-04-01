@@ -60,6 +60,8 @@ describe("approveBooking", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockGetUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null })
+    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.booking.findUnique.mockResolvedValue({ id: "booking-1", room: { landlordId: "landlord-1" } } as any)
     mockPrisma.booking.update.mockResolvedValue(mockBooking as any)
   })
 
@@ -97,9 +99,9 @@ describe("approveBooking", () => {
     expect(sendCall.subject).toMatch(/approved/i)
   })
 
-  it("calls revalidatePath('/bookings')", async () => {
+  it("calls revalidatePath('/admin/bookings')", async () => {
     await approveBooking("booking-1", { confirmedPrice: 500 })
-    expect(revalidatePath).toHaveBeenCalledWith("/bookings")
+    expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings")
   })
 
   it("returns { success: true } on happy path", async () => {
@@ -124,6 +126,8 @@ describe("declineBooking", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockGetUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null })
+    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.booking.findUnique.mockResolvedValue({ id: "booking-1", room: { landlordId: "landlord-1" } } as any)
     mockPrisma.booking.update.mockResolvedValue(mockDeclinedBooking as any)
   })
 
@@ -160,9 +164,9 @@ describe("declineBooking", () => {
     expect(sendCall.subject).toMatch(/declined/i)
   })
 
-  it("calls revalidatePath('/bookings')", async () => {
+  it("calls revalidatePath('/admin/bookings')", async () => {
     await declineBooking("booking-1", { declineReason: "Not available" })
-    expect(revalidatePath).toHaveBeenCalledWith("/bookings")
+    expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings")
   })
 
   it("returns { success: true } on happy path", async () => {

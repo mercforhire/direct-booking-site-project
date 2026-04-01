@@ -1,7 +1,7 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { prisma } from "@/lib/prisma"
+import { getLandlordForAdmin } from "@/lib/landlord"
 import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
 import { render } from "@react-email/render"
@@ -10,18 +10,15 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 import { BookingExtensionApprovedEmail } from "@/emails/booking-extension-approved"
 import { BookingExtensionDeclinedEmail } from "@/emails/booking-extension-declined"
 
-async function requireAuth() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || !user) throw new Error("Unauthorized")
-  return user
-}
-
 export async function approveExtension(extensionId: string, data: unknown) {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+
+  // Ownership check
+  const extCheck = await prisma.bookingExtension.findUnique({
+    where: { id: extensionId },
+    select: { booking: { select: { room: { select: { landlordId: true } } } } },
+  })
+  if (!extCheck || extCheck.booking.room.landlordId !== landlord.id) throw new Error("Extension not found")
 
   const parsed = approveExtensionSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
@@ -86,7 +83,14 @@ export async function approveExtension(extensionId: string, data: unknown) {
 }
 
 export async function declineExtension(extensionId: string, data: unknown) {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+
+  // Ownership check
+  const extCheck = await prisma.bookingExtension.findUnique({
+    where: { id: extensionId },
+    select: { booking: { select: { room: { select: { landlordId: true } } } } },
+  })
+  if (!extCheck || extCheck.booking.room.landlordId !== landlord.id) throw new Error("Extension not found")
 
   const parsed = declineExtensionSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }

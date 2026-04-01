@@ -1,17 +1,12 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { prisma } from "@/lib/prisma"
+import { getLandlordForAdmin } from "@/lib/landlord"
 import { revalidatePath } from "next/cache"
 
-async function requireAuth() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || !user) throw new Error("Unauthorized")
-  return user
+async function verifyRoomOwnership(roomId: string, landlordId: string) {
+  const room = await prisma.room.findUnique({ where: { id: roomId }, select: { landlordId: true } })
+  if (!room || room.landlordId !== landlordId) throw new Error("Room not found")
 }
 
 export async function setDatePriceOverride(
@@ -19,7 +14,8 @@ export async function setDatePriceOverride(
   dateStr: string,
   price: number
 ): Promise<void> {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+  await verifyRoomOwnership(roomId, landlord.id)
   const date = new Date(dateStr + "T12:00:00.000Z")
   await prisma.datePriceOverride.upsert({
     where: { roomId_date: { roomId, date } },
@@ -33,7 +29,8 @@ export async function clearDatePriceOverride(
   roomId: string,
   dateStr: string
 ): Promise<void> {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+  await verifyRoomOwnership(roomId, landlord.id)
   const date = new Date(dateStr + "T12:00:00.000Z")
   await prisma.datePriceOverride.deleteMany({
     where: { roomId, date },
@@ -47,7 +44,8 @@ export async function setRangePriceOverride(
   toStr: string,
   price: number
 ): Promise<void> {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+  await verifyRoomOwnership(roomId, landlord.id)
   const dates: Date[] = []
   const current = new Date(fromStr + "T12:00:00.000Z")
   const end = new Date(toStr + "T12:00:00.000Z")
@@ -67,7 +65,8 @@ export async function clearRangePriceOverride(
   fromStr: string,
   toStr: string
 ): Promise<void> {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
+  await verifyRoomOwnership(roomId, landlord.id)
   const dates: Date[] = []
   const current = new Date(fromStr + "T12:00:00.000Z")
   const end = new Date(toStr + "T12:00:00.000Z")

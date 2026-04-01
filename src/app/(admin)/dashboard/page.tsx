@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
+import { requireLandlordForAdmin } from "@/lib/landlord"
 import { Badge } from "@/components/ui/badge"
 import { format, isToday, isTomorrow } from "date-fns"
 
@@ -12,19 +13,22 @@ function dateLabel(date: Date) {
 }
 
 export default async function DashboardPage() {
+  const landlord = await requireLandlordForAdmin()
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const dayAfterTomorrow = new Date(today)
   dayAfterTomorrow.setDate(today.getDate() + 2)
 
+  const roomFilter = { room: { landlordId: landlord.id } }
+
   const [pendingApprovals, pendingEtransfer, currentlyStaying, checkIns, checkOuts] = await Promise.all([
     prisma.booking.findMany({
-      where: { status: "PENDING" },
+      where: { status: "PENDING", ...roomFilter },
       include: { room: { select: { name: true } } },
       orderBy: { createdAt: "asc" },
     }),
     prisma.booking.findMany({
-      where: { status: "APPROVED", stripeSessionId: null },
+      where: { status: "APPROVED", stripeSessionId: null, ...roomFilter },
       include: { room: { select: { name: true } } },
       orderBy: { createdAt: "asc" },
     }),
@@ -33,6 +37,7 @@ export default async function DashboardPage() {
         status: { in: ["APPROVED", "PAID"] },
         checkin: { lte: today },
         checkout: { gt: today },
+        ...roomFilter,
       },
       include: { room: { select: { name: true } } },
       orderBy: { checkin: "asc" },
@@ -41,6 +46,7 @@ export default async function DashboardPage() {
       where: {
         status: { in: ["APPROVED", "PAID"] },
         checkin: { gte: today, lt: dayAfterTomorrow },
+        ...roomFilter,
       },
       include: { room: { select: { name: true } } },
       orderBy: { checkin: "asc" },
@@ -49,6 +55,7 @@ export default async function DashboardPage() {
       where: {
         status: { in: ["APPROVED", "PAID"] },
         checkout: { gte: today, lt: dayAfterTomorrow },
+        ...roomFilter,
       },
       include: { room: { select: { name: true } } },
       orderBy: { checkout: "asc" },

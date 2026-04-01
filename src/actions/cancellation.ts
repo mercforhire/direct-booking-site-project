@@ -1,7 +1,7 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { prisma } from "@/lib/prisma"
+import { getLandlordForAdmin } from "@/lib/landlord"
 import { stripe } from "@/lib/stripe"
 import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
@@ -11,18 +11,8 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 import { BookingCancelledEmail } from "@/emails/booking-cancelled"
 import { formatDateET } from "@/lib/format-date-et"
 
-async function requireAuth() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || !user) throw new Error("Unauthorized")
-  return user
-}
-
 export async function cancelBooking(bookingId: string, data: unknown) {
-  await requireAuth()
+  const landlord = await getLandlordForAdmin()
 
   const parsed = cancelBookingSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
@@ -31,9 +21,10 @@ export async function cancelBooking(bookingId: string, data: unknown) {
   // Fetch booking for payment method detection + email data
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    include: { room: { select: { name: true } } },
+    include: { room: { select: { name: true, landlordId: true } } },
   })
   if (!booking) return { error: "not_found" }
+  if (booking.room.landlordId !== landlord.id) throw new Error("Booking not found")
 
   // Stripe refunds FIRST (hard block if any fail)
   if (booking.status === "PAID") {

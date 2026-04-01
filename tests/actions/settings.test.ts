@@ -17,16 +17,38 @@ vi.mock("@/lib/supabase/server", () => ({
 
 import { upsertSettings } from "@/actions/settings"
 
+const mockLandlord = {
+  id: "landlord-1",
+  slug: "highhill",
+  name: "Leon's Home",
+  ownerName: "Leon",
+  address: "9 Highhill Dr",
+  email: "test@test.com",
+  phone: null,
+  bgColor: "#3a392a",
+  textColor: "#f0ebe0",
+  accentColor: "#d4956a",
+  adminUserId: "user-1",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+}
+
 const validSettingsData = {
   serviceFeePercent: 3,
   depositAmount: 100,
 }
 
 const mockSettingsRecord = {
-  id: "global",
+  id: "settings-1",
+  landlordId: "landlord-1",
   serviceFeePercent: 3,
   depositAmount: 100,
   updatedAt: new Date(),
+}
+
+function mockAuthenticatedAdmin() {
+  mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
+  mockPrisma.landlord.findUnique.mockResolvedValue(mockLandlord as any)
 }
 
 describe("settings actions", () => {
@@ -36,20 +58,20 @@ describe("settings actions", () => {
 
   describe("upsertSettings", () => {
     it("upsertSettings with valid data upserts the Settings row and returns { settings }", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
+      mockAuthenticatedAdmin()
       mockPrisma.settings.upsert.mockResolvedValue(mockSettingsRecord as any)
 
       const result = await upsertSettings(validSettingsData)
       expect(result).toHaveProperty("settings")
       expect(mockPrisma.settings.upsert).toHaveBeenCalledWith({
-        where: { id: "global" },
-        create: expect.objectContaining({ id: "global" }),
+        where: { landlordId: "landlord-1" },
+        create: expect.objectContaining({ landlordId: "landlord-1" }),
         update: expect.any(Object),
       })
     })
 
     it("upsertSettings with serviceFeePercent=0 succeeds (0% is valid)", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
+      mockAuthenticatedAdmin()
       const zeroFeeRecord = { ...mockSettingsRecord, serviceFeePercent: 0 }
       mockPrisma.settings.upsert.mockResolvedValue(zeroFeeRecord as any)
 
@@ -59,7 +81,7 @@ describe("settings actions", () => {
     })
 
     it("upsertSettings with depositAmount=0 succeeds (no deposit is valid)", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
+      mockAuthenticatedAdmin()
       const noDepositRecord = { ...mockSettingsRecord, depositAmount: 0 }
       mockPrisma.settings.upsert.mockResolvedValue(noDepositRecord as any)
 
@@ -69,7 +91,7 @@ describe("settings actions", () => {
     })
 
     it("upsertSettings with a negative serviceFeePercent returns { error } with field-level message", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
+      mockAuthenticatedAdmin()
 
       const result = await upsertSettings({ serviceFeePercent: -1, depositAmount: 100 })
       expect(result).toHaveProperty("error")
@@ -77,7 +99,7 @@ describe("settings actions", () => {
     })
 
     it("upsertSettings with a negative depositAmount returns { error } with field-level message", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
+      mockAuthenticatedAdmin()
 
       const result = await upsertSettings({ serviceFeePercent: 3, depositAmount: -50 })
       expect(result).toHaveProperty("error")
@@ -91,7 +113,7 @@ describe("settings actions", () => {
     })
 
     it("when called twice with different values, the second call updates the existing row (upsert not create)", async () => {
-      mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
+      mockAuthenticatedAdmin()
       mockPrisma.settings.upsert.mockResolvedValue(mockSettingsRecord as any)
 
       // First call
@@ -100,10 +122,10 @@ describe("settings actions", () => {
       await upsertSettings({ serviceFeePercent: 5, depositAmount: 200 })
 
       expect(mockPrisma.settings.upsert).toHaveBeenCalledTimes(2)
-      // Both calls use where: { id: "global" }
+      // Both calls use where: { landlordId }
       expect(mockPrisma.settings.upsert).toHaveBeenNthCalledWith(2, {
-        where: { id: "global" },
-        create: expect.objectContaining({ id: "global", serviceFeePercent: 5, depositAmount: 200 }),
+        where: { landlordId: "landlord-1" },
+        create: expect.objectContaining({ landlordId: "landlord-1", serviceFeePercent: 5, depositAmount: 200 }),
         update: expect.objectContaining({ serviceFeePercent: 5, depositAmount: 200 }),
       })
     })

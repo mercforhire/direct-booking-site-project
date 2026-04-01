@@ -3,6 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 MVP** — Phases 1–17 (shipped 2026-04-01) — [archive](.planning/milestones/v1.0-ROADMAP.md)
+- 🔄 **v1.1 Multi-Tenant** — Phase 18 (in progress)
 
 ## Phases
 
@@ -30,6 +31,10 @@
 
 </details>
 
+### v1.1 Multi-Tenant
+
+- [ ] Phase 18: Multi-Tenant Landlord Support — 7 plans ready (0/7)
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -52,3 +57,4 @@
 | 15. Per-Day Pricing | v1.0 | 6/6 | Complete | 2026-03-31 |
 | 16. Guest Booking History | v1.0 | 3/3 | Complete | 2026-03-31 |
 | 17. Guest Sign-Up Flow | v1.0 | 4/4 | Complete | 2026-04-01 |
+| 18. Multi-Tenant Landlord Support | v1.1 | 0/7 | Plans Ready | — |

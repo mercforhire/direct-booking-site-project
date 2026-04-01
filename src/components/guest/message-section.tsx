@@ -15,11 +15,12 @@ export type SerializedMessage = {
 
 type Props = {
   bookingId: string
-  token: string | null // null = admin/landlord mode
+  token: string | null
   messages: SerializedMessage[]
+  isAdmin?: boolean
 }
 
-export function MessageSection({ bookingId, token, messages }: Props) {
+export function MessageSection({ bookingId, token, messages, isAdmin = false }: Props) {
   const router = useRouter()
   const [body, setBody] = useState("")
   const [isPending, startTransition] = useTransition()
@@ -48,8 +49,7 @@ export function MessageSection({ bookingId, token, messages }: Props) {
     })
   }
 
-  const isGuest = token !== null
-  const isAdmin = token === null
+  const isGuest = !isAdmin
 
   // Color tokens — dark mode for guest page, light mode for admin page
   const c = isAdmin ? {

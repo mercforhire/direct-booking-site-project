@@ -28,7 +28,7 @@ export default async function MyBookingsPage() {
 
   const bookings = await prisma.booking.findMany({
     where: {
-      OR: [{ guestUserId: user.id }, { guestEmail: user.email ?? undefined }],
+      guestUserId: user.id,
     },
     include: {
       room: {

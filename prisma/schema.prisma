@@ -9,21 +9,21 @@ datasource db {
 }
 
 model Room {
-  id                  String        @id @default(cuid())
+  id                  String              @id @default(cuid())
   name                String
   description         String
   location            String
-  baseNightlyRate     Decimal       @db.Decimal(10, 2)
-  cleaningFee         Decimal       @default(0) @db.Decimal(10, 2)
-  extraGuestFee       Decimal       @default(0) @db.Decimal(10, 2)
-  baseGuests          Int           @default(1)
+  baseNightlyRate     Decimal             @db.Decimal(10, 2)
+  cleaningFee         Decimal             @default(0) @db.Decimal(10, 2)
+  extraGuestFee       Decimal             @default(0) @db.Decimal(10, 2)
+  baseGuests          Int                 @default(1)
   maxGuests           Int
-  isActive            Boolean       @default(true)
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-  bookingWindowMonths Int           @default(3)
-  minStayNights       Int           @default(1)
-  maxStayNights       Int           @default(30)
+  isActive            Boolean             @default(true)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  bookingWindowMonths Int                 @default(3)
+  minStayNights       Int                 @default(1)
+  maxStayNights       Int                 @default(30)
   addOns              AddOn[]
   photos              RoomPhoto[]
   blockedDates        BlockedDate[]
@@ -96,28 +96,28 @@ enum BookingExtensionStatus {
 }
 
 model Booking {
-  id               String        @id @default(cuid())
+  id               String              @id @default(cuid())
   roomId           String
   guestName        String
   guestEmail       String
   guestPhone       String
   guestUserId      String?
-  checkin          DateTime      @db.Date
-  checkout         DateTime      @db.Date
+  checkin          DateTime            @db.Date
+  checkout         DateTime            @db.Date
   numGuests        Int
   selectedAddOnIds String[]
   noteToLandlord   String?
-  estimatedTotal   Decimal       @db.Decimal(10, 2)
-  status           BookingStatus @default(PENDING)
-  accessToken      String        @unique
-  confirmedPrice   Decimal?      @db.Decimal(10, 2)
+  estimatedTotal   Decimal             @db.Decimal(10, 2)
+  status           BookingStatus       @default(PENDING)
+  accessToken      String              @unique
+  confirmedPrice   Decimal?            @db.Decimal(10, 2)
   declineReason    String?
   stripeSessionId  String?
-  refundAmount     Decimal?      @db.Decimal(10, 2)
+  refundAmount     Decimal?            @db.Decimal(10, 2)
   cancelledAt      DateTime?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  room             Room          @relation(fields: [roomId], references: [id])
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  room             Room                @relation(fields: [roomId], references: [id])
   extensions       BookingExtension[]
   dateChanges      BookingDateChange[]
   messages         Message[]

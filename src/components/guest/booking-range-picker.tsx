@@ -56,11 +56,15 @@ export function BookingRangePicker({
       <button {...props}>
         {children}
         {!isBlocked && displayPrice !== undefined && (
-          <span className={
-            override !== undefined
-              ? "block text-[9px] font-semibold text-blue-600 leading-tight"
-              : "block text-[9px] text-gray-400 leading-tight"
-          }>
+          <span
+            style={{
+              display: "block",
+              fontSize: "9px",
+              lineHeight: 1.2,
+              fontWeight: override !== undefined ? 600 : 400,
+              color: override !== undefined ? "#d4956a" : "rgba(240,235,224,0.35)",
+            }}
+          >
             ${displayPrice}
           </span>
         )}

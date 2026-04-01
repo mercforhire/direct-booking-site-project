@@ -1,17 +1,35 @@
 import { Suspense } from "react"
+import Link from "next/link"
+import { Bebas_Neue, DM_Sans } from "next/font/google"
 import { prisma } from "@/lib/prisma"
 import { coerceRoomDecimals } from "@/lib/room-formatters"
 import { RoomList } from "@/components/guest/room-list"
+
+const bebas = Bebas_Neue({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-bebas",
+})
+
+const dm = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm",
+})
 
 export const dynamic = "force-dynamic"
 
 function RoomListSkeleton() {
   return (
-    <div className="space-y-4 mt-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", marginTop: "2rem" }}>
       {[1, 2, 3].map((i) => (
         <div
           key={i}
-          className="h-32 w-full rounded-lg bg-gray-200 animate-pulse"
+          style={{
+            height: "280px",
+            borderRadius: "12px",
+            background: "rgba(255,255,255,0.05)",
+            animation: "shimmer 1.8s ease-in-out infinite",
+          }}
         />
       ))}
     </div>
@@ -24,6 +42,7 @@ export default async function RoomsPage() {
     select: {
       id: true,
       name: true,
+      description: true,
       location: true,
       baseNightlyRate: true,
       cleaningFee: true,
@@ -50,11 +69,132 @@ export default async function RoomsPage() {
   }))
 
   return (
-    <main className="max-w-3xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Rooms</h1>
-      <Suspense fallback={<RoomListSkeleton />}>
-        <RoomList rooms={roomsForClient} />
-      </Suspense>
-    </main>
+    <div
+      className={`${bebas.variable} ${dm.variable}`}
+      style={{
+        background: "#3a392a",
+        minHeight: "100vh",
+        color: "#f0ebe0",
+        fontFamily: "var(--font-dm), sans-serif",
+      }}
+    >
+      <style>{`
+        @keyframes shimmer {
+          0%, 100% { opacity: 0.4; }
+          50%       { opacity: 0.7; }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .rooms-header { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
+        .back-link:hover { opacity: 1 !important; }
+        .my-bookings-btn:hover { background: rgba(255,255,255,0.06) !important; }
+        .room-tile:hover { border-color: rgba(255,255,255,0.18) !important; }
+        .room-tile:hover .tile-photo { transform: scale(1.04) !important; }
+        .room-tile:hover .tile-cta { background: #6a3214 !important; }
+        @media (max-width: 860px) {
+          .tile-grid { grid-template-columns: 1fr !important; }
+          .tile-photo-wrap { height: 220px !important; }
+        }
+        @media (max-width: 600px) {
+          .rooms-pad { padding: 0 1.5rem 3rem !important; }
+          .rooms-header-pad { padding: 2.5rem 1.5rem 1rem !important; }
+          .nav-pad { padding: 1.2rem 1.5rem !important; }
+        }
+      `}</style>
+
+      {/* ── Nav ─────────────────────────────────────────── */}
+      <nav
+        className="nav-pad"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "1.4rem 3rem",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
+        <Link
+          href="/"
+          className="back-link"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            color: "#f0ebe0",
+            textDecoration: "none",
+            fontSize: "0.75rem",
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            opacity: 0.5,
+            transition: "opacity 0.2s ease",
+          }}
+        >
+          ← Leon&rsquo;s Home
+        </Link>
+
+        <Link
+          href="/guest/login?next=/my-bookings"
+          className="my-bookings-btn"
+          style={{
+            border: "1px solid rgba(255,255,255,0.18)",
+            color: "rgba(240,235,224,0.6)",
+            padding: "0.42rem 1.2rem",
+            borderRadius: "9999px",
+            fontSize: "0.7rem",
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            textDecoration: "none",
+            background: "transparent",
+            transition: "background 0.2s ease",
+          }}
+        >
+          My Bookings
+        </Link>
+      </nav>
+
+      {/* ── Page header ─────────────────────────────────── */}
+      <div
+        className="rooms-header rooms-header-pad"
+        style={{ padding: "3rem 3rem 1.5rem" }}
+      >
+        <div
+          style={{
+            fontSize: "0.68rem",
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            opacity: 0.35,
+            marginBottom: "0.85rem",
+          }}
+        >
+          9 Highhill Dr &middot; Scarborough, ON
+        </div>
+        <h1
+          style={{
+            fontFamily: "var(--font-bebas)",
+            fontSize: "clamp(3.5rem, 8vw, 6rem)",
+            lineHeight: 0.9,
+            letterSpacing: "0.02em",
+            textTransform: "uppercase",
+            margin: 0,
+          }}
+        >
+          Available
+          <br />
+          Rooms
+        </h1>
+      </div>
+
+      {/* ── Room list ───────────────────────────────────── */}
+      <main
+        className="rooms-pad"
+        style={{ padding: "0 3rem 4rem" }}
+      >
+        <Suspense fallback={<RoomListSkeleton />}>
+          <RoomList rooms={roomsForClient} />
+        </Suspense>
+      </main>
+    </div>
   )
 }

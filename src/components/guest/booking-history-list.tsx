@@ -19,13 +19,13 @@ type SerializedBooking = {
   }
 }
 
-const statusConfig: Record<string, { label: string; className: string }> = {
-  PENDING: { label: "Pending", className: "bg-orange-100 text-orange-700" },
-  APPROVED: { label: "Approved", className: "bg-blue-100 text-blue-700" },
-  PAID: { label: "Paid", className: "bg-green-100 text-green-700" },
-  CANCELLED: { label: "Cancelled", className: "bg-gray-100 text-gray-700" },
-  DECLINED: { label: "Declined", className: "bg-red-100 text-red-700" },
-  COMPLETED: { label: "Completed", className: "bg-green-100 text-green-700" },
+const statusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  PENDING:   { label: "Pending",   color: "#d4956a", bg: "rgba(212,149,106,0.1)",  border: "rgba(212,149,106,0.3)" },
+  APPROVED:  { label: "Approved",  color: "#7ab3d4", bg: "rgba(122,179,212,0.1)",  border: "rgba(122,179,212,0.3)" },
+  PAID:      { label: "Paid",      color: "#7abf8e", bg: "rgba(122,191,142,0.1)",  border: "rgba(122,191,142,0.3)" },
+  CANCELLED: { label: "Cancelled", color: "rgba(240,235,224,0.35)", bg: "rgba(255,255,255,0.05)", border: "rgba(255,255,255,0.12)" },
+  DECLINED:  { label: "Declined",  color: "#d47a7a", bg: "rgba(212,122,122,0.1)",  border: "rgba(212,122,122,0.3)" },
+  COMPLETED: { label: "Completed", color: "#7abf8e", bg: "rgba(122,191,142,0.1)",  border: "rgba(122,191,142,0.3)" },
 }
 
 function formatDateRange(checkin: Date | string, checkout: Date | string) {
@@ -46,40 +46,115 @@ function BookingCard({ booking }: { booking: SerializedBooking }) {
   const price = booking.confirmedPrice ?? booking.estimatedTotal
   const badge = statusConfig[booking.status] ?? {
     label: booking.status,
-    className: "bg-gray-100 text-gray-700",
+    color: "rgba(240,235,224,0.35)",
+    bg: "rgba(255,255,255,0.05)",
+    border: "rgba(255,255,255,0.12)",
   }
 
   return (
     <Link
       href={`/bookings/${booking.id}`}
-      className="flex gap-3 rounded-lg border bg-white p-4 hover:bg-gray-50 transition-colors"
+      className="booking-card"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        borderRadius: "10px",
+        border: "1px solid rgba(255,255,255,0.07)",
+        background: "rgba(255,255,255,0.03)",
+        textDecoration: "none",
+        color: "#f0ebe0",
+        overflow: "hidden",
+        transition: "border-color 0.2s ease, background 0.2s ease",
+      }}
     >
-      {photo ? (
-        <Image
-          src={photo}
-          alt={booking.room.name}
-          width={64}
-          height={64}
-          className="rounded object-cover shrink-0 w-16 h-16"
-        />
-      ) : (
-        <div className="w-16 h-16 rounded bg-gray-200 shrink-0" />
-      )}
-      <div className="flex-1 min-w-0 space-y-1">
-        <p className="font-medium truncate">{booking.room.name}</p>
-        <p className="text-sm text-gray-500">
-          {formatDateRange(booking.checkin, booking.checkout)}
-        </p>
-        <p className="text-sm text-gray-500">
-          {booking.numGuests} {booking.numGuests === 1 ? "guest" : "guests"}
-        </p>
-        <div className="flex items-center justify-between">
-          <span
-            className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}
+      {/* Cover photo */}
+      <div
+        style={{
+          position: "relative",
+          height: "180px",
+          background: "#2a2618",
+          overflow: "hidden",
+          flexShrink: 0,
+        }}
+      >
+        {photo ? (
+          <Image
+            src={photo}
+            alt={booking.room.name}
+            fill
+            className="booking-card-img"
+            style={{ objectFit: "cover", transition: "transform 0.5s ease" }}
+            sizes="(max-width: 680px) 100vw, 640px"
+          />
+        ) : null}
+        {/* Status badge overlaid on photo */}
+        <span
+          style={{
+            position: "absolute",
+            top: "0.75rem",
+            right: "0.75rem",
+            display: "inline-block",
+            borderRadius: "9999px",
+            padding: "0.18rem 0.65rem",
+            fontSize: "0.65rem",
+            fontWeight: 600,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            color: badge.color,
+            background: "rgba(30,28,20,0.75)",
+            backdropFilter: "blur(6px)",
+            border: `1px solid ${badge.border}`,
+          }}
+        >
+          {badge.label}
+        </span>
+      </div>
+
+      {/* Info row */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0.9rem 1.1rem",
+          gap: "1rem",
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <div
+            style={{
+              fontWeight: 600,
+              fontSize: "0.92rem",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              marginBottom: "0.2rem",
+            }}
           >
-            {badge.label}
+            {booking.room.name}
+          </div>
+          <div style={{ fontSize: "0.75rem", opacity: 0.45, lineHeight: 1.5 }}>
+            {formatDateRange(booking.checkin, booking.checkout)}
+            &ensp;&middot;&ensp;
+            {booking.numGuests} {booking.numGuests === 1 ? "guest" : "guests"}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexShrink: 0 }}>
+          <span style={{ fontSize: "0.88rem", fontWeight: 600 }}>
+            {formatPrice(price)}
           </span>
-          <span className="text-sm font-medium">{formatPrice(price)}</span>
+          <span
+            className="booking-card-arrow"
+            style={{
+              color: "#d4956a",
+              fontSize: "0.85rem",
+              opacity: 0.5,
+              transition: "transform 0.2s ease, opacity 0.2s ease",
+            }}
+          >
+            →
+          </span>
         </div>
       </div>
     </Link>
@@ -91,55 +166,82 @@ type BookingHistoryListProps = {
   past: SerializedBooking[]
 }
 
-export default function BookingHistoryList({
-  upcoming,
-  past,
-}: BookingHistoryListProps) {
+export default function BookingHistoryList({ upcoming, past }: BookingHistoryListProps) {
   if (upcoming.length === 0 && past.length === 0) {
     return (
-      <div className="text-center py-12 space-y-4">
-        <p className="text-gray-500">
+      <div style={{ textAlign: "center", padding: "3rem 0" }}>
+        <p style={{ opacity: 0.4, fontSize: "0.88rem", marginBottom: "1.75rem" }}>
           You don&apos;t have any bookings yet.
         </p>
         <Link
           href="/rooms"
-          className="inline-block rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+          className="browse-btn"
+          style={{
+            display: "inline-block",
+            background: "#7c3d18",
+            color: "#f0ebe0",
+            textDecoration: "none",
+            borderRadius: "9999px",
+            padding: "0.75rem 2rem",
+            fontSize: "0.72rem",
+            fontWeight: 700,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            transition: "background 0.2s ease",
+          }}
         >
-          Browse rooms
+          Browse Rooms
         </Link>
       </div>
     )
   }
 
   return (
-    <div className="space-y-8">
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Upcoming</h2>
-        {upcoming.length > 0 ? (
-          <div className="space-y-3">
-            {upcoming.map((b) => (
-              <BookingCard key={b.id} booking={b} />
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-gray-400">No upcoming bookings.</p>
-        )}
-      </section>
+    <>
+      <style>{`
+        .booking-card:hover { border-color: rgba(255,255,255,0.18) !important; background: rgba(255,255,255,0.05) !important; }
+        .booking-card:hover .booking-card-img { transform: scale(1.06); }
+        .booking-card:hover .booking-card-arrow { transform: translateX(3px); opacity: 1 !important; }
+        .browse-btn:hover { background: #6a3214 !important; }
+        .section-label {
+          font-family: var(--font-bebas);
+          font-size: 1.25rem;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          margin: 0 0 1rem;
+        }
+        .empty-note { font-size: 0.78rem; opacity: 0.35; }
+      `}</style>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Past Bookings</h2>
-        {past.length > 0 ? (
-          <div className="space-y-3">
-            {past.map((b) => (
-              <BookingCard key={b.id} booking={b} />
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-gray-400">
-            No past bookings in the last 12 months.
-          </p>
-        )}
-      </section>
-    </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
+        {/* Upcoming */}
+        <section>
+          <h2 className="section-label">Upcoming</h2>
+          {upcoming.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              {upcoming.map((b) => (
+                <BookingCard key={b.id} booking={b} />
+              ))}
+            </div>
+          ) : (
+            <p className="empty-note">No upcoming bookings.</p>
+          )}
+        </section>
+
+        {/* Past */}
+        <section>
+          <h2 className="section-label">Past</h2>
+          {past.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              {past.map((b) => (
+                <BookingCard key={b.id} booking={b} />
+              ))}
+            </div>
+          ) : (
+            <p className="empty-note">No past bookings in the last 12 months.</p>
+          )}
+        </section>
+      </div>
+    </>
   )
 }

@@ -17,7 +17,7 @@ export default async function DashboardPage() {
   const dayAfterTomorrow = new Date(today)
   dayAfterTomorrow.setDate(today.getDate() + 2)
 
-  const [pendingApprovals, pendingEtransfer, checkIns, checkOuts] = await Promise.all([
+  const [pendingApprovals, pendingEtransfer, currentlyStaying, checkIns, checkOuts] = await Promise.all([
     prisma.booking.findMany({
       where: { status: "PENDING" },
       include: { room: { select: { name: true } } },
@@ -27,6 +27,15 @@ export default async function DashboardPage() {
       where: { status: "APPROVED", stripeSessionId: null },
       include: { room: { select: { name: true } } },
       orderBy: { createdAt: "asc" },
+    }),
+    prisma.booking.findMany({
+      where: {
+        status: { in: ["APPROVED", "PAID"] },
+        checkin: { lte: today },
+        checkout: { gt: today },
+      },
+      include: { room: { select: { name: true } } },
+      orderBy: { checkin: "asc" },
     }),
     prisma.booking.findMany({
       where: {
@@ -127,6 +136,39 @@ export default async function DashboardPage() {
             )}
           </div>
 
+        </div>
+      </section>
+
+      {/* Currently Staying */}
+      <section className="space-y-4">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Currently Staying</h2>
+        <div className="rounded-lg border bg-white p-4 space-y-3">
+          {currentlyStaying.length === 0 ? (
+            <p className="text-sm text-gray-400">No guests currently staying</p>
+          ) : (
+            <ul className="space-y-2">
+              {currentlyStaying.map((b) => (
+                <li key={b.id}>
+                  <Link
+                    href={`/admin/bookings/${b.id}`}
+                    className="flex items-center justify-between gap-2 text-sm hover:bg-gray-50 -mx-2 px-2 py-1.5 rounded"
+                  >
+                    <div>
+                      <span className="font-medium">{b.guestName}</span>
+                      <span className="text-gray-400 mx-1">·</span>
+                      <span className="text-gray-600">{b.room.name}</span>
+                      <div className="text-xs text-gray-400 mt-0.5">
+                        {format(b.checkin, "MMM d")} – {format(b.checkout, "MMM d, yyyy")}
+                      </div>
+                    </div>
+                    <span className="text-xs font-medium text-green-600 shrink-0">
+                      Checkout {dateLabel(b.checkout)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
 

@@ -3,8 +3,6 @@
 import { useEffect, useTransition, useState } from "react"
 import { useRouter } from "next/navigation"
 import { format } from "date-fns"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
 import { submitMessage, sendMessageAsLandlord } from "@/actions/messaging"
 
 export type SerializedMessage = {
@@ -44,52 +42,157 @@ export function MessageSection({ bookingId, token, messages }: Props) {
         result = await sendMessageAsLandlord(bookingId, { body: body.trim() })
       }
       if (!result || !("error" in result)) {
-        // Success — clear textarea and refresh immediately (don't wait for next poll tick)
         setBody("")
         router.refresh()
       }
     })
   }
 
-  return (
-    <div className="mt-6 space-y-4">
-      <h2 className="text-lg font-semibold text-gray-900">Messages</h2>
+  const isGuest = token !== null
 
-      <div className="rounded-lg border border-gray-200 p-4 space-y-4">
+  return (
+    <div style={{ marginTop: "0.25rem" }}>
+      <div
+        style={{
+          fontSize: "0.63rem",
+          letterSpacing: "0.22em",
+          textTransform: "uppercase",
+          opacity: 0.35,
+          marginBottom: "0.75rem",
+        }}
+      >
+        Messages
+      </div>
+
+      <div
+        style={{
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: "10px",
+          overflow: "hidden",
+        }}
+      >
         {/* Message thread */}
-        <div className="space-y-4">
+        <div
+          style={{
+            padding: "1.25rem",
+            display: "flex",
+            flexDirection: "column",
+            gap: "1rem",
+            minHeight: messages.length === 0 ? "80px" : undefined,
+          }}
+        >
           {messages.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No messages yet.</p>
+            <p style={{ fontSize: "0.8rem", opacity: 0.3, margin: 0 }}>
+              No messages yet. Send Leon a message below.
+            </p>
           ) : (
-            messages.map((msg) => (
-              <div key={msg.id}>
-                <p className="text-xs text-muted-foreground">
-                  {msg.senderName} &middot;{" "}
-                  {format(new Date(msg.createdAt), "MMM d, h:mm a")}
-                </p>
-                <p className="text-sm text-gray-900 whitespace-pre-wrap mt-0.5">
-                  {msg.body}
-                </p>
-              </div>
-            ))
+            messages.map((msg) => {
+              const isGuestMsg = msg.sender === "GUEST"
+              return (
+                <div
+                  key={msg.id}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: isGuestMsg ? "flex-end" : "flex-start",
+                  }}
+                >
+                  <div
+                    style={{
+                      maxWidth: "80%",
+                      background: isGuestMsg
+                        ? "rgba(212,149,106,0.14)"
+                        : "rgba(255,255,255,0.06)",
+                      border: `1px solid ${isGuestMsg ? "rgba(212,149,106,0.22)" : "rgba(255,255,255,0.09)"}`,
+                      borderRadius: isGuestMsg ? "12px 12px 3px 12px" : "12px 12px 12px 3px",
+                      padding: "0.65rem 0.9rem",
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontSize: "0.85rem",
+                        color: "#f0ebe0",
+                        whiteSpace: "pre-wrap",
+                        margin: 0,
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {msg.body}
+                    </p>
+                  </div>
+                  <p
+                    style={{
+                      fontSize: "0.65rem",
+                      opacity: 0.3,
+                      marginTop: "0.25rem",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    {msg.senderName} &middot; {format(new Date(msg.createdAt), "MMM d, h:mm a")}
+                  </p>
+                </div>
+              )
+            })
           )}
         </div>
 
         {/* Send form */}
-        <div className="space-y-2 pt-2 border-t border-gray-100">
-          <Textarea
+        <div
+          style={{
+            borderTop: "1px solid rgba(255,255,255,0.06)",
+            padding: "1rem 1.25rem",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.65rem",
+          }}
+        >
+          <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Write a message..."
+            placeholder="Write a message to Leon…"
             rows={3}
             disabled={isPending}
+            style={{
+              width: "100%",
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "8px",
+              padding: "0.65rem 0.85rem",
+              color: "#f0ebe0",
+              fontSize: "0.85rem",
+              resize: "vertical",
+              transition: "border-color 0.2s ease",
+              outline: "none",
+              fontFamily: "inherit",
+              boxSizing: "border-box",
+            }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(212,149,106,0.5)" }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)" }}
           />
-          <Button
-            onClick={handleSend}
-            disabled={isPending || !body.trim()}
-          >
-            {isPending ? "Sending..." : "Send"}
-          </Button>
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button
+              type="button"
+              onClick={handleSend}
+              disabled={isPending || !body.trim()}
+              style={{
+                background: "#7c3d18",
+                color: "#f0ebe0",
+                border: "none",
+                borderRadius: "9999px",
+                padding: "0.55rem 1.5rem",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                cursor: isPending || !body.trim() ? "not-allowed" : "pointer",
+                opacity: isPending || !body.trim() ? 0.4 : 1,
+                transition: "background 0.2s ease, opacity 0.15s ease",
+              }}
+            >
+              {isPending ? "Sending…" : "Send"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

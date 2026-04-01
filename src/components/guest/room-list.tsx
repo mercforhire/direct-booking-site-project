@@ -13,6 +13,7 @@ interface RoomPhoto {
 interface Room {
   id: string
   name: string
+  description: string
   location: string
   baseNightlyRate: number
   cleaningFee: number
@@ -37,13 +38,11 @@ export function RoomList({ rooms }: RoomListProps) {
 
   const datesSet = Boolean(checkin && checkout)
 
-  // Determine availability for each room
   const roomsWithAvailability = rooms.map((room) => ({
     room,
     isAvailable: isRoomAvailable(room, checkin, checkout, guests),
   }))
 
-  // Sort: available first, unavailable second (stable within each group)
   const sorted = [
     ...roomsWithAvailability.filter((r) => r.isAvailable),
     ...roomsWithAvailability.filter((r) => !r.isAvailable),
@@ -59,24 +58,42 @@ export function RoomList({ rooms }: RoomListProps) {
       <RoomListFilter />
 
       {allUnavailable ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center gap-4">
-          <p className="text-gray-600 text-base">
-            No rooms available for those dates. Try different dates or fewer
-            guests.
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "5rem 2rem",
+            textAlign: "center",
+            gap: "1.25rem",
+          }}
+        >
+          <p style={{ opacity: 0.55, fontSize: "0.95rem", lineHeight: 1.7 }}>
+            No rooms available for those dates.
+            <br />
+            Try different dates or fewer guests.
           </p>
           <button
             type="button"
-            onClick={() => {
-              // Clear filter by navigating without params
-              window.location.href = "/rooms"
+            onClick={() => { window.location.href = "/rooms" }}
+            style={{
+              border: "1px solid rgba(255,255,255,0.2)",
+              color: "rgba(240,235,224,0.65)",
+              padding: "0.5rem 1.4rem",
+              borderRadius: "9999px",
+              fontSize: "0.72rem",
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              background: "transparent",
+              cursor: "pointer",
             }}
-            className="text-sm text-blue-600 underline hover:text-blue-800"
           >
-            Clear filters
+            Clear Filters
           </button>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
           {sorted.map(({ room, isAvailable }) => (
             <RoomTile
               key={room.id}

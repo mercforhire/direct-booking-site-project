@@ -1,7 +1,7 @@
 "use client"
 
+import type React from "react"
 import { useState } from "react"
-import { Separator } from "@/components/ui/separator"
 import type { PriceEstimate } from "@/lib/price-estimate"
 
 interface BookingPriceSummaryProps {
@@ -23,18 +23,26 @@ export function BookingPriceSummary({
 
   const summaryTitle =
     estimate != null
-      ? `Price estimate — $${estimate.total.toFixed(2)}`
-      : "Select dates"
+      ? `Estimate — $${estimate.total.toFixed(2)}`
+      : "Price estimate"
+
+  const rowStyle: React.CSSProperties = {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+    fontSize: "0.8rem",
+    color: "rgba(240,235,224,0.65)",
+  }
 
   const priceContent =
     estimate == null ? (
-      <p className="text-sm text-gray-500">
-        Select dates to see price estimate.
+      <p style={{ fontSize: "0.8rem", opacity: 0.4, margin: 0 }}>
+        Select dates to see your price breakdown.
       </p>
     ) : (
-      <div className="space-y-2 text-sm">
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
         {/* Nightly rate */}
-        <div className="flex justify-between">
+        <div style={rowStyle}>
           <span>
             {estimate.nightlyTotal === baseNightlyRate * estimate.nights
               ? `$${baseNightlyRate.toFixed(2)} \u00d7 ${estimate.nights} ${estimate.nights === 1 ? "night" : "nights"}`
@@ -44,14 +52,14 @@ export function BookingPriceSummary({
         </div>
 
         {/* Cleaning fee */}
-        <div className="flex justify-between">
+        <div style={rowStyle}>
           <span>Cleaning fee</span>
           <span>${estimate.cleaningFee.toFixed(2)}</span>
         </div>
 
         {/* Extra guest fee — only when applicable */}
         {estimate.extraGuestTotal > 0 && (
-          <div className="flex justify-between">
+          <div style={rowStyle}>
             <span>Extra guest fee</span>
             <span>${estimate.extraGuestTotal.toFixed(2)}</span>
           </div>
@@ -61,61 +69,86 @@ export function BookingPriceSummary({
         {addOns
           .filter((a) => selectedAddOnIds.includes(a.id))
           .map((a) => (
-            <div key={a.id} className="flex justify-between">
+            <div key={a.id} style={rowStyle}>
               <span>{a.name}</span>
               <span>${a.price.toFixed(2)}</span>
             </div>
           ))}
 
         {/* Deposit */}
-        <div className="flex justify-between">
+        <div style={rowStyle}>
           <span>Deposit</span>
           <span>${estimate.depositAmount.toFixed(2)}</span>
         </div>
 
         {/* Service fee */}
-        <div className="flex justify-between">
+        <div style={rowStyle}>
           <span>Service fee ({estimate.serviceFeePercent}%)</span>
           <span>${estimate.serviceFee.toFixed(2)}</span>
         </div>
 
-        <Separator />
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "0.25rem 0" }} />
 
         {/* Total */}
-        <div className="flex justify-between font-semibold">
-          <span>Total</span>
-          <span>${estimate.total.toFixed(2)}</span>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "baseline",
+            fontSize: "0.92rem",
+            fontWeight: 600,
+            color: "#f0ebe0",
+          }}
+        >
+          <span>Total estimate</span>
+          <span style={{ color: "#d4956a" }}>${estimate.total.toFixed(2)}</span>
         </div>
 
-        <p className="text-xs text-gray-400 mt-1">
-          Final price set by landlord at approval
+        <p style={{ fontSize: "0.68rem", opacity: 0.35, margin: "0.1rem 0 0", lineHeight: 1.5 }}>
+          Final price confirmed by Leon at approval
         </p>
       </div>
     )
 
   return (
     <div
-      className={[
-        "border rounded-lg p-4",
-        className,
-      ]
-        .filter(Boolean)
-        .join(" ")}
+      className={["border rounded-lg p-4", className].filter(Boolean).join(" ")}
+      style={{ padding: "1.25rem" }}
     >
       {/* Mobile toggle — hidden on desktop */}
       <button
         type="button"
-        className="w-full text-left md:hidden text-sm font-medium text-gray-800 flex items-center justify-between select-none"
+        className="w-full text-left md:hidden flex items-center justify-between select-none"
+        style={{
+          fontSize: "0.78rem",
+          fontWeight: 600,
+          letterSpacing: "0.04em",
+          color: "inherit",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: 0,
+        }}
         onClick={() => setMobileOpen((o) => !o)}
       >
         <span>{summaryTitle}</span>
-        <span className={["text-gray-400 text-xs transition-transform", mobileOpen ? "rotate-180" : ""].join(" ")}>
+        <span
+          style={{
+            fontSize: "0.65rem",
+            opacity: 0.4,
+            transition: "transform 0.2s ease",
+            transform: mobileOpen ? "rotate(180deg)" : "none",
+            display: "inline-block",
+          }}
+        >
           &#9660;
         </span>
       </button>
 
       {/* Content: always visible on desktop, toggled on mobile */}
-      <div className={["md:block pt-3", mobileOpen ? "block" : "hidden md:block"].join(" ")}>
+      <div className={["md:block", mobileOpen ? "block" : "hidden md:block"].join(" ")}
+        style={{ paddingTop: "0.75rem" }}
+      >
         {priceContent}
       </div>
     </div>

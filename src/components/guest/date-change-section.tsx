@@ -2,8 +2,6 @@
 
 import { useState, useTransition } from "react"
 import { format } from "date-fns"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -35,10 +33,56 @@ function formatDate(iso: string): string {
 }
 
 function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-CA", {
-    style: "currency",
-    currency: "CAD",
-  }).format(amount)
+  return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(amount)
+}
+
+const ghostBtn: React.CSSProperties = {
+  background: "transparent",
+  border: "1px solid rgba(255,255,255,0.2)",
+  color: "rgba(240,235,224,0.65)",
+  borderRadius: "9999px",
+  padding: "0.5rem 1.2rem",
+  fontSize: "0.75rem",
+  fontWeight: 600,
+  letterSpacing: "0.12em",
+  textTransform: "uppercase",
+  cursor: "pointer",
+  transition: "background 0.2s ease",
+}
+
+const primaryBtn: React.CSSProperties = {
+  background: "#7c3d18",
+  border: "none",
+  color: "#f0ebe0",
+  borderRadius: "9999px",
+  padding: "0.55rem 1.5rem",
+  fontSize: "0.75rem",
+  fontWeight: 700,
+  letterSpacing: "0.14em",
+  textTransform: "uppercase",
+  cursor: "pointer",
+  transition: "background 0.2s ease",
+}
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  background: "rgba(255,255,255,0.05)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  borderRadius: "8px",
+  padding: "0.55rem 0.85rem",
+  color: "#f0ebe0",
+  fontSize: "0.85rem",
+  outline: "none",
+  boxSizing: "border-box",
+}
+
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  fontSize: "0.7rem",
+  letterSpacing: "0.1em",
+  textTransform: "uppercase",
+  opacity: 0.4,
+  marginBottom: "0.4rem",
 }
 
 export function DateChangeSection({ booking, activeDateChange, token }: Props) {
@@ -51,20 +95,31 @@ export function DateChangeSection({ booking, activeDateChange, token }: Props) {
   const [isPending, startTransition] = useTransition()
   const [isStripeLoading, startStripeTransition] = useTransition()
 
-  // Internal guard: only show for APPROVED or PAID bookings
-  // Exception: if activeDateChange is PAID, always show the confirmation
   if (booking.status !== "APPROVED" && booking.status !== "PAID" && activeDateChange?.status !== "PAID") {
     return null
   }
 
-  // PAID state: show green confirmation panel with confirmed dates
+  // PAID state
   if (activeDateChange?.status === "PAID") {
     return (
-      <div className="rounded-md border p-4">
-        <h3 className="font-semibold mb-2">Date Change</h3>
-        <div className="rounded-md bg-green-50 border border-green-200 p-3 text-green-800 text-sm">
-          Date change confirmed. New dates: {formatDate(activeDateChange.requestedCheckin)} — {formatDate(activeDateChange.requestedCheckout)}
-        </div>
+      <div
+        style={{
+          background: "rgba(52,211,153,0.08)",
+          border: "1px solid rgba(52,211,153,0.22)",
+          borderRadius: "10px",
+          padding: "1.1rem 1.25rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.65rem",
+        }}
+      >
+        <span style={{ fontSize: "1rem" }}>✓</span>
+        <span style={{ fontSize: "0.85rem", color: "#6ee7b7" }}>
+          Date change confirmed. New dates:{" "}
+          <strong>{formatDate(activeDateChange.requestedCheckin)}</strong>
+          {" — "}
+          <strong>{formatDate(activeDateChange.requestedCheckout)}</strong>
+        </span>
       </div>
     )
   }
@@ -106,25 +161,49 @@ export function DateChangeSection({ booking, activeDateChange, token }: Props) {
     })
   }
 
-  return (
-    <div className="mt-6 space-y-4">
-      <h2 className="text-lg font-semibold text-gray-900">Date Change Request</h2>
+  const sectionLabel = (
+    <div
+      style={{
+        fontSize: "0.63rem",
+        letterSpacing: "0.22em",
+        textTransform: "uppercase",
+        opacity: 0.35,
+        marginBottom: "0.75rem",
+      }}
+    >
+      Date Change Request
+    </div>
+  )
 
-      {/* PENDING state */}
+  return (
+    <div style={{ marginTop: "0.25rem" }}>
+      {sectionLabel}
+
+      {/* PENDING */}
       {activeDateChange?.status === "PENDING" && (
-        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 space-y-3">
-          <p className="text-sm text-yellow-800">
+        <div
+          style={{
+            background: "rgba(251,191,36,0.07)",
+            border: "1px solid rgba(251,191,36,0.22)",
+            borderRadius: "10px",
+            padding: "1.1rem 1.25rem",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.85rem",
+          }}
+        >
+          <p style={{ fontSize: "0.85rem", color: "#fcd34d", margin: 0, lineHeight: 1.6 }}>
             Date change requested:{" "}
             <strong>{formatDate(activeDateChange.requestedCheckin)}</strong>
             {" to "}
-            <strong>{formatDate(activeDateChange.requestedCheckout)}</strong>{" "}
-            — awaiting landlord approval.
+            <strong>{formatDate(activeDateChange.requestedCheckout)}</strong>
+            {" "}— awaiting Leon&apos;s approval.
           </p>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm" disabled={isPending}>
-                {isPending ? "Cancelling..." : "Cancel Request"}
-              </Button>
+              <button style={ghostBtn} disabled={isPending}>
+                {isPending ? "Cancelling…" : "Cancel Request"}
+              </button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -144,40 +223,44 @@ export function DateChangeSection({ booking, activeDateChange, token }: Props) {
         </div>
       )}
 
-      {/* APPROVED state */}
+      {/* APPROVED */}
       {activeDateChange?.status === "APPROVED" && (
-        <div className="space-y-4">
-          <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <Badge>Approved</Badge>
-              <span className="text-sm text-gray-600">
-                Date change to{" "}
-                <strong>{formatDate(activeDateChange.requestedCheckin)}</strong>
-                {" – "}
-                <strong>{formatDate(activeDateChange.requestedCheckout)}</strong>
-              </span>
-            </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          <div
+            style={{
+              background: "rgba(52,211,153,0.08)",
+              border: "1px solid rgba(52,211,153,0.22)",
+              borderRadius: "10px",
+              padding: "1rem 1.25rem",
+              fontSize: "0.85rem",
+              color: "#6ee7b7",
+            }}
+          >
+            Approved: {" "}
+            <strong>{formatDate(activeDateChange.requestedCheckin)}</strong>
+            {" – "}
+            <strong>{formatDate(activeDateChange.requestedCheckout)}</strong>
           </div>
 
-          {/* Stripe top-up payment */}
+          {/* Stripe top-up */}
           {activeDateChange.stripeSessionId !== null && activeDateChange.newPrice !== null && (
-            <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
-              <h3 className="font-medium text-gray-900">Payment Required</h3>
-              <p className="text-sm text-gray-500">
-                A top-up payment of{" "}
-                <strong>{formatCurrency(activeDateChange.newPrice)}</strong> is required to confirm your new dates.
+            <div
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                borderRadius: "10px",
+                padding: "1.25rem",
+              }}
+            >
+              <div style={{ fontSize: "0.88rem", fontWeight: 600, marginBottom: "0.4rem" }}>
+                Payment Required
+              </div>
+              <p style={{ fontSize: "0.78rem", opacity: 0.55, marginBottom: "1rem", lineHeight: 1.5 }}>
+                A top-up of <strong style={{ color: "#d4956a" }}>{formatCurrency(activeDateChange.newPrice)}</strong> is required to confirm your new dates.
               </p>
-              <form
-                action={() => {
-                  handleStripePayment(activeDateChange.id)
-                }}
-              >
-                <button
-                  type="submit"
-                  disabled={isStripeLoading}
-                  className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                >
-                  {isStripeLoading ? "Redirecting to Stripe..." : "Pay by Card"}
+              <form action={() => handleStripePayment(activeDateChange.id)}>
+                <button type="submit" disabled={isStripeLoading} style={{ ...primaryBtn, opacity: isStripeLoading ? 0.5 : 1 }}>
+                  {isStripeLoading ? "Redirecting to Stripe…" : "Pay by Card"}
                 </button>
               </form>
             </div>
@@ -185,114 +268,148 @@ export function DateChangeSection({ booking, activeDateChange, token }: Props) {
 
           {/* E-transfer top-up */}
           {activeDateChange.stripeSessionId === null && activeDateChange.newPrice !== null && (
-            <div className="rounded-md bg-blue-50 border border-blue-200 p-4 text-blue-800 text-sm">
-              Payment of{" "}
-              <strong>{formatCurrency(activeDateChange.newPrice)}</strong> required via e-transfer to confirm your new dates.
+            <div
+              style={{
+                background: "rgba(212,149,106,0.07)",
+                border: "1px solid rgba(212,149,106,0.22)",
+                borderRadius: "10px",
+                padding: "1rem 1.25rem",
+                fontSize: "0.85rem",
+                color: "#d4956a",
+              }}
+            >
+              Payment of <strong>{formatCurrency(activeDateChange.newPrice)}</strong> required via e-transfer to confirm your new dates.
             </div>
           )}
 
           {/* No payment required */}
           {activeDateChange.newPrice === null && (
-            <div className="rounded-md bg-green-50 border border-green-200 p-4 text-green-800 text-sm">
-              Your dates have been updated.
+            <div
+              style={{
+                background: "rgba(52,211,153,0.07)",
+                border: "1px solid rgba(52,211,153,0.2)",
+                borderRadius: "10px",
+                padding: "1rem 1.25rem",
+                fontSize: "0.85rem",
+                color: "#6ee7b7",
+              }}
+            >
+              Your dates have been updated — no additional payment required.
             </div>
           )}
         </div>
       )}
 
-      {/* DECLINED state */}
+      {/* DECLINED */}
       {activeDateChange?.status === "DECLINED" && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 space-y-2">
-          <div className="flex items-center gap-2">
-            <Badge variant="destructive">Declined</Badge>
-            <span className="text-sm text-red-800">Date change request declined</span>
+        <div
+          style={{
+            background: "rgba(248,113,113,0.07)",
+            border: "1px solid rgba(248,113,113,0.22)",
+            borderRadius: "10px",
+            padding: "1.1rem 1.25rem",
+          }}
+        >
+          <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#f87171", marginBottom: "0.35rem" }}>
+            Date change declined
           </div>
           {activeDateChange.declineReason && (
-            <p className="text-sm text-red-700">
+            <p style={{ fontSize: "0.82rem", color: "rgba(240,235,224,0.55)", margin: 0, lineHeight: 1.5 }}>
               Reason: {activeDateChange.declineReason}
             </p>
           )}
         </div>
       )}
 
-      {/* No active request — show request form or submit button */}
+      {/* No active request */}
       {activeDateChange === null && (
         <div>
           {submitted ? (
-            <div className="rounded-md bg-green-50 border border-green-200 p-4 text-green-800 text-sm">
-              Date change request submitted — we&apos;ll email you once it&apos;s reviewed.
+            <div
+              style={{
+                background: "rgba(52,211,153,0.08)",
+                border: "1px solid rgba(52,211,153,0.22)",
+                borderRadius: "10px",
+                padding: "1rem 1.25rem",
+                fontSize: "0.85rem",
+                color: "#6ee7b7",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}
+            >
+              <span>✓</span>
+              <span>Date change request submitted — Leon will email you once it&apos;s reviewed.</span>
             </div>
           ) : !showForm ? (
-            <Button variant="outline" onClick={() => setShowForm(true)}>
+            <button style={ghostBtn} onClick={() => setShowForm(true)}>
               Request Date Change
-            </Button>
+            </button>
           ) : (
-            <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-4">
-              <h3 className="font-medium text-gray-900">Request new dates</h3>
+            <div
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                borderRadius: "10px",
+                padding: "1.25rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+              }}
+            >
+              <div style={{ fontSize: "0.88rem", fontWeight: 600 }}>Request new dates</div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
-                  <label
-                    htmlFor="new-checkin"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    New Check-in
-                  </label>
+                  <label htmlFor="new-checkin" style={labelStyle}>New Check-in</label>
                   <input
                     id="new-checkin"
                     type="date"
                     value={requestedCheckin}
                     onChange={(e) => setRequestedCheckin(e.target.value)}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    style={inputStyle}
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor="new-checkout"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    New Check-out
-                  </label>
+                  <label htmlFor="new-checkout" style={labelStyle}>New Check-out</label>
                   <input
                     id="new-checkout"
                     type="date"
                     value={requestedCheckout}
                     onChange={(e) => setRequestedCheckout(e.target.value)}
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    style={inputStyle}
                   />
                 </div>
               </div>
 
               <div>
-                <label
-                  htmlFor="date-change-note"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Note to landlord (optional)
-                </label>
+                <label htmlFor="date-change-note" style={labelStyle}>Note to Leon (optional)</label>
                 <textarea
                   id="date-change-note"
                   rows={3}
                   value={noteToLandlord}
                   onChange={(e) => setNoteToLandlord(e.target.value)}
-                  placeholder="Any notes for your date change request..."
-                  className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Any notes for your date change request…"
+                  style={{ ...inputStyle, resize: "vertical", fontFamily: "inherit" }}
                 />
               </div>
 
               {validationError && (
-                <p className="text-sm text-red-600">{validationError}</p>
+                <p style={{ fontSize: "0.78rem", color: "#f87171", margin: 0 }}>{validationError}</p>
               )}
 
-              <div className="flex gap-3">
-                <Button
+              <div style={{ display: "flex", gap: "0.65rem" }}>
+                <button
+                  type="button"
                   onClick={handleSubmit}
                   disabled={isPending}
+                  style={{ ...primaryBtn, opacity: isPending ? 0.5 : 1, cursor: isPending ? "not-allowed" : "pointer" }}
                 >
-                  {isPending ? "Submitting..." : "Submit Request"}
-                </Button>
-                <Button
-                  variant="outline"
+                  {isPending ? "Submitting…" : "Submit Request"}
+                </button>
+                <button
+                  type="button"
+                  style={ghostBtn}
                   onClick={() => {
                     setShowForm(false)
                     setRequestedCheckin("")
@@ -303,7 +420,7 @@ export function DateChangeSection({ booking, activeDateChange, token }: Props) {
                   disabled={isPending}
                 >
                   Cancel
-                </Button>
+                </button>
               </div>
             </div>
           )}

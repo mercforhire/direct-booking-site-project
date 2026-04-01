@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { format } from "date-fns"
 
 type SerializedBooking = {
   id: string
@@ -28,13 +27,24 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; b
   COMPLETED: { label: "Completed", color: "#7abf8e", bg: "rgba(122,191,142,0.1)",  border: "rgba(122,191,142,0.3)" },
 }
 
+function formatDateET(date: Date, includeYear: boolean): string {
+  return date.toLocaleDateString("en-US", {
+    timeZone: "America/New_York",
+    month: "short",
+    day: "numeric",
+    ...(includeYear ? { year: "numeric" } : {}),
+  })
+}
+
 function formatDateRange(checkin: Date | string, checkout: Date | string) {
   const ci = new Date(checkin)
   const co = new Date(checkout)
-  if (ci.getFullYear() === co.getFullYear()) {
-    return `${format(ci, "MMM d")} – ${format(co, "MMM d, yyyy")}`
+  const ciYear = ci.toLocaleDateString("en-US", { timeZone: "America/New_York", year: "numeric" })
+  const coYear = co.toLocaleDateString("en-US", { timeZone: "America/New_York", year: "numeric" })
+  if (ciYear === coYear) {
+    return `${formatDateET(ci, false)} – ${formatDateET(co, true)}`
   }
-  return `${format(ci, "MMM d, yyyy")} – ${format(co, "MMM d, yyyy")}`
+  return `${formatDateET(ci, true)} – ${formatDateET(co, true)}`
 }
 
 function formatPrice(amount: number) {

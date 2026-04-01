@@ -14,6 +14,7 @@ export const bookingSchema = z.object({
   estimatedTotal: z.number().nonnegative(),
   createAccount: z.boolean().default(false),
   password: z.string().optional(),
+  guestUserId: z.string().optional(),
 })
 
 export type BookingFormValues = z.infer<typeof bookingSchema>
@@ -32,4 +33,5 @@ export const bookingSchemaCoerced = z.object({
   estimatedTotal: z.coerce.number().nonnegative(),
   createAccount: z.boolean().default(false),
   password: z.string().optional(),
+  guestUserId: z.string().optional(),
 })

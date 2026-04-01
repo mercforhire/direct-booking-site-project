@@ -49,6 +49,42 @@ export function MessageSection({ bookingId, token, messages }: Props) {
   }
 
   const isGuest = token !== null
+  const isAdmin = token === null
+
+  // Color tokens — dark mode for guest page, light mode for admin page
+  const c = isAdmin ? {
+    label:       "rgba(0,0,0,0.4)",
+    container:   "#ffffff",
+    containerBorder: "rgba(0,0,0,0.1)",
+    emptyText:   "rgba(0,0,0,0.35)",
+    guestBubble: "rgba(212,149,106,0.15)",
+    guestBubbleBorder: "rgba(212,149,106,0.35)",
+    adminBubble: "rgba(0,0,0,0.06)",
+    adminBubbleBorder: "rgba(0,0,0,0.1)",
+    msgText:     "#1a1a1a",
+    meta:        "rgba(0,0,0,0.35)",
+    divider:     "rgba(0,0,0,0.08)",
+    textareaBg:  "#f8f7f4",
+    textareaBorder: "rgba(0,0,0,0.15)",
+    textareaColor: "#1a1a1a",
+    textareaFocus: "rgba(212,149,106,0.6)",
+  } : {
+    label:       "rgba(255,255,255,0.35)",
+    container:   "rgba(255,255,255,0.03)",
+    containerBorder: "rgba(255,255,255,0.07)",
+    emptyText:   "rgba(240,235,224,0.3)",
+    guestBubble: "rgba(212,149,106,0.14)",
+    guestBubbleBorder: "rgba(212,149,106,0.22)",
+    adminBubble: "rgba(255,255,255,0.06)",
+    adminBubbleBorder: "rgba(255,255,255,0.09)",
+    msgText:     "#f0ebe0",
+    meta:        "rgba(240,235,224,0.3)",
+    divider:     "rgba(255,255,255,0.06)",
+    textareaBg:  "rgba(255,255,255,0.05)",
+    textareaBorder: "rgba(255,255,255,0.1)",
+    textareaColor: "#f0ebe0",
+    textareaFocus: "rgba(212,149,106,0.5)",
+  }
 
   return (
     <div style={{ marginTop: "0.25rem" }}>
@@ -57,7 +93,7 @@ export function MessageSection({ bookingId, token, messages }: Props) {
           fontSize: "0.63rem",
           letterSpacing: "0.22em",
           textTransform: "uppercase",
-          opacity: 0.35,
+          color: c.label,
           marginBottom: "0.75rem",
         }}
       >
@@ -66,8 +102,8 @@ export function MessageSection({ bookingId, token, messages }: Props) {
 
       <div
         style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.07)",
+          background: c.container,
+          border: `1px solid ${c.containerBorder}`,
           borderRadius: "10px",
           overflow: "hidden",
         }}
@@ -83,7 +119,7 @@ export function MessageSection({ bookingId, token, messages }: Props) {
           }}
         >
           {messages.length === 0 ? (
-            <p style={{ fontSize: "0.8rem", opacity: 0.3, margin: 0 }}>
+            <p style={{ fontSize: "0.8rem", color: c.emptyText, margin: 0 }}>
               No messages yet. Send Leon a message below.
             </p>
           ) : (
@@ -101,10 +137,8 @@ export function MessageSection({ bookingId, token, messages }: Props) {
                   <div
                     style={{
                       maxWidth: "80%",
-                      background: isGuestMsg
-                        ? "rgba(212,149,106,0.14)"
-                        : "rgba(255,255,255,0.06)",
-                      border: `1px solid ${isGuestMsg ? "rgba(212,149,106,0.22)" : "rgba(255,255,255,0.09)"}`,
+                      background: isGuestMsg ? c.guestBubble : c.adminBubble,
+                      border: `1px solid ${isGuestMsg ? c.guestBubbleBorder : c.adminBubbleBorder}`,
                       borderRadius: isGuestMsg ? "12px 12px 3px 12px" : "12px 12px 12px 3px",
                       padding: "0.65rem 0.9rem",
                     }}
@@ -112,7 +146,7 @@ export function MessageSection({ bookingId, token, messages }: Props) {
                     <p
                       style={{
                         fontSize: "0.85rem",
-                        color: "#f0ebe0",
+                        color: c.msgText,
                         whiteSpace: "pre-wrap",
                         margin: 0,
                         lineHeight: 1.6,
@@ -124,7 +158,7 @@ export function MessageSection({ bookingId, token, messages }: Props) {
                   <p
                     style={{
                       fontSize: "0.65rem",
-                      opacity: 0.3,
+                      color: c.meta,
                       marginTop: "0.25rem",
                       letterSpacing: "0.04em",
                     }}
@@ -140,7 +174,7 @@ export function MessageSection({ bookingId, token, messages }: Props) {
         {/* Send form */}
         <div
           style={{
-            borderTop: "1px solid rgba(255,255,255,0.06)",
+            borderTop: `1px solid ${c.divider}`,
             padding: "1rem 1.25rem",
             display: "flex",
             flexDirection: "column",
@@ -155,11 +189,11 @@ export function MessageSection({ bookingId, token, messages }: Props) {
             disabled={isPending}
             style={{
               width: "100%",
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.1)",
+              background: c.textareaBg,
+              border: `1px solid ${c.textareaBorder}`,
               borderRadius: "8px",
               padding: "0.65rem 0.85rem",
-              color: "#f0ebe0",
+              color: c.textareaColor,
               fontSize: "0.85rem",
               resize: "vertical",
               transition: "border-color 0.2s ease",
@@ -167,8 +201,8 @@ export function MessageSection({ bookingId, token, messages }: Props) {
               fontFamily: "inherit",
               boxSizing: "border-box",
             }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(212,149,106,0.5)" }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)" }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = c.textareaFocus }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = c.textareaBorder }}
           />
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <button

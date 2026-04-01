@@ -1,19 +1,16 @@
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
 
-// Legacy compatibility redirect — sends all visitors to /my-bookings.
-// Unauthenticated users are sent to login, which bounces back to /my-bookings after auth.
-export default async function MyBookingPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+/**
+ * Legacy /my-booking — redirects to /{slug}/my-bookings.
+ */
+export default async function LegacyMyBookingPage() {
+  const landlord = await prisma.landlord.findFirst({
+    orderBy: { createdAt: "asc" },
+    select: { slug: true },
+  })
 
-  if (!user) {
-    redirect("/guest/login?next=/my-bookings")
-  }
-
-  redirect("/my-bookings")
+  redirect(landlord ? `/${landlord.slug}/my-bookings` : "/")
 }

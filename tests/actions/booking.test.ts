@@ -71,7 +71,7 @@ const mockCreatedBooking = {
   accessToken: "some-uuid",
   createdAt: new Date(),
   updatedAt: new Date(),
-  room: { name: "Room 1" },
+  room: { name: "Room 1", landlord: { slug: "highhill" } },
 }
 
 describe("submitBooking", () => {
@@ -209,7 +209,7 @@ describe("submitBooking", () => {
       // redirect throws
     }
     expect(vi.mocked(redirect)).toHaveBeenCalledWith(
-      expect.stringMatching(/^\/bookings\/booking-123\?token=[0-9a-f-]{36}&new=1$/)
+      expect.stringMatching(/^\/highhill\/bookings\/booking-123\?token=[0-9a-f-]{36}&new=1$/)
     )
   })
 
@@ -239,7 +239,7 @@ describe("submitBooking", () => {
     expect(mockPrisma.booking.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.anything(),
-        include: { room: { select: { name: true } } },
+        include: { room: { select: { name: true, landlord: { select: { slug: true } } } } },
       })
     )
   })

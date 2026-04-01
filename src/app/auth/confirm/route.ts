@@ -1,11 +1,29 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { prisma } from "@/lib/prisma"
 
+/**
+ * Legacy /auth/confirm — exchanges the code then redirects to the
+ * tenant-scoped destination. Kept for backward compatibility with
+ * confirmation emails sent before multi-tenant migration.
+ */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get("code")
   const type = searchParams.get("type")
-  const next = searchParams.get("next") ?? (type === "recovery" ? "/guest/reset-password" : "/dashboard")
+
+  // Resolve default landlord slug for tenant-scoped redirects
+  const landlord = await prisma.landlord.findFirst({
+    orderBy: { createdAt: "asc" },
+    select: { slug: true },
+  })
+  const slug = landlord?.slug ?? "highhill"
+
+  const next =
+    searchParams.get("next") ??
+    (type === "recovery"
+      ? `/${slug}/guest/reset-password`
+      : `/${slug}/my-bookings`)
 
   if (code) {
     const supabase = await createClient()
@@ -15,6 +33,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Token invalid, expired, or missing — redirect to login with error param
-  return NextResponse.redirect(new URL("/guest/login?error=invalid_token", request.url))
+  return NextResponse.redirect(
+    new URL(`/${slug}/guest/login?error=invalid_token`, request.url)
+  )
 }

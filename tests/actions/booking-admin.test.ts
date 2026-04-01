@@ -37,7 +37,7 @@ const mockBooking = {
   guestName: "Jane Guest",
   status: "APPROVED",
   confirmedPrice: 500,
-  room: { name: "Ocean View Suite" },
+  room: { name: "Ocean View Suite", landlord: { slug: "highhill" } },
 }
 
 const mockDeclinedBooking = {
@@ -46,7 +46,7 @@ const mockDeclinedBooking = {
   guestName: "Jane Guest",
   status: "DECLINED",
   declineReason: "Not available",
-  room: { name: "Ocean View Suite" },
+  room: { name: "Ocean View Suite", landlord: { slug: "highhill" } },
 }
 
 function makePrismaNotFoundError() {

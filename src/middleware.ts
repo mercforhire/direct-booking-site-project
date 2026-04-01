@@ -36,6 +36,7 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
+  // Admin routes — require authenticated admin user
   const adminPaths = ["/dashboard", "/settings", "/availability", "/admin/rooms", "/admin/bookings"]
   const isAdminRoute = adminPaths.some((p) => pathname.startsWith(p))
 
@@ -43,6 +44,23 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     return NextResponse.redirect(url)
+  }
+
+  // Tenant-scoped guest-authenticated routes: /{slug}/my-bookings, /{slug}/my-booking, /{slug}/bookings/*
+  // Pattern: first segment is the landlord slug, second is the protected path
+  const segments = pathname.split("/").filter(Boolean)
+  if (!user && segments.length >= 2) {
+    const guestPath = "/" + segments.slice(1).join("/")
+    const protectedGuestPaths = ["/my-bookings", "/my-booking", "/bookings/"]
+    const isProtectedGuestRoute = protectedGuestPaths.some((p) => guestPath.startsWith(p))
+
+    if (isProtectedGuestRoute) {
+      const slug = segments[0]
+      const url = request.nextUrl.clone()
+      url.pathname = `/${slug}/guest/login`
+      url.searchParams.set("next", pathname)
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse

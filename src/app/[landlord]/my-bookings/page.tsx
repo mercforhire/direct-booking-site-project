@@ -21,7 +21,7 @@ export default async function LandlordMyBookingsPage({
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect(`/guest/login?next=${base}/my-bookings`)
+  if (!user) redirect(`${base}/guest/login?next=${base}/my-bookings`)
 
   const bookings = await prisma.booking.findMany({
     where: {

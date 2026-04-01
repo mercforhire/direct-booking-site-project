@@ -229,7 +229,7 @@ export default async function LandlordHomePage({
               Browse Rooms
             </Link>
             <Link
-              href={`/guest/login?next=${base}/my-bookings`}
+              href={`${base}/guest/login?next=${base}/my-bookings`}
               className="ghost-btn"
               style={{
                 border: `1px solid ${landlord.textColor}40`,
@@ -489,7 +489,7 @@ export default async function LandlordHomePage({
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
           <Link
-            href="/guest/signup"
+            href={`${base}/guest/signup`}
             className="ghost-btn"
             style={{
               fontSize: "0.68rem",
@@ -504,7 +504,7 @@ export default async function LandlordHomePage({
             Create account
           </Link>
           <Link
-            href={`/guest/login?next=${base}/my-bookings`}
+            href={`${base}/guest/login?next=${base}/my-bookings`}
             className="ghost-btn"
             style={{
               border: "1px solid rgba(255,255,255,0.2)",

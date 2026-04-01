@@ -20,7 +20,7 @@ export default async function LandlordMyBookingPage({
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/guest/login?next=${base}/my-bookings`)
+    redirect(`${base}/guest/login?next=${base}/my-bookings`)
   }
 
   redirect(`${base}/my-bookings`)

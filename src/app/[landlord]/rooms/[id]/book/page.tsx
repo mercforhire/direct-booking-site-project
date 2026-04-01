@@ -280,7 +280,7 @@ export default async function LandlordBookPage({
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <Link
-              href="/guest/login"
+              href={`${base}/guest/login`}
               className="my-bookings-btn"
               style={{
                 border: "1px solid rgba(255,255,255,0.18)",
@@ -298,7 +298,7 @@ export default async function LandlordBookPage({
               Sign In
             </Link>
             <Link
-              href="/guest/signup"
+              href={`${base}/guest/signup`}
               className="my-bookings-btn"
               style={{
                 border: "1px solid rgba(255,255,255,0.18)",

@@ -366,7 +366,7 @@ export default async function LandlordBookingPage({
         </Link>
 
         <Link
-          href={`/guest/login?next=${base}/my-bookings`}
+          href={`${base}/guest/login?next=${base}/my-bookings`}
           className="my-bookings-btn"
           style={{
             border: "1px solid rgba(255,255,255,0.18)",

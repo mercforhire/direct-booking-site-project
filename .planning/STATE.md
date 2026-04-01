@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Completed 01-foundation-room-management/01-01-PLAN.md
-last_updated: "2026-03-26T04:21:13.580Z"
-last_activity: 2026-03-25 — Roadmap created (9 phases, 49 requirements mapped)
+status: executing
+stopped_at: Completed 17-add-guest-sign-up-flow/17-01-PLAN.md
+last_updated: "2026-04-01T03:30:14Z"
+last_activity: 2026-03-31 — Completed 17-01 guest signup server action and page
 progress:
   total_phases: 9
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-03-25)
 
 ## Current Position
 
-Phase: 1 of 9 (Foundation & Room Management)
-Plan: 0 of ? in current phase
-Status: Ready to plan
-Last activity: 2026-03-25 — Roadmap created (9 phases, 49 requirements mapped)
+Phase: 17 (Guest Sign-Up Flow)
+Plan: 1 of 4 in current phase
+Status: Executing
+Last activity: 2026-03-31 — Completed 17-01 guest signup server action and page
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -65,6 +65,8 @@ Recent decisions affecting current work:
 - [Phase 01-foundation-room-management]: Auth split into auth.ts (Prisma) and auth-edge.ts (no Prisma) — middleware must use edge-safe export
 - [Phase 01-foundation-room-management]: Settings singleton uses id='global' string default for simple upsert pattern
 - [Phase 01-foundation-room-management]: Money values: always Decimal(10,2) in Prisma schema, never Float
+- [Phase 17-add-guest-sign-up-flow]: Used admin.createUser (not signUp) for guest self-registration to auto-confirm without email verification
+- [Phase 17-add-guest-sign-up-flow]: Stored name and phone in user_metadata for booking form prefill
 
 ### Pending Todos
 
@@ -78,6 +80,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T04:21:13.578Z
-Stopped at: Completed 01-foundation-room-management/01-01-PLAN.md
+Last session: 2026-04-01T03:30:14Z
+Stopped at: Completed 17-add-guest-sign-up-flow/17-01-PLAN.md
 Resume file: None

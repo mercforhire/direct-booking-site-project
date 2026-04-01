@@ -1,25 +1,588 @@
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import Image from "next/image"
+import { Bebas_Neue, DM_Sans } from "next/font/google"
+import { prisma } from "@/lib/prisma"
 
-export default function HomePage() {
+const bebas = Bebas_Neue({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-bebas",
+})
+
+const dm = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm",
+})
+
+export default async function HomePage() {
+  const rooms = await prisma.room.findMany({
+    where: { photos: { some: {} } },
+    include: { photos: { orderBy: { position: "asc" }, take: 1 } },
+  })
+
+  // Room 1 (master bedroom) as hero; feature Room 1, Room 4, Room 5+6
+  const heroRoom =
+    rooms.find((r) => r.name === "Room 1") ?? rooms[0]
+  const featuredNames = ["Room 1", "Room 4", "Room 5+6"]
+  const featured = featuredNames
+    .map((name) => rooms.find((r) => r.name === name))
+    .filter((r): r is NonNullable<typeof r> => r != null)
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center">
-      <h1 className="text-3xl font-semibold">Welcome</h1>
-      <p className="text-gray-500 max-w-sm">
-        Browse available rooms and book directly — no third-party fees.
-      </p>
-      <Button asChild size="lg">
-        <Link href="/rooms">View Rooms</Link>
-      </Button>
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 flex flex-col items-center gap-3 w-full max-w-sm">
-        <p className="text-sm text-gray-600">Already booked with us?</p>
-        <Button asChild variant="outline" size="sm">
-          <Link href="/guest/login?next=/my-bookings">Sign in</Link>
-        </Button>
+    <div
+      className={`${bebas.variable} ${dm.variable}`}
+      style={{
+        background: "#3a392a",
+        minHeight: "100vh",
+        color: "#f0ebe0",
+        fontFamily: "var(--font-dm), sans-serif",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        .a1 { animation: fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) both; }
+        .a2 { animation: fadeUp 0.9s 0.1s cubic-bezier(0.16,1,0.3,1) both; }
+        .a3 { animation: fadeUp 0.9s 0.22s cubic-bezier(0.16,1,0.3,1) both; }
+        .a4 { animation: fadeUp 0.9s 0.34s cubic-bezier(0.16,1,0.3,1) both; }
+        .a5 { animation: fadeIn 1.2s 0.1s both; }
+        .room-card:hover .room-img { transform: scale(1.04); }
+        .room-card:hover .room-arrow { transform: translateX(4px); }
+        .brown-btn:hover { background: #6a3214 !important; }
+        .ghost-btn:hover { background: rgba(255,255,255,0.06) !important; }
+        .nav-link:hover { opacity: 0.7 !important; }
+        .admin-link:hover { opacity: 0.3 !important; }
+        @media (max-width: 900px) {
+          .hero-grid { grid-template-columns: 1fr !important; }
+          .hero-image-col { display: none !important; }
+          .rooms-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 600px) {
+          .rooms-grid { grid-template-columns: 1fr !important; }
+          .hero-pad { padding: 2rem 1.5rem !important; }
+          .section-pad { padding: 2.5rem 1.5rem !important; }
+          .nav-pad { padding: 1.2rem 1.5rem !important; }
+          .footer-pad { padding: 1rem 1.5rem !important; }
+          .benefits-list { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+
+      {/* ── Nav ─────────────────────────────────────────── */}
+      <nav
+        className="nav-pad"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "1.4rem 3rem",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
+        <div>
+          <div
+            style={{
+              fontFamily: "var(--font-bebas)",
+              fontSize: "1.6rem",
+              letterSpacing: "0.12em",
+              lineHeight: 1,
+            }}
+          >
+            Leon&rsquo;s Home
+          </div>
+          <div
+            style={{
+              fontSize: "0.68rem",
+              letterSpacing: "0.14em",
+              opacity: 0.4,
+              marginTop: "2px",
+              textTransform: "uppercase",
+            }}
+          >
+            9 Highhill Dr &middot; Scarborough, ON
+          </div>
+        </div>
+
+        <Link
+          href="/rooms"
+          className="brown-btn"
+          style={{
+            background: "#7c3d18",
+            color: "#f0ebe0",
+            padding: "0.55rem 1.6rem",
+            borderRadius: "9999px",
+            fontSize: "0.72rem",
+            fontWeight: 700,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            textDecoration: "none",
+            transition: "background 0.2s ease",
+          }}
+        >
+          View Rooms
+        </Link>
+      </nav>
+
+      {/* ── Hero ────────────────────────────────────────── */}
+      <section
+        className="hero-pad hero-grid"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 420px",
+          gap: "3.5rem",
+          alignItems: "center",
+          padding: "3.5rem 3rem 3rem",
+          minHeight: "calc(100vh - 72px)",
+        }}
+      >
+        {/* Left — copy */}
+        <div style={{ maxWidth: "560px" }}>
+          {/* Eyebrow */}
+          <div
+            className="a1"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              background: "rgba(124,61,24,0.2)",
+              border: "1px solid rgba(124,61,24,0.4)",
+              borderRadius: "9999px",
+              padding: "0.3rem 1rem",
+              fontSize: "0.7rem",
+              fontWeight: 600,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: "#d4956a",
+              marginBottom: "1.8rem",
+            }}
+          >
+            <span>✦</span>
+            <span>Direct booking &mdash; no Airbnb fees</span>
+          </div>
+
+          {/* Headline */}
+          <h1
+            className="a2"
+            style={{
+              fontFamily: "var(--font-bebas)",
+              fontSize: "clamp(4rem, 10vw, 7.5rem)",
+              lineHeight: 0.9,
+              letterSpacing: "0.02em",
+              textTransform: "uppercase",
+              margin: "0 0 2rem",
+              color: "#f0ebe0",
+            }}
+          >
+            Welcome
+            <br />
+            Back to
+            <br />
+            <span style={{ color: "#d4956a" }}>Leon&rsquo;s</span>
+          </h1>
+
+          {/* Sub */}
+          <p
+            className="a3"
+            style={{
+              opacity: 0.62,
+              lineHeight: 1.75,
+              fontSize: "0.95rem",
+              maxWidth: "36rem",
+              marginBottom: "2rem",
+            }}
+          >
+            You found us on Airbnb &mdash; now book directly and keep more money
+            in your pocket. Same home, same rooms, same host. No platform
+            service fees.
+          </p>
+
+          {/* Benefits */}
+          <div
+            className="a3 benefits-list"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "0.6rem",
+              marginBottom: "2.5rem",
+            }}
+          >
+            {[
+              "No Airbnb service fees",
+              "Direct contact with Leon",
+              "Flexible arrangements",
+              "Returning guest rates",
+            ].map((b) => (
+              <div
+                key={b}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  fontSize: "0.82rem",
+                  opacity: 0.75,
+                }}
+              >
+                <span style={{ color: "#d4956a", fontSize: "0.9rem" }}>✓</span>
+                {b}
+              </div>
+            ))}
+          </div>
+
+          {/* CTAs */}
+          <div
+            className="a4"
+            style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center" }}
+          >
+            <Link
+              href="/rooms"
+              className="brown-btn"
+              style={{
+                background: "#7c3d18",
+                color: "#f0ebe0",
+                padding: "0.9rem 2.4rem",
+                borderRadius: "9999px",
+                fontSize: "0.82rem",
+                fontWeight: 700,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                textDecoration: "none",
+                transition: "background 0.2s ease",
+              }}
+            >
+              Browse Rooms
+            </Link>
+            <Link
+              href="/guest/login?next=/my-bookings"
+              className="ghost-btn"
+              style={{
+                border: "1px solid rgba(240,235,224,0.25)",
+                color: "rgba(240,235,224,0.65)",
+                padding: "0.9rem 2rem",
+                borderRadius: "9999px",
+                fontSize: "0.82rem",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                textDecoration: "none",
+                transition: "background 0.2s ease",
+              }}
+            >
+              Sign In
+            </Link>
+          </div>
+        </div>
+
+        {/* Right — hero room photo */}
+        {heroRoom?.photos[0] && (
+          <div
+            className="a5 hero-image-col"
+            style={{
+              position: "relative",
+              height: "min(62vh, 560px)",
+              borderRadius: "12px",
+              overflow: "hidden",
+              flexShrink: 0,
+            }}
+          >
+            <Image
+              src={heroRoom.photos[0].url}
+              alt={heroRoom.name}
+              fill
+              style={{ objectFit: "cover" }}
+              priority
+              sizes="420px"
+            />
+            {/* Overlay badge */}
+            <div
+              style={{
+                position: "absolute",
+                bottom: "1.2rem",
+                left: "1.2rem",
+                background: "rgba(30,28,20,0.75)",
+                backdropFilter: "blur(8px)",
+                borderRadius: "8px",
+                padding: "0.65rem 1rem",
+                fontSize: "0.75rem",
+              }}
+            >
+              <div style={{ fontWeight: 600, marginBottom: "1px" }}>
+                {heroRoom.name}
+              </div>
+              <div style={{ opacity: 0.6, fontSize: "0.7rem" }}>
+                Up to {heroRoom.maxGuests} guest
+                {heroRoom.maxGuests !== 1 ? "s" : ""}
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ── Savings banner ──────────────────────────────── */}
+      <div
+        className="section-pad"
+        style={{
+          padding: "1.5rem 3rem",
+          background: "rgba(124,61,24,0.12)",
+          borderTop: "1px solid rgba(124,61,24,0.2)",
+          borderBottom: "1px solid rgba(124,61,24,0.2)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: "2rem",
+          flexWrap: "wrap",
+          textAlign: "center",
+        }}
+      >
+        <div style={{ fontSize: "0.8rem", opacity: 0.55, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+          Why book direct?
+        </div>
+        <div
+          style={{
+            fontFamily: "var(--font-bebas)",
+            fontSize: "1.4rem",
+            letterSpacing: "0.06em",
+            color: "#d4956a",
+          }}
+        >
+          Save up to 15%
+        </div>
+        <div style={{ fontSize: "0.82rem", opacity: 0.65, maxWidth: "28rem", lineHeight: 1.6 }}>
+          Airbnb charges guests a 14–16% service fee on every booking.
+          Book directly with Leon and those fees stay in your wallet.
+        </div>
+        <Link
+          href="/rooms"
+          style={{
+            fontSize: "0.75rem",
+            color: "#d4956a",
+            textDecoration: "none",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            fontWeight: 600,
+            whiteSpace: "nowrap",
+          }}
+        >
+          See Rooms →
+        </Link>
       </div>
-      <Link href="/login" className="text-sm text-gray-400 hover:text-gray-600">
-        Admin Login
-      </Link>
+
+      {/* ── Rooms grid ──────────────────────────────────── */}
+      {featured.length > 0 && (
+        <section
+          className="section-pad"
+          style={{ padding: "3.5rem 3rem" }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "baseline",
+              marginBottom: "2rem",
+            }}
+          >
+            <h2
+              style={{
+                fontFamily: "var(--font-bebas)",
+                fontSize: "2rem",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                margin: 0,
+              }}
+            >
+              Available Rooms
+            </h2>
+            <Link
+              href="/rooms"
+              className="nav-link"
+              style={{
+                fontSize: "0.78rem",
+                color: "#d4956a",
+                textDecoration: "none",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                opacity: 0.9,
+                transition: "opacity 0.2s ease",
+              }}
+            >
+              View All →
+            </Link>
+          </div>
+
+          <div
+            className="rooms-grid"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "1.25rem",
+            }}
+          >
+            {featured.map((room) => (
+              <Link
+                key={room.id}
+                href={`/rooms/${room.id}`}
+                className="room-card"
+                style={{
+                  textDecoration: "none",
+                  color: "inherit",
+                  display: "flex",
+                  flexDirection: "column",
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: "10px",
+                  overflow: "hidden",
+                  transition: "border-color 0.2s ease",
+                }}
+              >
+                {/* Photo */}
+                <div
+                  style={{
+                    position: "relative",
+                    height: "200px",
+                    overflow: "hidden",
+                    background: "#2a2618",
+                  }}
+                >
+                  {room.photos[0] && (
+                    <Image
+                      src={room.photos[0].url}
+                      alt={room.name}
+                      fill
+                      className="room-img"
+                      style={{
+                        objectFit: "cover",
+                        transition: "transform 0.5s ease",
+                      }}
+                      sizes="(max-width: 600px) 100vw, (max-width: 900px) 50vw, 33vw"
+                    />
+                  )}
+                </div>
+
+                {/* Info */}
+                <div
+                  style={{
+                    padding: "1.1rem 1.2rem",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-end",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: "0.95rem", marginBottom: "3px" }}>
+                      {room.name}
+                    </div>
+                    <div style={{ fontSize: "0.75rem", opacity: 0.45 }}>
+                      Up to {room.maxGuests} guest
+                      {room.maxGuests !== 1 ? "s" : ""}
+                    </div>
+                  </div>
+                  <span
+                    className="room-arrow"
+                    style={{
+                      color: "#d4956a",
+                      fontSize: "1rem",
+                      transition: "transform 0.2s ease",
+                    }}
+                  >
+                    →
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Returning guest strip ───────────────────────── */}
+      <div
+        className="footer-pad"
+        style={{
+          marginTop: "auto",
+          padding: "2rem 3rem",
+          borderTop: "1px solid rgba(255,255,255,0.07)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "1.5rem",
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <div style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: "3px" }}>
+            Already booked with us?
+          </div>
+          <div style={{ fontSize: "0.78rem", opacity: 0.45 }}>
+            Sign in to view your upcoming &amp; past bookings.
+          </div>
+        </div>
+        {/* Right side — two CTAs */}
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+          <Link
+            href="/guest/signup"
+            className="ghost-btn"
+            style={{
+              fontSize: "0.68rem",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              opacity: 0.4,
+              color: "#f0ebe0",
+              textDecoration: "none",
+              transition: "opacity 0.2s ease",
+            }}
+          >
+            Create account
+          </Link>
+          <Link
+            href="/guest/login?next=/my-bookings"
+            className="ghost-btn"
+            style={{
+              border: "1px solid rgba(255,255,255,0.2)",
+              color: "rgba(240,235,224,0.65)",
+              padding: "0.55rem 1.4rem",
+              borderRadius: "9999px",
+              fontSize: "0.72rem",
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              textDecoration: "none",
+              transition: "background 0.2s ease",
+              whiteSpace: "nowrap",
+            }}
+          >
+            My Bookings →
+          </Link>
+        </div>
+      </div>
+
+      {/* ── Admin footer ─────────────────────────────────── */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          padding: "0.8rem 3rem",
+          borderTop: "1px solid rgba(255,255,255,0.04)",
+        }}
+      >
+        <Link
+          href="/login"
+          className="admin-link"
+          style={{
+            opacity: 0.15,
+            color: "#f0ebe0",
+            fontSize: "0.65rem",
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            textDecoration: "none",
+            transition: "opacity 0.2s ease",
+          }}
+        >
+          Admin
+        </Link>
+      </div>
     </div>
   )
 }

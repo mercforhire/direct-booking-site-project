@@ -4,7 +4,7 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 17-add-guest-sign-up-flow/17-04-PLAN.md
-last_updated: "2026-04-01T03:45:43.694Z"
+last_updated: "2026-04-01T04:25:58.692Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 18
@@ -25,8 +25,8 @@ See: .planning/PROJECT.md (updated 2026-03-25)
 
 ## Current Position
 
-Phase: 17 (add-guest-sign-up-flow-let-logged-in-guest-book-a-room-with-information-prefilled-and-hide-the-create-account-option-for-logged-in-guests) — EXECUTING
-Plan: 4 of 4
+Phase: 17
+Plan: Not started
 Status: Ready to execute
 Last activity: 2026-04-01
 

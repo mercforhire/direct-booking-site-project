@@ -3,20 +3,8 @@ export const dynamic = "force-dynamic"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { Bebas_Neue, DM_Sans } from "next/font/google"
 import { getLandlordBySlug } from "@/lib/landlord"
 import { prisma } from "@/lib/prisma"
-
-const bebas = Bebas_Neue({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-bebas",
-})
-
-const dm = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm",
-})
 
 export default async function LandlordHomePage({
   params,
@@ -38,26 +26,8 @@ export default async function LandlordHomePage({
   const base = `/${slug}`
 
   return (
-    <div
-      className={`${bebas.variable} ${dm.variable}`}
-      style={{
-        background: landlord.bgColor,
-        minHeight: "100vh",
-        color: landlord.textColor,
-        fontFamily: "var(--font-dm), sans-serif",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(24px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
         .a1 { animation: fadeUp 0.9s cubic-bezier(0.16,1,0.3,1) both; }
         .a2 { animation: fadeUp 0.9s 0.1s cubic-bezier(0.16,1,0.3,1) both; }
         .a3 { animation: fadeUp 0.9s 0.22s cubic-bezier(0.16,1,0.3,1) both; }
@@ -65,9 +35,6 @@ export default async function LandlordHomePage({
         .a5 { animation: fadeIn 1.2s 0.1s both; }
         .room-card:hover .room-img { transform: scale(1.04); }
         .room-card:hover .room-arrow { transform: translateX(4px); }
-        .brown-btn:hover { background: #6a3214 !important; }
-        .ghost-btn:hover { background: rgba(255,255,255,0.06) !important; }
-        .nav-link:hover { opacity: 0.7 !important; }
         .admin-link:hover { opacity: 0.3 !important; }
         @media (max-width: 900px) {
           .hero-grid { grid-template-columns: 1fr !important; }
@@ -78,7 +45,6 @@ export default async function LandlordHomePage({
           .rooms-grid { grid-template-columns: 1fr !important; }
           .hero-pad { padding: 2rem 1.5rem !important; }
           .section-pad { padding: 2.5rem 1.5rem !important; }
-          .nav-pad { padding: 1.2rem 1.5rem !important; }
           .footer-pad { padding: 1rem 1.5rem !important; }
           .benefits-list { grid-template-columns: 1fr !important; }
         }

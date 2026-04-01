@@ -1,22 +1,10 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { Bebas_Neue, DM_Sans } from "next/font/google"
 import { getLandlordBySlug } from "@/lib/landlord"
 import { prisma } from "@/lib/prisma"
 import { AvailabilityCalendarReadonly } from "@/components/guest/availability-calendar-readonly"
 import { RoomPhotoGallery } from "@/components/guest/room-photo-gallery"
 import { RoomPricingTable } from "@/components/guest/room-pricing-table"
-
-const bebas = Bebas_Neue({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-bebas",
-})
-
-const dm = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm",
-})
 
 export const dynamic = "force-dynamic"
 
@@ -80,25 +68,11 @@ export default async function LandlordRoomPage({
   const bookHref = `${base}/rooms/${id}/book${bookParams.toString() ? "?" + bookParams.toString() : ""}`
 
   return (
-    <div
-      className={`${bebas.variable} ${dm.variable} room-dark`}
-      style={{
-        background: landlord.bgColor,
-        minHeight: "100vh",
-        color: landlord.textColor,
-        fontFamily: "var(--font-dm), sans-serif",
-      }}
-    >
+    <div className="room-dark">
       <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
         .rd-fade   { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
         .rd-fade-2 { animation: fadeUp 0.8s 0.12s cubic-bezier(0.16,1,0.3,1) both; }
         .rd-fade-3 { animation: fadeUp 0.8s 0.22s cubic-bezier(0.16,1,0.3,1) both; }
-        .back-link:hover    { opacity: 1 !important; }
-        .my-bookings-btn:hover { background: rgba(255,255,255,0.06) !important; }
         .book-cta:hover     { background: #6a3214 !important; }
         .thumb-btn:hover img { transform: scale(1.06) !important; }
         .rd-card {
@@ -145,7 +119,6 @@ export default async function LandlordRoomPage({
         }
         @media (max-width: 640px) {
           .rd-content-pad { padding: 1.5rem 1.5rem 3rem !important; }
-          .nav-pad { padding: 1.2rem 1.5rem !important; }
         }
       `}</style>
 

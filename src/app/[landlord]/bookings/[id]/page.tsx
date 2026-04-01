@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { Bebas_Neue, DM_Sans } from "next/font/google"
 import { getLandlordBySlug } from "@/lib/landlord"
 import { prisma } from "@/lib/prisma"
 import { stripe } from "@/lib/stripe"
@@ -13,17 +12,6 @@ import { BookingExtensionPaidEmail } from "@/emails/booking-extension-paid"
 import { BookingDateChangePaidEmail } from "@/emails/booking-date-change-paid"
 import { BookingStatusView } from "@/components/guest/booking-status-view"
 import type { SerializedDateChange } from "@/components/guest/booking-status-view"
-
-const bebas = Bebas_Neue({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-bebas",
-})
-
-const dm = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm",
-})
 
 export const dynamic = "force-dynamic"
 
@@ -285,23 +273,9 @@ export default async function LandlordBookingPage({
   }
 
   return (
-    <div
-      className={`${bebas.variable} ${dm.variable} bk-status`}
-      style={{
-        background: landlord.bgColor,
-        minHeight: "100vh",
-        color: landlord.textColor,
-        fontFamily: "var(--font-dm), sans-serif",
-      }}
-    >
+    <div className="bk-status">
       <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
         .bs-fade { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
-        .back-link:hover { opacity: 1 !important; }
-        .my-bookings-btn:hover { background: rgba(255,255,255,0.06) !important; }
         .bs-card {
           background: rgba(255,255,255,0.03);
           border: 1px solid rgba(255,255,255,0.07);
@@ -358,7 +332,6 @@ export default async function LandlordBookingPage({
         .bk-status .font-mono { color: ${landlord.textColor}8C !important; }
         @media (max-width: 640px) {
           .bs-content { padding: 1.5rem 1.5rem 4rem !important; }
-          .nav-pad { padding: 1.2rem 1.5rem !important; }
         }
       `}</style>
 

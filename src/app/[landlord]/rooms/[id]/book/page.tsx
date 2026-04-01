@@ -1,22 +1,10 @@
 import { notFound } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { Bebas_Neue, DM_Sans } from "next/font/google"
 import { getLandlordBySlug } from "@/lib/landlord"
 import { prisma } from "@/lib/prisma"
 import { BookingForm } from "@/components/guest/booking-form"
 import { createClient } from "@/lib/supabase/server"
-
-const bebas = Bebas_Neue({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-bebas",
-})
-
-const dm = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm",
-})
 
 export const dynamic = "force-dynamic"
 
@@ -107,24 +95,10 @@ export default async function LandlordBookPage({
   const coverPhoto = room.photos[0]?.url ?? null
 
   return (
-    <div
-      className={`${bebas.variable} ${dm.variable} booking-dark`}
-      style={{
-        background: landlord.bgColor,
-        minHeight: "100vh",
-        color: landlord.textColor,
-        fontFamily: "var(--font-dm), sans-serif",
-      }}
-    >
+    <div className="booking-dark">
       <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
         .bk-fade { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
         .bk-fade-2 { animation: fadeUp 0.8s 0.1s cubic-bezier(0.16,1,0.3,1) both; }
-        .back-link:hover { opacity: 1 !important; }
-        .my-bookings-btn:hover { background: rgba(255,255,255,0.06) !important; }
         .bk-section {
           background: rgba(255,255,255,0.03);
           border: 1px solid rgba(255,255,255,0.07);
@@ -251,7 +225,6 @@ export default async function LandlordBookPage({
         @media (max-width: 640px) {
           .book-pad { padding: 0 1.5rem 3rem !important; }
           .book-hdr { padding: 2rem 1.5rem 1rem !important; }
-          .nav-pad { padding: 1.2rem 1.5rem !important; }
         }
       `}</style>
 

@@ -3,20 +3,8 @@ import { createClient } from "@/lib/supabase/server"
 import { getLandlordBySlug } from "@/lib/landlord"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
-import { Bebas_Neue, DM_Sans } from "next/font/google"
 import BookingHistoryList from "@/components/guest/booking-history-list"
 import SignOutButton from "@/components/guest/sign-out-button"
-
-const bebas = Bebas_Neue({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-bebas",
-})
-
-const dm = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm",
-})
 
 export const dynamic = "force-dynamic"
 
@@ -78,27 +66,12 @@ export default async function LandlordMyBookingsPage({
     .sort((a, b) => new Date(b.checkin).getTime() - new Date(a.checkin).getTime())
 
   return (
-    <div
-      className={`${bebas.variable} ${dm.variable}`}
-      style={{
-        background: landlord.bgColor,
-        minHeight: "100vh",
-        color: landlord.textColor,
-        fontFamily: "var(--font-dm), sans-serif",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
         .page-header { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
         .page-content { animation: fadeUp 0.8s 0.1s cubic-bezier(0.16,1,0.3,1) both; }
         .back-nav:hover { opacity: 1 !important; }
         @media (max-width: 600px) {
-          .nav-pad { padding: 1.2rem 1.5rem !important; }
           .content-pad { padding: 2rem 1.5rem 4rem !important; }
         }
       `}</style>

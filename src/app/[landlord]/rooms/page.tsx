@@ -1,22 +1,10 @@
 import { Suspense } from "react"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { Bebas_Neue, DM_Sans } from "next/font/google"
 import { getLandlordBySlug } from "@/lib/landlord"
 import { prisma } from "@/lib/prisma"
 import { coerceRoomDecimals } from "@/lib/room-formatters"
 import { RoomList } from "@/components/guest/room-list"
-
-const bebas = Bebas_Neue({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-bebas",
-})
-
-const dm = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm",
-})
 
 export const dynamic = "force-dynamic"
 
@@ -81,27 +69,9 @@ export default async function LandlordRoomsPage({
   }))
 
   return (
-    <div
-      className={`${bebas.variable} ${dm.variable}`}
-      style={{
-        background: landlord.bgColor,
-        minHeight: "100vh",
-        color: landlord.textColor,
-        fontFamily: "var(--font-dm), sans-serif",
-      }}
-    >
+    <>
       <style>{`
-        @keyframes shimmer {
-          0%, 100% { opacity: 0.4; }
-          50%       { opacity: 0.7; }
-        }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
         .rooms-header { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
-        .back-link:hover { opacity: 1 !important; }
-        .my-bookings-btn:hover { background: rgba(255,255,255,0.06) !important; }
         .room-tile:hover { border-color: rgba(255,255,255,0.18) !important; }
         .room-tile:hover .tile-photo { transform: scale(1.04) !important; }
         .room-tile:hover .tile-cta { background: #6a3214 !important; }
@@ -112,7 +82,6 @@ export default async function LandlordRoomsPage({
         @media (max-width: 600px) {
           .rooms-pad { padding: 0 1.5rem 3rem !important; }
           .rooms-header-pad { padding: 2.5rem 1.5rem 1rem !important; }
-          .nav-pad { padding: 1.2rem 1.5rem !important; }
         }
       `}</style>
 
@@ -207,6 +176,6 @@ export default async function LandlordRoomsPage({
           <RoomList rooms={roomsForClient} basePath={base} />
         </Suspense>
       </main>
-    </div>
+    </>
   )
 }

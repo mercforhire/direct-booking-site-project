@@ -25,7 +25,7 @@ Repeat guests can book a room directly with the landlord without going through A
 - [ ] Guest can submit a booking request (room, dates, number of guests, optional add-ons)
 - [ ] Guest sees an itemized price estimate before submitting (nightly × nights + cleaning fee + extra guest fees + add-ons + deposit + service fee)
 - [ ] Guest can book without an account (name, email, phone number)
-- [ ] Guest can optionally create an account to view booking history
+- [x] Guest can optionally create an account to view booking history (Validated in Phase 17)
 
 **Approval Flow**
 - [ ] Landlord receives email notification when a new booking request arrives
@@ -90,4 +90,4 @@ Repeat guests can book a room directly with the landlord without going through A
 | Adjustable service fee | Allows landlord to offset Stripe costs; can be 0 for e-transfer | — Pending |
 
 ---
-*Last updated: 2026-03-31 — Phase 16 complete (guest-booking-history). Guests can now view upcoming and past bookings at /my-bookings after signing in.*
+*Last updated: 2026-04-01 — Phase 17 complete (guest-sign-up-flow). Guests can create accounts at /guest/signup; booking form prefills and locks fields for logged-in guests; sign-up CTAs added to login page and home page footer.*

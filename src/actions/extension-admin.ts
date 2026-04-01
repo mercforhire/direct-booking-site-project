@@ -32,7 +32,7 @@ export async function approveExtension(extensionId: string, data: unknown) {
       guestName: string
       accessToken: string
       checkout: Date
-      room: { name: string }
+      room: { name: string; landlord: { slug: string } }
     }
     requestedCheckout: Date
   }
@@ -43,7 +43,7 @@ export async function approveExtension(extensionId: string, data: unknown) {
       data: { status: "APPROVED", extensionPrice },
       include: {
         booking: {
-          include: { room: { select: { name: true } } },
+          include: { room: { select: { name: true, landlord: { select: { slug: true } } } } },
         },
       },
     })
@@ -64,6 +64,7 @@ export async function approveExtension(extensionId: string, data: unknown) {
         extensionPrice,
         bookingId: extension.booking.id,
         accessToken: extension.booking.accessToken,
+        landlordSlug: extension.booking.room.landlord.slug,
       })
     )
     await resend.emails.send({
@@ -78,7 +79,7 @@ export async function approveExtension(extensionId: string, data: unknown) {
 
   revalidatePath("/admin/bookings")
   revalidatePath(`/admin/bookings/${extension.booking.id}`)
-  revalidatePath(`/bookings/${extension.booking.id}`)
+  revalidatePath(`/${extension.booking.room.landlord.slug}/bookings/${extension.booking.id}`)
   return { success: true }
 }
 
@@ -103,7 +104,7 @@ export async function declineExtension(extensionId: string, data: unknown) {
       guestEmail: string
       guestName: string
       accessToken: string
-      room: { name: string }
+      room: { name: string; landlord: { slug: string } }
     }
     requestedCheckout: Date
   }
@@ -114,7 +115,7 @@ export async function declineExtension(extensionId: string, data: unknown) {
       data: { status: "DECLINED", declineReason: declineReason ?? null },
       include: {
         booking: {
-          include: { room: { select: { name: true } } },
+          include: { room: { select: { name: true, landlord: { select: { slug: true } } } } },
         },
       },
     })
@@ -135,6 +136,7 @@ export async function declineExtension(extensionId: string, data: unknown) {
         declineReason: declineReason ?? null,
         bookingId: extension.booking.id,
         accessToken: extension.booking.accessToken,
+        landlordSlug: extension.booking.room.landlord.slug,
       })
     )
     await resend.emails.send({
@@ -149,6 +151,6 @@ export async function declineExtension(extensionId: string, data: unknown) {
 
   revalidatePath("/admin/bookings")
   revalidatePath(`/admin/bookings/${extension.booking.id}`)
-  revalidatePath(`/bookings/${extension.booking.id}`)
+  revalidatePath(`/${extension.booking.room.landlord.slug}/bookings/${extension.booking.id}`)
   return { success: true }
 }

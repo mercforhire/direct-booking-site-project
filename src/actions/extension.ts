@@ -22,7 +22,7 @@ export async function submitExtension(bookingId: string, data: unknown) {
       guestName: true,
       guestEmail: true,
       accessToken: true,
-      room: { select: { name: true } },
+      room: { select: { name: true, landlord: { select: { slug: true } } } },
     },
   })
   if (!booking || !["APPROVED", "PAID"].includes(booking.status)) {
@@ -68,7 +68,7 @@ export async function submitExtension(bookingId: string, data: unknown) {
     console.error("[submitExtension] email send failed:", emailErr)
   }
 
-  revalidatePath(`/bookings/${bookingId}`)
+  revalidatePath(`/${booking.room.landlord.slug}/bookings/${bookingId}`)
   return { success: true }
 }
 
@@ -79,7 +79,7 @@ export async function cancelExtension(bookingId: string, extensionId: string, to
   // Token auth guard — guest-facing action, no Supabase session required
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    select: { accessToken: true },
+    select: { accessToken: true, room: { select: { landlord: { select: { slug: true } } } } },
   })
   if (!booking || !token || token !== booking.accessToken) {
     return { error: "unauthorized" }
@@ -96,6 +96,6 @@ export async function cancelExtension(bookingId: string, extensionId: string, to
     throw err
   }
 
-  revalidatePath(`/bookings/${bookingId}`)
+  revalidatePath(`/${booking.room.landlord.slug}/bookings/${bookingId}`)
   return { success: true }
 }

@@ -64,7 +64,7 @@ export async function POST(request: Request) {
         try {
           const fullBooking = await prisma.booking.findUnique({
             where: { id: extension.bookingId },
-            include: { room: { select: { name: true } } },
+            include: { room: { select: { name: true, landlord: { select: { slug: true } } } } },
           })
           if (fullBooking) {
             const resend = new Resend(process.env.RESEND_API_KEY)
@@ -77,6 +77,7 @@ export async function POST(request: Request) {
                 extensionAmountPaid: Number(extension.extensionPrice ?? 0),
                 bookingId: fullBooking.id,
                 accessToken: fullBooking.accessToken,
+                landlordSlug: fullBooking.room.landlord.slug,
               })
             )
             await resend.emails.send({
@@ -122,7 +123,7 @@ export async function POST(request: Request) {
         try {
           const fullBooking = await prisma.booking.findUnique({
             where: { id: dateChange.bookingId },
-            include: { room: { select: { name: true } } },
+            include: { room: { select: { name: true, landlord: { select: { slug: true } } } } },
           })
           if (fullBooking) {
             const resend = new Resend(process.env.RESEND_API_KEY)
@@ -135,6 +136,7 @@ export async function POST(request: Request) {
                 amountPaid: Number(dateChange.newPrice ?? 0),
                 bookingId: fullBooking.id,
                 accessToken: fullBooking.accessToken,
+                landlordSlug: fullBooking.room.landlord.slug,
               })
             )
             await resend.emails.send({

@@ -43,7 +43,7 @@ const mockBooking = {
   accessToken: "token-abc",
   checkin: new Date("2026-05-01T00:00:00.000Z"),
   checkout: new Date("2026-05-07T00:00:00.000Z"),
-  room: { name: "Ocean View Suite", landlordId: "landlord-1" },
+  room: { name: "Ocean View Suite", landlordId: "landlord-1", landlord: { slug: "highhill" } },
 }
 
 describe("submitMessage", () => {
@@ -97,9 +97,9 @@ describe("submitMessage", () => {
     expect(result).toEqual({ success: true })
   })
 
-  it("revalidates /bookings/[id], /admin/bookings/[id], /admin/bookings", async () => {
+  it("revalidates /{slug}/bookings/[id], /admin/bookings/[id], /admin/bookings", async () => {
     await submitMessage("booking-1", "token-abc", { body: "Hello!" })
-    expect(revalidatePath).toHaveBeenCalledWith("/bookings/booking-1")
+    expect(revalidatePath).toHaveBeenCalledWith("/highhill/bookings/booking-1")
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings/booking-1")
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings")
   })

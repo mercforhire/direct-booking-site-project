@@ -8,6 +8,7 @@ type Props = {
   amountPaid: number
   bookingId: string
   accessToken: string
+  landlordSlug: string
 }
 
 export function BookingDateChangePaidEmail({
@@ -18,13 +19,14 @@ export function BookingDateChangePaidEmail({
   amountPaid,
   bookingId,
   accessToken,
+  landlordSlug,
 }: Props) {
   const formattedAmount = new Intl.NumberFormat("en-CA", {
     style: "currency",
     currency: "CAD",
   }).format(amountPaid)
 
-  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/bookings/${bookingId}?token=${accessToken}`
+  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/${landlordSlug}/bookings/${bookingId}?token=${accessToken}`
 
   return (
     <div

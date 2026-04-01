@@ -8,6 +8,7 @@ type Props = {
   body: string
   bookingId: string
   accessToken: string
+  landlordSlug: string
 }
 
 export function NewMessageGuestEmail({
@@ -18,8 +19,9 @@ export function NewMessageGuestEmail({
   body,
   bookingId,
   accessToken,
+  landlordSlug,
 }: Props) {
-  const guestUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/bookings/${bookingId}?token=${accessToken}`
+  const guestUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/${landlordSlug}/bookings/${bookingId}?token=${accessToken}`
   return (
     <div style={{ fontFamily: "sans-serif", maxWidth: "600px", margin: "0 auto", padding: "24px", color: "#111" }}>
       <h2 style={{ fontSize: "20px", fontWeight: "600", marginBottom: "4px" }}>

@@ -19,7 +19,7 @@ export function BookingNotificationEmail({
   numGuests,
   estimatedTotal,
 }: Props) {
-  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/bookings/${bookingId}`
+  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/admin/bookings/${bookingId}`
   const formattedTotal = new Intl.NumberFormat("en-CA", {
     style: "currency",
     currency: "CAD",

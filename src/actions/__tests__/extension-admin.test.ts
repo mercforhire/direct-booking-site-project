@@ -40,7 +40,7 @@ const mockExtensionApproved = {
     guestName: "Jane Guest",
     accessToken: "token-abc",
     checkout: new Date("2026-05-05T00:00:00.000Z"),
-    room: { name: "Ocean View Suite" },
+    room: { name: "Ocean View Suite", landlord: { slug: "highhill" } },
   },
   requestedCheckout: new Date("2026-05-10T00:00:00.000Z"),
 }
@@ -52,7 +52,7 @@ const mockExtensionDeclined = {
     guestEmail: "guest@example.com",
     guestName: "Jane Guest",
     accessToken: "token-abc",
-    room: { name: "Ocean View Suite" },
+    room: { name: "Ocean View Suite", landlord: { slug: "highhill" } },
   },
   requestedCheckout: new Date("2026-05-10T00:00:00.000Z"),
 }
@@ -101,11 +101,11 @@ describe("approveExtension", () => {
     expect(result).toEqual({ success: true })
   })
 
-  it("revalidates /admin/bookings, /admin/bookings/[bookingId], and /bookings/[bookingId]", async () => {
+  it("revalidates /admin/bookings, /admin/bookings/[bookingId], and /{slug}/bookings/[bookingId]", async () => {
     await approveExtension("ext-1", { extensionPrice: 200 })
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings")
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings/booking-1")
-    expect(revalidatePath).toHaveBeenCalledWith("/bookings/booking-1")
+    expect(revalidatePath).toHaveBeenCalledWith("/highhill/bookings/booking-1")
   })
 })
 
@@ -146,10 +146,10 @@ describe("declineExtension", () => {
     expect(result).toEqual({ success: true })
   })
 
-  it("revalidates /admin/bookings, /admin/bookings/[bookingId], and /bookings/[bookingId]", async () => {
+  it("revalidates /admin/bookings, /admin/bookings/[bookingId], and /{slug}/bookings/[bookingId]", async () => {
     await declineExtension("ext-1", {})
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings")
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings/booking-1")
-    expect(revalidatePath).toHaveBeenCalledWith("/bookings/booking-1")
+    expect(revalidatePath).toHaveBeenCalledWith("/highhill/bookings/booking-1")
   })
 })

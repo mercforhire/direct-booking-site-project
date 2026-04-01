@@ -49,6 +49,7 @@ export default async function BookingPage({
           name: true,
           location: true,
           landlordId: true,
+          landlord: { select: { slug: true } },
           addOns: {
             select: { id: true, name: true, price: true },
           },
@@ -146,7 +147,7 @@ export default async function BookingPage({
           const freshBooking = await prisma.booking.update({
             where: { id },
             data: { checkout: activeExtension.requestedCheckout },
-            include: { room: { select: { name: true } } },
+            include: { room: { select: { name: true, landlord: { select: { slug: true } } } } },
           })
           activeExtension = { ...activeExtension, status: "PAID" }
           booking.checkout = activeExtension.requestedCheckout
@@ -161,6 +162,7 @@ export default async function BookingPage({
                 extensionAmountPaid: Number(activeExtension.extensionPrice ?? 0),
                 bookingId: freshBooking.id,
                 accessToken: freshBooking.accessToken,
+                landlordSlug: freshBooking.room.landlord.slug,
               })
             )
             await resend.emails.send({
@@ -212,7 +214,7 @@ export default async function BookingPage({
         try {
           const freshBooking = await prisma.booking.findUnique({
             where: { id },
-            include: { room: { select: { name: true } } },
+            include: { room: { select: { name: true, landlord: { select: { slug: true } } } } },
           })
           if (freshBooking) {
             const resend = new Resend(process.env.RESEND_API_KEY)
@@ -225,6 +227,7 @@ export default async function BookingPage({
                 amountPaid: Number(activeDateChangeRecord.newPrice ?? 0),
                 bookingId: freshBooking.id,
                 accessToken: freshBooking.accessToken,
+                landlordSlug: freshBooking.room.landlord.slug,
               })
             )
             await resend.emails.send({

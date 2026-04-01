@@ -76,7 +76,7 @@ const mockBooking = {
   guestEmail: "guest@example.com",
   checkin: new Date("2026-05-01T00:00:00.000Z"),
   checkout: new Date("2026-05-07T00:00:00.000Z"),
-  room: { name: "Ocean View Suite" },
+  room: { name: "Ocean View Suite", landlord: { slug: "highhill" } },
 }
 
 const validDateChangeData = {
@@ -149,9 +149,9 @@ describe("submitDateChange", () => {
     expect(result).toEqual({ success: true })
   })
 
-  it("revalidates /bookings/[bookingId] after creation", async () => {
+  it("revalidates /{slug}/bookings/[bookingId] after creation", async () => {
     await submitDateChange("booking-1", validDateChangeData)
-    expect(revalidatePath).toHaveBeenCalledWith("/bookings/booking-1")
+    expect(revalidatePath).toHaveBeenCalledWith("/highhill/bookings/booking-1")
   })
 
   it("accepts PAID booking status as eligible", async () => {
@@ -167,6 +167,7 @@ describe("cancelDateChange", () => {
     mockPrisma.booking.findUnique.mockResolvedValue({
       id: "booking-1",
       accessToken: "token-abc",
+      room: { landlord: { slug: "highhill" } },
     } as any)
     mockPrisma.bookingDateChange.findFirst.mockResolvedValue({
       id: "dc-1",
@@ -213,7 +214,7 @@ describe("cancelDateChange", () => {
         data: { status: "DECLINED" },
       })
     )
-    expect(revalidatePath).toHaveBeenCalledWith("/bookings/booking-1")
+    expect(revalidatePath).toHaveBeenCalledWith("/highhill/bookings/booking-1")
     expect(result).toEqual({ success: true })
   })
 })
@@ -235,7 +236,7 @@ const mockDateChangeFull = {
     confirmedPrice: 200,
     checkin: new Date("2026-05-01T00:00:00.000Z"),
     checkout: new Date("2026-05-07T00:00:00.000Z"),
-    room: { name: "Ocean View Suite" },
+    room: { name: "Ocean View Suite", landlord: { slug: "highhill" } },
   },
 }
 
@@ -372,7 +373,7 @@ describe("approveDateChange", () => {
     expect(result).toEqual({ success: true })
   })
 
-  it("revalidates /admin/bookings, /admin/bookings/[id], and /bookings/[id]", async () => {
+  it("revalidates /admin/bookings, /admin/bookings/[id], and /{slug}/bookings/[id]", async () => {
     mockPrisma.bookingDateChange.update.mockResolvedValue({
       ...mockDateChangeFull,
       status: "APPROVED",
@@ -381,7 +382,7 @@ describe("approveDateChange", () => {
     await approveDateChange("dc-1", { newPrice: 200 })
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings")
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings/booking-1")
-    expect(revalidatePath).toHaveBeenCalledWith("/bookings/booking-1")
+    expect(revalidatePath).toHaveBeenCalledWith("/highhill/bookings/booking-1")
   })
 })
 
@@ -445,11 +446,11 @@ describe("declineDateChange", () => {
     expect(result).toEqual({ success: true })
   })
 
-  it("revalidates /admin/bookings, /admin/bookings/[id], and /bookings/[id]", async () => {
+  it("revalidates /admin/bookings, /admin/bookings/[id], and /{slug}/bookings/[id]", async () => {
     await declineDateChange("dc-1", {})
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings")
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings/booking-1")
-    expect(revalidatePath).toHaveBeenCalledWith("/bookings/booking-1")
+    expect(revalidatePath).toHaveBeenCalledWith("/highhill/bookings/booking-1")
   })
 })
 
@@ -465,7 +466,7 @@ const mockDateChangeApproved = {
   booking: {
     id: "booking-1",
     guestEmail: "guest@example.com",
-    room: { name: "Ocean View Suite" },
+    room: { name: "Ocean View Suite", landlord: { slug: "highhill" } },
   },
 }
 

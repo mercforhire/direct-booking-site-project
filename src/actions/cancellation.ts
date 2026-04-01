@@ -21,7 +21,7 @@ export async function cancelBooking(bookingId: string, data: unknown) {
   // Fetch booking for payment method detection + email data
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    include: { room: { select: { name: true, landlordId: true } } },
+    include: { room: { select: { name: true, landlordId: true, landlord: { select: { slug: true } } } } },
   })
   if (!booking) return { error: "not_found" }
   if (booking.room.landlordId !== landlord.id) throw new Error("Booking not found")
@@ -109,6 +109,7 @@ export async function cancelBooking(bookingId: string, data: unknown) {
         paymentMethod,
         bookingId: booking.id,
         accessToken: booking.accessToken,
+        landlordSlug: booking.room.landlord.slug,
       })
     )
     await resend.emails.send({
@@ -123,6 +124,6 @@ export async function cancelBooking(bookingId: string, data: unknown) {
 
   revalidatePath("/admin/bookings")
   revalidatePath(`/admin/bookings/${bookingId}`)
-  revalidatePath(`/bookings/${bookingId}`)
+  revalidatePath(`/${booking.room.landlord.slug}/bookings/${bookingId}`)
   return { success: true }
 }

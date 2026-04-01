@@ -59,7 +59,7 @@ const baseBooking: any = {
   checkout: new Date("2026-04-05"),
   refundAmount: null,
   cancelledAt: null,
-  room: { name: "Ocean View", landlordId: "landlord-1" },
+  room: { name: "Ocean View", landlordId: "landlord-1", landlord: { slug: "highhill" } },
 }
 
 describe("cancelBooking", () => {

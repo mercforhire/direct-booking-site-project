@@ -6,6 +6,7 @@ type Props = {
   accessToken: string
   declineReason: string | null
   roomName: string
+  landlordSlug: string
 }
 
 export function BookingDeclinedEmail({
@@ -14,8 +15,9 @@ export function BookingDeclinedEmail({
   accessToken,
   declineReason,
   roomName,
+  landlordSlug,
 }: Props) {
-  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/bookings/${bookingId}?token=${accessToken}`
+  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/${landlordSlug}/bookings/${bookingId}?token=${accessToken}`
 
   return (
     <div

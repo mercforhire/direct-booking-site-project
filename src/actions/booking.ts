@@ -74,15 +74,17 @@ export async function submitBooking(data: unknown) {
       status: "PENDING",
       accessToken,
     },
-    include: { room: { select: { name: true } } },
+    include: { room: { select: { name: true, landlord: { select: { slug: true } } } } },
   })
 
   const resend = new Resend(process.env.RESEND_API_KEY)
   const fromEmail = process.env.RESEND_FROM_EMAIL ?? "noreply@example.com"
 
+  const landlordSlug = created.room.landlord.slug
+
   try {
     const html = await render(
-      BookingConfirmationEmail({ bookingId: created.id, accessToken, guestName })
+      BookingConfirmationEmail({ bookingId: created.id, accessToken, guestName, landlordSlug })
     )
     await resend.emails.send({
       from: fromEmail,
@@ -118,5 +120,5 @@ export async function submitBooking(data: unknown) {
     }
   }
 
-  redirect(`/bookings/${created.id}?token=${accessToken}&new=1`)
+  redirect(`/${landlordSlug}/bookings/${created.id}?token=${accessToken}&new=1`)
 }

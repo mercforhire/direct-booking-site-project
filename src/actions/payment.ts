@@ -17,11 +17,12 @@ import { formatDateET } from "@/lib/format-date-et"
 export async function createStripeCheckoutSession(bookingId: string) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId, status: "APPROVED" },
-    include: { room: { select: { name: true } } },
+    include: { room: { select: { name: true, landlord: { select: { slug: true } } } } },
   })
 
   if (!booking) return { error: "booking_not_found" }
 
+  const landlordSlug = booking.room.landlord.slug
   const origin =
     (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL
 
@@ -42,8 +43,8 @@ export async function createStripeCheckoutSession(bookingId: string) {
       },
     ],
     metadata: { bookingId: booking.id },
-    success_url: `${origin}/bookings/${booking.id}?paid=1`,
-    cancel_url: `${origin}/bookings/${booking.id}`,
+    success_url: `${origin}/${landlordSlug}/bookings/${booking.id}?paid=1`,
+    cancel_url: `${origin}/${landlordSlug}/bookings/${booking.id}`,
     customer_email: booking.guestEmail,
   })
 
@@ -127,7 +128,7 @@ export async function createExtensionStripeCheckoutSession(extensionId: string) 
           id: true,
           guestEmail: true,
           checkout: true,
-          room: { select: { name: true } },
+          room: { select: { name: true, landlord: { select: { slug: true } } } },
         },
       },
     },
@@ -135,6 +136,7 @@ export async function createExtensionStripeCheckoutSession(extensionId: string) 
 
   if (!extension || !extension.extensionPrice) return { error: "extension_not_found" }
 
+  const landlordSlug = extension.booking.room.landlord.slug
   const origin =
     (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL
 
@@ -158,8 +160,8 @@ export async function createExtensionStripeCheckoutSession(extensionId: string) 
       },
     ],
     metadata: { type: "extension", extensionId: extension.id },
-    success_url: `${origin}/bookings/${extension.booking.id}?extension_paid=1`,
-    cancel_url: `${origin}/bookings/${extension.booking.id}`,
+    success_url: `${origin}/${landlordSlug}/bookings/${extension.booking.id}?extension_paid=1`,
+    cancel_url: `${origin}/${landlordSlug}/bookings/${extension.booking.id}`,
     customer_email: extension.booking.guestEmail,
   })
 
@@ -192,7 +194,7 @@ export async function markExtensionAsPaid(extensionId: string) {
       guestName: string
       accessToken: string
       checkin: Date
-      room: { name: string }
+      room: { name: string; landlord: { slug: string } }
     }
   }
 
@@ -202,7 +204,7 @@ export async function markExtensionAsPaid(extensionId: string) {
       data: { status: "PAID" },
       include: {
         booking: {
-          include: { room: { select: { name: true } } },
+          include: { room: { select: { name: true, landlord: { select: { slug: true } } } } },
         },
       },
     })
@@ -230,6 +232,7 @@ export async function markExtensionAsPaid(extensionId: string) {
         extensionAmountPaid: Number(extension.extensionPrice ?? 0),
         bookingId: extension.booking.id,
         accessToken: extension.booking.accessToken,
+        landlordSlug: extension.booking.room.landlord.slug,
       })
     )
     await resend.emails.send({
@@ -243,7 +246,7 @@ export async function markExtensionAsPaid(extensionId: string) {
   }
 
   revalidatePath(`/admin/bookings/${extension.bookingId}`)
-  revalidatePath(`/bookings/${extension.bookingId}`)
+  revalidatePath(`/${extension.booking.room.landlord.slug}/bookings/${extension.bookingId}`)
 
   return { success: true }
 }

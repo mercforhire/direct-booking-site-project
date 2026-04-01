@@ -79,7 +79,7 @@ const mockExtension = {
     accessToken: "token-abc",
     checkin: new Date("2026-04-01T00:00:00.000Z"),
     checkout: new Date("2026-05-05T00:00:00.000Z"),
-    room: { name: "Ocean View Suite" },
+    room: { name: "Ocean View Suite", landlord: { slug: "highhill" } },
   },
 }
 
@@ -204,10 +204,10 @@ describe("markExtensionAsPaid", () => {
     expect(result).toEqual({ error: "not_approved" })
   })
 
-  it("revalidates /admin/bookings/[bookingId] and /bookings/[bookingId]", async () => {
+  it("revalidates /admin/bookings/[bookingId] and /{slug}/bookings/[bookingId]", async () => {
     await markExtensionAsPaid("ext-1")
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings/booking-1")
-    expect(revalidatePath).toHaveBeenCalledWith("/bookings/booking-1")
+    expect(revalidatePath).toHaveBeenCalledWith("/highhill/bookings/booking-1")
   })
 
   it("sends extension payment confirmation email to guest (non-fatal)", async () => {

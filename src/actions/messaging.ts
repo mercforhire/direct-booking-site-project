@@ -20,7 +20,7 @@ export async function submitMessage(bookingId: string, token: string, data: unkn
 
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    include: { room: { select: { name: true } } },
+    include: { room: { select: { name: true, landlord: { select: { slug: true } } } } },
   })
   if (!booking) return { error: "booking_not_found" }
   if (token !== booking.accessToken) return { error: "unauthorized" }
@@ -59,7 +59,7 @@ export async function submitMessage(bookingId: string, token: string, data: unkn
     console.error("Failed to send landlord notification email:", err)
   }
 
-  revalidatePath(`/bookings/${bookingId}`)
+  revalidatePath(`/${booking.room.landlord.slug}/bookings/${bookingId}`)
   revalidatePath(`/admin/bookings/${bookingId}`)
   revalidatePath("/admin/bookings")
 
@@ -75,7 +75,7 @@ export async function sendMessageAsLandlord(bookingId: string, data: unknown) {
 
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    include: { room: { select: { name: true, landlordId: true } } },
+    include: { room: { select: { name: true, landlordId: true, landlord: { select: { slug: true } } } } },
   })
   if (!booking) return { error: "booking_not_found" }
   if (booking.room.landlordId !== landlord.id) throw new Error("Booking not found")
@@ -101,6 +101,7 @@ export async function sendMessageAsLandlord(bookingId: string, data: unknown) {
         body,
         bookingId,
         accessToken: booking.accessToken,
+        landlordSlug: booking.room.landlord.slug,
       })
     )
     await resend.emails.send({
@@ -113,7 +114,7 @@ export async function sendMessageAsLandlord(bookingId: string, data: unknown) {
     console.error("Failed to send guest notification email:", err)
   }
 
-  revalidatePath(`/bookings/${bookingId}`)
+  revalidatePath(`/${booking.room.landlord.slug}/bookings/${bookingId}`)
   revalidatePath(`/admin/bookings/${bookingId}`)
   revalidatePath("/admin/bookings")
 

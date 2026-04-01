@@ -9,6 +9,7 @@ type Props = {
   paymentMethod: "stripe" | "etransfer" | "none"
   bookingId: string
   accessToken: string
+  landlordSlug: string
 }
 
 export function BookingCancelledEmail({
@@ -20,8 +21,9 @@ export function BookingCancelledEmail({
   paymentMethod,
   bookingId,
   accessToken,
+  landlordSlug,
 }: Props) {
-  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/bookings/${bookingId}?token=${accessToken}`
+  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/${landlordSlug}/bookings/${bookingId}?token=${accessToken}`
 
   return (
     <div style={{ fontFamily: "sans-serif", maxWidth: "600px", margin: "0 auto", padding: "24px" }}>

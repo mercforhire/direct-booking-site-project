@@ -75,7 +75,7 @@ const mockBooking = {
   confirmedPrice: 500,
   checkin: new Date("2026-05-01T00:00:00.000Z"),
   checkout: new Date("2026-05-05T00:00:00.000Z"),
-  room: { name: "Ocean View Suite" },
+  room: { name: "Ocean View Suite", landlord: { slug: "highhill" } },
 }
 
 function makePrismaNotFoundError() {

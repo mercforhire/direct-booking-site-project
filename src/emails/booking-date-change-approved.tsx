@@ -11,6 +11,7 @@ type Props = {
   checkoutUrl?: string
   bookingId: string
   accessToken: string
+  landlordSlug: string
 }
 
 export function BookingDateChangeApprovedEmail({
@@ -24,8 +25,9 @@ export function BookingDateChangeApprovedEmail({
   checkoutUrl,
   bookingId,
   accessToken,
+  landlordSlug,
 }: Props) {
-  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/bookings/${bookingId}?token=${accessToken}`
+  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/${landlordSlug}/bookings/${bookingId}?token=${accessToken}`
 
   const formattedPrice = new Intl.NumberFormat("en-CA", {
     style: "currency",

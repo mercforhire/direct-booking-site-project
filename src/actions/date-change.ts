@@ -23,7 +23,7 @@ export async function submitDateChange(bookingId: string, data: unknown) {
 
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    include: { room: { select: { name: true } } },
+    include: { room: { select: { name: true, landlord: { select: { slug: true } } } } },
   })
   if (!booking) return { error: "booking_not_found" }
   if (!["APPROVED", "PAID"].includes(booking.status)) return { error: "invalid_status" }
@@ -69,7 +69,7 @@ export async function submitDateChange(bookingId: string, data: unknown) {
     console.error("[submitDateChange] email send failed:", emailErr)
   }
 
-  revalidatePath(`/bookings/${bookingId}`)
+  revalidatePath(`/${booking.room.landlord.slug}/bookings/${bookingId}`)
   return { success: true }
 }
 
@@ -77,7 +77,7 @@ export async function cancelDateChange(bookingId: string, token: string | null) 
   // Token auth guard — guest-facing action, no Supabase session required
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    select: { accessToken: true },
+    select: { accessToken: true, room: { select: { landlord: { select: { slug: true } } } } },
   })
   if (!booking || !token || token !== booking.accessToken) {
     return { error: "unauthorized" }
@@ -93,7 +93,7 @@ export async function cancelDateChange(bookingId: string, token: string | null) 
     data: { status: "DECLINED" },
   })
 
-  revalidatePath(`/bookings/${bookingId}`)
+  revalidatePath(`/${booking.room.landlord.slug}/bookings/${bookingId}`)
   return { success: true }
 }
 
@@ -126,7 +126,7 @@ export async function approveDateChange(dateChangeId: string, data: unknown) {
       confirmedPrice: import("@prisma/client").Prisma.Decimal | null
       checkin: Date
       checkout: Date
-      room: { name: string }
+      room: { name: string; landlord: { slug: string } }
     }
   }
 
@@ -147,7 +147,7 @@ export async function approveDateChange(dateChangeId: string, data: unknown) {
             confirmedPrice: true,
             checkin: true,
             checkout: true,
-            room: { select: { name: true } },
+            room: { select: { name: true, landlord: { select: { slug: true } } } },
           },
         },
       },
@@ -160,6 +160,7 @@ export async function approveDateChange(dateChangeId: string, data: unknown) {
   }
 
   const booking = dateChange.booking
+  const landlordSlug = booking.room.landlord.slug
   const priceDiff = newPrice - Number(booking.confirmedPrice ?? 0)
   const isStripe = !!booking.stripeSessionId
 
@@ -191,8 +192,8 @@ export async function approveDateChange(dateChangeId: string, data: unknown) {
           },
         ],
         metadata: { type: "date_change_topup", dateChangeId },
-        success_url: `${origin}/bookings/${booking.id}?date_change_paid=1`,
-        cancel_url: `${origin}/bookings/${booking.id}`,
+        success_url: `${origin}/${landlordSlug}/bookings/${booking.id}?date_change_paid=1`,
+        cancel_url: `${origin}/${landlordSlug}/bookings/${booking.id}`,
         customer_email: booking.guestEmail,
       })
       await prisma.bookingDateChange.update({
@@ -261,6 +262,7 @@ export async function approveDateChange(dateChangeId: string, data: unknown) {
         checkoutUrl,
         bookingId: booking.id,
         accessToken: booking.accessToken,
+        landlordSlug,
       })
     )
     await resend.emails.send({
@@ -275,7 +277,7 @@ export async function approveDateChange(dateChangeId: string, data: unknown) {
 
   revalidatePath("/admin/bookings")
   revalidatePath(`/admin/bookings/${booking.id}`)
-  revalidatePath(`/bookings/${booking.id}`)
+  revalidatePath(`/${landlordSlug}/bookings/${booking.id}`)
 
   return { success: true, ...(checkoutUrl ? { checkoutUrl } : {}) }
 }
@@ -304,7 +306,7 @@ export async function declineDateChange(dateChangeId: string, data: unknown) {
       guestName: string
       guestEmail: string
       accessToken: string
-      room: { name: string }
+      room: { name: string; landlord: { slug: string } }
     }
   }
 
@@ -321,7 +323,7 @@ export async function declineDateChange(dateChangeId: string, data: unknown) {
             guestName: true,
             guestEmail: true,
             accessToken: true,
-            room: { select: { name: true } },
+            room: { select: { name: true, landlord: { select: { slug: true } } } },
           },
         },
       },
@@ -334,6 +336,7 @@ export async function declineDateChange(dateChangeId: string, data: unknown) {
   }
 
   const booking = dateChange.booking
+  const landlordSlug = booking.room.landlord.slug
 
   // Non-fatal email to guest
   try {
@@ -347,6 +350,7 @@ export async function declineDateChange(dateChangeId: string, data: unknown) {
         declineReason: declineReason ?? null,
         bookingId: booking.id,
         accessToken: booking.accessToken,
+        landlordSlug,
       })
     )
     await resend.emails.send({
@@ -361,7 +365,7 @@ export async function declineDateChange(dateChangeId: string, data: unknown) {
 
   revalidatePath("/admin/bookings")
   revalidatePath(`/admin/bookings/${booking.id}`)
-  revalidatePath(`/bookings/${booking.id}`)
+  revalidatePath(`/${landlordSlug}/bookings/${booking.id}`)
 
   return { success: true }
 }
@@ -374,7 +378,7 @@ export async function createDateChangeStripeCheckoutSession(dateChangeId: string
         select: {
           id: true,
           guestEmail: true,
-          room: { select: { name: true } },
+          room: { select: { name: true, landlord: { select: { slug: true } } } },
         },
       },
     },
@@ -382,6 +386,7 @@ export async function createDateChangeStripeCheckoutSession(dateChangeId: string
 
   if (!dateChange || !dateChange.newPrice) return { error: "date_change_not_found" }
 
+  const landlordSlug = dateChange.booking.room.landlord.slug
   const origin =
     (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL
 
@@ -402,8 +407,8 @@ export async function createDateChangeStripeCheckoutSession(dateChangeId: string
       },
     ],
     metadata: { type: "date_change_topup", dateChangeId },
-    success_url: `${origin}/bookings/${dateChange.booking.id}?date_change_paid=1`,
-    cancel_url: `${origin}/bookings/${dateChange.booking.id}`,
+    success_url: `${origin}/${landlordSlug}/bookings/${dateChange.booking.id}?date_change_paid=1`,
+    cancel_url: `${origin}/${landlordSlug}/bookings/${dateChange.booking.id}`,
     customer_email: dateChange.booking.guestEmail,
   })
 

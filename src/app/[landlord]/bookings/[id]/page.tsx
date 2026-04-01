@@ -137,6 +137,7 @@ export default async function LandlordBookingPage({
                 extensionAmountPaid: Number(activeExtension.extensionPrice ?? 0),
                 bookingId: freshBooking.id,
                 accessToken: freshBooking.accessToken,
+                landlordSlug: slug,
               })
             )
             await resend.emails.send({
@@ -194,6 +195,7 @@ export default async function LandlordBookingPage({
                 amountPaid: Number(activeDateChangeRecord.newPrice ?? 0),
                 bookingId: freshBooking.id,
                 accessToken: freshBooking.accessToken,
+                landlordSlug: slug,
               })
             )
             await resend.emails.send({

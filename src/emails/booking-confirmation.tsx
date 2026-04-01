@@ -4,14 +4,16 @@ type Props = {
   bookingId: string
   accessToken: string
   guestName: string
+  landlordSlug: string
 }
 
 export function BookingConfirmationEmail({
   bookingId,
   accessToken,
   guestName,
+  landlordSlug,
 }: Props) {
-  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/bookings/${bookingId}?token=${accessToken}`
+  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/${landlordSlug}/bookings/${bookingId}?token=${accessToken}`
 
   return (
     <div

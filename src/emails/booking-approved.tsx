@@ -6,6 +6,7 @@ type Props = {
   accessToken: string
   confirmedPrice: number
   roomName: string
+  landlordSlug: string
 }
 
 export function BookingApprovedEmail({
@@ -14,8 +15,9 @@ export function BookingApprovedEmail({
   accessToken,
   confirmedPrice,
   roomName,
+  landlordSlug,
 }: Props) {
-  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/bookings/${bookingId}?token=${accessToken}`
+  const bookingUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/${landlordSlug}/bookings/${bookingId}?token=${accessToken}`
   const formattedPrice = new Intl.NumberFormat("en-CA", {
     style: "currency",
     currency: "CAD",

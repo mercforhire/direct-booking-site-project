@@ -27,12 +27,12 @@ export async function approveBooking(bookingId: string, data: unknown) {
   if (!parsed.success) return { error: parsed.error.flatten() }
   const { confirmedPrice } = parsed.data
 
-  let booking: { id: string; guestEmail: string; guestName: string; accessToken: string; room: { name: string } }
+  let booking: { id: string; guestEmail: string; guestName: string; accessToken: string; room: { name: string; landlord: { slug: string } } }
   try {
     booking = await prisma.booking.update({
       where: { id: bookingId, status: "PENDING" },
       data: { status: "APPROVED", confirmedPrice },
-      include: { room: { select: { name: true } } },
+      include: { room: { select: { name: true, landlord: { select: { slug: true } } } } },
     })
   } catch (err) {
     if (err instanceof PrismaClientKnownRequestError && err.code === "P2025") {
@@ -50,6 +50,7 @@ export async function approveBooking(bookingId: string, data: unknown) {
         roomName: booking.room.name,
         confirmedPrice,
         accessToken: booking.accessToken,
+        landlordSlug: booking.room.landlord.slug,
       })
     )
     await resend.emails.send({
@@ -82,12 +83,12 @@ export async function declineBooking(bookingId: string, data: unknown) {
   if (!parsed.success) return { error: parsed.error.flatten() }
   const { declineReason } = parsed.data
 
-  let booking: { id: string; guestEmail: string; guestName: string; accessToken: string; room: { name: string } }
+  let booking: { id: string; guestEmail: string; guestName: string; accessToken: string; room: { name: string; landlord: { slug: string } } }
   try {
     booking = await prisma.booking.update({
       where: { id: bookingId, status: "PENDING" },
       data: { status: "DECLINED", declineReason: declineReason ?? null },
-      include: { room: { select: { name: true } } },
+      include: { room: { select: { name: true, landlord: { select: { slug: true } } } } },
     })
   } catch (err) {
     if (err instanceof PrismaClientKnownRequestError && err.code === "P2025") {
@@ -105,6 +106,7 @@ export async function declineBooking(bookingId: string, data: unknown) {
         roomName: booking.room.name,
         accessToken: booking.accessToken,
         declineReason: declineReason ?? null,
+        landlordSlug: booking.room.landlord.slug,
       })
     )
     await resend.emails.send({

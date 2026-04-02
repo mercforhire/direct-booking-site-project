@@ -50,6 +50,7 @@ interface AvailabilityDashboardProps {
   blockedDateStrings: string[]
   priceOverrideMap: Record<string, number>
   baseNightlyRate: number
+  landlordSlug?: string
 }
 
 export function AvailabilityDashboard({
@@ -58,6 +59,7 @@ export function AvailabilityDashboard({
   blockedDateStrings,
   priceOverrideMap,
   baseNightlyRate,
+  landlordSlug,
 }: AvailabilityDashboardProps) {
   const router = useRouter()
 
@@ -96,7 +98,10 @@ export function AvailabilityDashboard({
   const [rangePriceInput, setRangePriceInput] = useState("")
 
   function handleRoomChange(value: string) {
-    router.push(`/availability?roomId=${value}`)
+    const params = new URLSearchParams()
+    params.set("roomId", value)
+    if (landlordSlug) params.set("landlord", landlordSlug)
+    router.push(`/availability?${params.toString()}`)
   }
 
   function enterRangeMode() {

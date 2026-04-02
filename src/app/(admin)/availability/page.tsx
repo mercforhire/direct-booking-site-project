@@ -73,6 +73,7 @@ export default async function AvailabilityPage({
           blockedDateStrings={blockedDateStrings}
           priceOverrideMap={priceOverrideMap}
           baseNightlyRate={baseNightlyRate}
+          landlordSlug={selected.slug}
         />
       </div>
     </div>

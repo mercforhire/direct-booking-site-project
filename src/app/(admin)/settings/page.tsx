@@ -38,8 +38,8 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     <div>
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">Settings</h1>
       <div className="space-y-8">
-        <LandlordEditForm landlordId={selected.id} defaultValues={landlordDefaults} />
-        <SettingsForm defaultValues={settingsDefaults} landlordId={selected.id} />
+        <LandlordEditForm key={selected.id} landlordId={selected.id} defaultValues={landlordDefaults} />
+        <SettingsForm key={selected.id} defaultValues={settingsDefaults} landlordId={selected.id} />
       </div>
     </div>
   )

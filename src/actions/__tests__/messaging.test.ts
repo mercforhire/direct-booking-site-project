@@ -43,7 +43,7 @@ const mockBooking = {
   accessToken: "token-abc",
   checkin: new Date("2026-05-01T00:00:00.000Z"),
   checkout: new Date("2026-05-07T00:00:00.000Z"),
-  room: { name: "Ocean View Suite", landlordId: "landlord-1", landlord: { slug: "leon" } },
+  room: { name: "Ocean View Suite", landlordId: "landlord-1", landlord: { slug: "leon", ownerName: "Host" } },
 }
 
 describe("submitMessage", () => {
@@ -108,7 +108,7 @@ describe("submitMessage", () => {
 describe("sendMessageAsLandlord", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockPrisma.landlord.findFirst.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1", ownerName: "Host" } as any)
+    mockPrisma.landlord.findMany.mockResolvedValue([{ id: "landlord-1", adminUserId: "admin-1", ownerName: "Host" }] as any)
     process.env.RESEND_API_KEY = "re_test_key"
     process.env.RESEND_FROM_EMAIL = "noreply@example.com"
     process.env.NEXT_PUBLIC_SITE_URL = "https://example.com"

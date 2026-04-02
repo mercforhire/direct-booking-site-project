@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getLandlordForAdmin } from "@/lib/landlord"
+import { getLandlordIdsForAdmin } from "@/lib/landlord"
 import { stripe } from "@/lib/stripe"
 import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
@@ -12,7 +12,7 @@ import { BookingCancelledEmail } from "@/emails/booking-cancelled"
 import { formatDateET } from "@/lib/format-date-et"
 
 export async function cancelBooking(bookingId: string, data: unknown) {
-  const landlord = await getLandlordForAdmin()
+  const landlordIds = await getLandlordIdsForAdmin()
 
   const parsed = cancelBookingSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
@@ -24,7 +24,7 @@ export async function cancelBooking(bookingId: string, data: unknown) {
     include: { room: { select: { name: true, landlordId: true, landlord: { select: { slug: true } } } } },
   })
   if (!booking) return { error: "not_found" }
-  if (booking.room.landlordId !== landlord.id) throw new Error("Booking not found")
+  if (!landlordIds.includes(booking.room.landlordId)) throw new Error("Booking not found")
 
   // Stripe refunds FIRST (hard block if any fail)
   if (booking.status === "PAID") {

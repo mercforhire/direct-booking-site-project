@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getLandlordForAdmin } from "@/lib/landlord"
+import { getLandlordIdsForAdmin } from "@/lib/landlord"
 import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
 import { render } from "@react-email/render"
@@ -11,14 +11,14 @@ import { BookingExtensionApprovedEmail } from "@/emails/booking-extension-approv
 import { BookingExtensionDeclinedEmail } from "@/emails/booking-extension-declined"
 
 export async function approveExtension(extensionId: string, data: unknown) {
-  const landlord = await getLandlordForAdmin()
+  const landlordIds = await getLandlordIdsForAdmin()
 
   // Ownership check
   const extCheck = await prisma.bookingExtension.findUnique({
     where: { id: extensionId },
     select: { booking: { select: { room: { select: { landlordId: true } } } } },
   })
-  if (!extCheck || extCheck.booking.room.landlordId !== landlord.id) throw new Error("Extension not found")
+  if (!extCheck || !landlordIds.includes(extCheck.booking.room.landlordId)) throw new Error("Extension not found")
 
   const parsed = approveExtensionSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
@@ -84,14 +84,14 @@ export async function approveExtension(extensionId: string, data: unknown) {
 }
 
 export async function declineExtension(extensionId: string, data: unknown) {
-  const landlord = await getLandlordForAdmin()
+  const landlordIds = await getLandlordIdsForAdmin()
 
   // Ownership check
   const extCheck = await prisma.bookingExtension.findUnique({
     where: { id: extensionId },
     select: { booking: { select: { room: { select: { landlordId: true } } } } },
   })
-  if (!extCheck || extCheck.booking.room.landlordId !== landlord.id) throw new Error("Extension not found")
+  if (!extCheck || !landlordIds.includes(extCheck.booking.room.landlordId)) throw new Error("Extension not found")
 
   const parsed = declineExtensionSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }

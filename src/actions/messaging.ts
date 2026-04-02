@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getLandlordForAdmin } from "@/lib/landlord"
+import { getLandlordIdsForAdmin } from "@/lib/landlord"
 import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
 import { render } from "@react-email/render"
@@ -67,7 +67,7 @@ export async function submitMessage(bookingId: string, token: string, data: unkn
 }
 
 export async function sendMessageAsLandlord(bookingId: string, data: unknown) {
-  const landlord = await getLandlordForAdmin()
+  const landlordIds = await getLandlordIdsForAdmin()
 
   const parsed = messageSchemaCoerced.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
@@ -75,23 +75,23 @@ export async function sendMessageAsLandlord(bookingId: string, data: unknown) {
 
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    include: { room: { select: { name: true, landlordId: true, landlord: { select: { slug: true } } } } },
+    include: { room: { select: { name: true, landlordId: true, landlord: { select: { slug: true, ownerName: true } } } } },
   })
   if (!booking) return { error: "booking_not_found" }
-  if (booking.room.landlordId !== landlord.id) throw new Error("Booking not found")
+  if (!landlordIds.includes(booking.room.landlordId)) throw new Error("Booking not found")
 
   await prisma.message.create({
     data: {
       bookingId,
       sender: "LANDLORD",
-      senderName: landlord.ownerName,
+      senderName: booking.room.landlord.ownerName,
       body,
     },
   })
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const subject = `New message from ${landlord.ownerName} — ${booking.room.name}, ${formatDate(booking.checkin)}–${formatDate(booking.checkout)}`
+    const subject = `New message from ${booking.room.landlord.ownerName} — ${booking.room.name}, ${formatDate(booking.checkin)}–${formatDate(booking.checkout)}`
     const html = await render(
       NewMessageGuestEmail({
         guestName: booking.guestName,

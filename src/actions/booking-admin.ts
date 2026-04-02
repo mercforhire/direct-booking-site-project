@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getLandlordForAdmin } from "@/lib/landlord"
+import { getLandlordIdsForAdmin } from "@/lib/landlord"
 import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
 import { render } from "@react-email/render"
@@ -14,14 +14,14 @@ import { BookingDeclinedEmail } from "@/emails/booking-declined"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 
 export async function approveBooking(bookingId: string, data: unknown) {
-  const landlord = await getLandlordForAdmin()
+  const landlordIds = await getLandlordIdsForAdmin()
 
   // Ownership check
   const check = await prisma.booking.findUnique({
     where: { id: bookingId },
     select: { room: { select: { landlordId: true } } },
   })
-  if (!check || check.room.landlordId !== landlord.id) throw new Error("Booking not found")
+  if (!check || !landlordIds.includes(check.room.landlordId)) throw new Error("Booking not found")
 
   const parsed = approveBookingSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
@@ -70,14 +70,14 @@ export async function approveBooking(bookingId: string, data: unknown) {
 }
 
 export async function declineBooking(bookingId: string, data: unknown) {
-  const landlord = await getLandlordForAdmin()
+  const landlordIds = await getLandlordIdsForAdmin()
 
   // Ownership check
   const check = await prisma.booking.findUnique({
     where: { id: bookingId },
     select: { room: { select: { landlordId: true } } },
   })
-  if (!check || check.room.landlordId !== landlord.id) throw new Error("Booking not found")
+  if (!check || !landlordIds.includes(check.room.landlordId)) throw new Error("Booking not found")
 
   const parsed = declineBookingSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }

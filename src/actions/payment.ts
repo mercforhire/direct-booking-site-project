@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getLandlordForAdmin } from "@/lib/landlord"
+import { getLandlordIdsForAdmin } from "@/lib/landlord"
 import { stripe } from "@/lib/stripe"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -57,14 +57,14 @@ export async function createStripeCheckoutSession(bookingId: string) {
 }
 
 export async function markBookingAsPaid(bookingId: string) {
-  const landlord = await getLandlordForAdmin()
+  const landlordIds = await getLandlordIdsForAdmin()
 
   // Ownership check
   const check = await prisma.booking.findUnique({
     where: { id: bookingId },
     select: { room: { select: { landlordId: true } } },
   })
-  if (!check || check.room.landlordId !== landlord.id) throw new Error("Booking not found")
+  if (!check || !landlordIds.includes(check.room.landlordId)) throw new Error("Booking not found")
 
   markAsPaidSchema.parse({ bookingId })
 
@@ -175,14 +175,14 @@ export async function createExtensionStripeCheckoutSession(extensionId: string) 
 }
 
 export async function markExtensionAsPaid(extensionId: string) {
-  const landlord = await getLandlordForAdmin()
+  const landlordIds = await getLandlordIdsForAdmin()
 
   // Ownership check
   const extCheck = await prisma.bookingExtension.findUnique({
     where: { id: extensionId },
     select: { booking: { select: { room: { select: { landlordId: true } } } } },
   })
-  if (!extCheck || extCheck.booking.room.landlordId !== landlord.id) throw new Error("Extension not found")
+  if (!extCheck || !landlordIds.includes(extCheck.booking.room.landlordId)) throw new Error("Extension not found")
 
   let extension: {
     id: string

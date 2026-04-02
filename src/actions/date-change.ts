@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { prisma } from "@/lib/prisma"
-import { getLandlordForAdmin } from "@/lib/landlord"
+import { getLandlordIdsForAdmin } from "@/lib/landlord"
 import { stripe } from "@/lib/stripe"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -98,14 +98,14 @@ export async function cancelDateChange(bookingId: string, token: string | null) 
 }
 
 export async function approveDateChange(dateChangeId: string, data: unknown) {
-  const landlord = await getLandlordForAdmin()
+  const landlordIds = await getLandlordIdsForAdmin()
 
   // Ownership check
   const dcCheck = await prisma.bookingDateChange.findUnique({
     where: { id: dateChangeId },
     select: { booking: { select: { room: { select: { landlordId: true } } } } },
   })
-  if (!dcCheck || dcCheck.booking.room.landlordId !== landlord.id) throw new Error("Date change not found")
+  if (!dcCheck || !landlordIds.includes(dcCheck.booking.room.landlordId)) throw new Error("Date change not found")
 
   const parsed = approveDateChangeSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
@@ -283,14 +283,14 @@ export async function approveDateChange(dateChangeId: string, data: unknown) {
 }
 
 export async function declineDateChange(dateChangeId: string, data: unknown) {
-  const landlord = await getLandlordForAdmin()
+  const landlordIds = await getLandlordIdsForAdmin()
 
   // Ownership check
   const dcCheck = await prisma.bookingDateChange.findUnique({
     where: { id: dateChangeId },
     select: { booking: { select: { room: { select: { landlordId: true } } } } },
   })
-  if (!dcCheck || dcCheck.booking.room.landlordId !== landlord.id) throw new Error("Date change not found")
+  if (!dcCheck || !landlordIds.includes(dcCheck.booking.room.landlordId)) throw new Error("Date change not found")
 
   const parsed = declineDateChangeSchema.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }

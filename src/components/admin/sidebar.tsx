@@ -24,7 +24,7 @@ const navItems = [
 ]
 
 /** Pages that operate on a specific landlord and need the switcher visible */
-const landlordScopedPaths = ["/admin/rooms", "/availability", "/bookings", "/settings"]
+const landlordScopedPaths = ["/dashboard", "/admin/rooms", "/availability", "/bookings", "/settings"]
 
 interface LandlordOption {
   slug: string

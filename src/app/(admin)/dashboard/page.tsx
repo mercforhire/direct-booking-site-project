@@ -1,11 +1,15 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
-import { requireLandlordsForAdmin } from "@/lib/landlord"
+import { requireLandlordsWithSelected } from "@/lib/landlord"
 import { Badge } from "@/components/ui/badge"
 import { format, isToday, isTomorrow } from "date-fns"
-import type { Booking, Room, Landlord } from "@prisma/client"
+import type { Booking, Landlord } from "@prisma/client"
 
 export const dynamic = "force-dynamic"
+
+interface DashboardPageProps {
+  searchParams: Promise<{ landlord?: string }>
+}
 
 type BookingWithRoom = Booking & { room: { name: true } extends infer _ ? { name: string; landlordId: string } : never }
 
@@ -29,9 +33,13 @@ function groupByLandlord(
   return landlords.map((l) => ({ landlord: l, bookings: map.get(l.id) ?? [] }))
 }
 
-export default async function DashboardPage() {
-  const landlords = await requireLandlordsForAdmin()
-  const landlordIds = landlords.map((l) => l.id)
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+  const { landlord: landlordSlug } = await searchParams
+  const { landlords, selected } = await requireLandlordsWithSelected(landlordSlug)
+
+  // Filter to selected landlord only
+  const landlordIds = [selected.id]
+  const displayLandlords = [selected]
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -82,13 +90,13 @@ export default async function DashboardPage() {
     }),
   ])
 
-  const multiProperty = landlords.length > 1
+  const multiProperty = displayLandlords.length > 1
 
-  const pendingGroups = groupByLandlord(pendingApprovals as BookingWithRoom[], landlords)
-  const etransferGroups = groupByLandlord(pendingEtransfer as BookingWithRoom[], landlords)
-  const stayingGroups = groupByLandlord(currentlyStaying as BookingWithRoom[], landlords)
-  const checkinGroups = groupByLandlord(checkIns as BookingWithRoom[], landlords)
-  const checkoutGroups = groupByLandlord(checkOuts as BookingWithRoom[], landlords)
+  const pendingGroups = groupByLandlord(pendingApprovals as BookingWithRoom[], displayLandlords)
+  const etransferGroups = groupByLandlord(pendingEtransfer as BookingWithRoom[], displayLandlords)
+  const stayingGroups = groupByLandlord(currentlyStaying as BookingWithRoom[], displayLandlords)
+  const checkinGroups = groupByLandlord(checkIns as BookingWithRoom[], displayLandlords)
+  const checkoutGroups = groupByLandlord(checkOuts as BookingWithRoom[], displayLandlords)
 
   return (
     <div className="space-y-8">

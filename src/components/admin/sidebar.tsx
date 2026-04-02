@@ -43,7 +43,9 @@ export function Sidebar({ landlords }: { landlords: LandlordOption[] }) {
   function handleLandlordChange(slug: string) {
     const params = new URLSearchParams(searchParams.toString())
     params.set("landlord", slug)
-    router.push(`${pathname}?${params.toString()}`)
+    // Full page load ensures all server component state resets cleanly.
+    // router.push can leave stale client component state during transition.
+    window.location.href = `${pathname}?${params.toString()}`
   }
 
   function buildHref(basePath: string) {

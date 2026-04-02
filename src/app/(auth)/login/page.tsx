@@ -30,7 +30,7 @@ export default function LoginPage() {
       email,
       options: {
         shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
+        emailRedirectTo: `${window.location.origin}/auth/confirm?next=/dashboard`,
       },
     })
     setLoading(false)

@@ -19,17 +19,37 @@ export async function GET(request: NextRequest) {
   })
   const slug = landlord?.slug ?? "highhill"
 
-  const next =
-    searchParams.get("next") ??
-    (type === "recovery"
-      ? `/${slug}/guest/reset-password`
-      : `/${slug}/my-bookings`)
+  const explicitNext = searchParams.get("next")
 
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(new URL(next, request.url))
+      // If caller specified a destination, use it
+      if (explicitNext) {
+        return NextResponse.redirect(new URL(explicitNext, request.url))
+      }
+
+      // Otherwise detect admin vs guest and redirect appropriately
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (user) {
+        const isAdmin = await prisma.landlord.findFirst({
+          where: { adminUserId: user.id },
+          select: { id: true },
+        })
+        if (isAdmin) {
+          return NextResponse.redirect(new URL("/dashboard", request.url))
+        }
+      }
+
+      // Guest fallback
+      const guestNext =
+        type === "recovery"
+          ? `/${slug}/guest/reset-password`
+          : `/${slug}/my-bookings`
+      return NextResponse.redirect(new URL(guestNext, request.url))
     }
   }
 

@@ -42,3 +42,7 @@ vendor/
 coverage/
 .cache/
 tmp/
+
+# Airbnb scraper session cookies
+.airbnb-session.json
+debug-multical-*.png

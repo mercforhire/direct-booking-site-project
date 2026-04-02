@@ -43,8 +43,8 @@ export async function createStripeCheckoutSession(bookingId: string) {
       },
     ],
     metadata: { bookingId: booking.id },
-    success_url: `${origin}/${landlordSlug}/bookings/${booking.id}?paid=1`,
-    cancel_url: `${origin}/${landlordSlug}/bookings/${booking.id}`,
+    success_url: `${origin}/${landlordSlug}/bookings/${booking.id}?paid=1&token=${booking.accessToken}`,
+    cancel_url: `${origin}/${landlordSlug}/bookings/${booking.id}?token=${booking.accessToken}`,
     customer_email: booking.guestEmail,
   })
 
@@ -127,6 +127,7 @@ export async function createExtensionStripeCheckoutSession(extensionId: string) 
         select: {
           id: true,
           guestEmail: true,
+          accessToken: true,
           checkout: true,
           room: { select: { name: true, landlord: { select: { slug: true } } } },
         },
@@ -160,8 +161,8 @@ export async function createExtensionStripeCheckoutSession(extensionId: string) 
       },
     ],
     metadata: { type: "extension", extensionId: extension.id },
-    success_url: `${origin}/${landlordSlug}/bookings/${extension.booking.id}?extension_paid=1`,
-    cancel_url: `${origin}/${landlordSlug}/bookings/${extension.booking.id}`,
+    success_url: `${origin}/${landlordSlug}/bookings/${extension.booking.id}?extension_paid=1&token=${extension.booking.accessToken}`,
+    cancel_url: `${origin}/${landlordSlug}/bookings/${extension.booking.id}?token=${extension.booking.accessToken}`,
     customer_email: extension.booking.guestEmail,
   })
 

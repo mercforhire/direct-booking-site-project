@@ -192,8 +192,8 @@ export async function approveDateChange(dateChangeId: string, data: unknown) {
           },
         ],
         metadata: { type: "date_change_topup", dateChangeId },
-        success_url: `${origin}/${landlordSlug}/bookings/${booking.id}?date_change_paid=1`,
-        cancel_url: `${origin}/${landlordSlug}/bookings/${booking.id}`,
+        success_url: `${origin}/${landlordSlug}/bookings/${booking.id}?date_change_paid=1&token=${booking.accessToken}`,
+        cancel_url: `${origin}/${landlordSlug}/bookings/${booking.id}?token=${booking.accessToken}`,
         customer_email: booking.guestEmail,
       })
       await prisma.bookingDateChange.update({
@@ -378,6 +378,7 @@ export async function createDateChangeStripeCheckoutSession(dateChangeId: string
         select: {
           id: true,
           guestEmail: true,
+          accessToken: true,
           room: { select: { name: true, landlord: { select: { slug: true } } } },
         },
       },
@@ -407,8 +408,8 @@ export async function createDateChangeStripeCheckoutSession(dateChangeId: string
       },
     ],
     metadata: { type: "date_change_topup", dateChangeId },
-    success_url: `${origin}/${landlordSlug}/bookings/${dateChange.booking.id}?date_change_paid=1`,
-    cancel_url: `${origin}/${landlordSlug}/bookings/${dateChange.booking.id}`,
+    success_url: `${origin}/${landlordSlug}/bookings/${dateChange.booking.id}?date_change_paid=1&token=${dateChange.booking.accessToken}`,
+    cancel_url: `${origin}/${landlordSlug}/bookings/${dateChange.booking.id}?token=${dateChange.booking.accessToken}`,
     customer_email: dateChange.booking.guestEmail,
   })
 

@@ -67,6 +67,7 @@ export default async function AvailabilityPage({
       </p>
       <div className="mt-6">
         <AvailabilityDashboard
+          key={selectedRoom?.id ?? "none"}
           rooms={roomsForClient}
           selectedRoom={selectedRoomForClient}
           blockedDateStrings={blockedDateStrings}

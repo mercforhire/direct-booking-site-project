@@ -63,3 +63,45 @@ export async function createLandlord(data: unknown) {
   revalidatePath("/settings")
   return { landlord }
 }
+
+export async function updateLandlord(landlordId: string, data: unknown) {
+  const landlordIds = await getLandlordIdsForAdmin()
+  if (!landlordIds.includes(landlordId)) throw new Error("Unauthorized")
+
+  const parsed = landlordSchema.safeParse(data)
+  if (!parsed.success) return { error: parsed.error.flatten() }
+
+  // Check slug uniqueness (exclude current landlord)
+  const existing = await prisma.landlord.findFirst({
+    where: { slug: parsed.data.slug, NOT: { id: landlordId } },
+    select: { id: true },
+  })
+  if (existing) {
+    return {
+      error: {
+        fieldErrors: { slug: ["This slug is already taken"] },
+        formErrors: [],
+      },
+    }
+  }
+
+  const landlord = await prisma.landlord.update({
+    where: { id: landlordId },
+    data: {
+      name: parsed.data.name,
+      slug: parsed.data.slug,
+      ownerName: parsed.data.ownerName,
+      address: parsed.data.address,
+      email: parsed.data.email,
+      phone: parsed.data.phone || null,
+      bgColor: parsed.data.bgColor,
+      textColor: parsed.data.textColor,
+      accentColor: parsed.data.accentColor,
+    },
+  })
+
+  revalidatePath("/dashboard")
+  revalidatePath("/settings")
+  revalidatePath(`/${landlord.slug}`)
+  return { landlord }
+}

@@ -51,6 +51,7 @@ model Room {
   blockedDates        BlockedDate[]
   priceOverrides      DatePriceOverride[]
   bookings            Booking[]
+  icalSources         IcalSource[]
 
   @@index([landlordId])
 }
@@ -88,9 +89,24 @@ model BlockedDate {
   id     String   @id @default(cuid())
   roomId String
   date   DateTime @db.Date
+  source String   @default("MANUAL")
   room   Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   @@unique([roomId, date])
+  @@index([roomId])
+}
+
+model IcalSource {
+  id        String    @id @default(cuid())
+  roomId    String
+  url       String
+  label     String?
+  lastSync  DateTime?
+  syncError String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  room      Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
   @@index([roomId])
 }
 

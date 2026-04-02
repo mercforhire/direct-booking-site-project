@@ -39,6 +39,7 @@ describe("availability actions", () => {
         id: "bd-1",
         roomId: "room-1",
         date: new Date("2026-04-01T00:00:00.000Z"),
+        source: "MANUAL",
       })
 
       await toggleBlockedDate("room-1", "2026-04-01")
@@ -57,6 +58,7 @@ describe("availability actions", () => {
         id: "bd-1",
         roomId: "room-1",
         date: new Date("2026-04-01T00:00:00.000Z"),
+        source: "MANUAL",
       }
       mockPrisma.blockedDate.findUnique.mockResolvedValue(existing)
       mockPrisma.blockedDate.delete.mockResolvedValue(existing)

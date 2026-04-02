@@ -19,11 +19,13 @@ model Landlord {
   bgColor     String    @default("#3a392a")
   textColor   String    @default("#f0ebe0")
   accentColor String    @default("#d4956a")
-  adminUserId String    @unique
+  adminUserId String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   rooms       Room[]
   settings    Settings?
+
+  @@index([adminUserId])
 }
 
 model Room {

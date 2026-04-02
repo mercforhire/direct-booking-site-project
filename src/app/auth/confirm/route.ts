@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     orderBy: { createdAt: "asc" },
     select: { slug: true },
   })
-  const slug = landlord?.slug ?? "highhill"
+  const slug = landlord?.slug ?? "leon"
 
   const explicitNext = searchParams.get("next")
 

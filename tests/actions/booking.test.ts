@@ -71,7 +71,7 @@ const mockCreatedBooking = {
   accessToken: "some-uuid",
   createdAt: new Date(),
   updatedAt: new Date(),
-  room: { name: "Room 1", landlord: { slug: "highhill" } },
+  room: { name: "Room 1", landlord: { slug: "leon" } },
 }
 
 describe("submitBooking", () => {
@@ -209,7 +209,7 @@ describe("submitBooking", () => {
       // redirect throws
     }
     expect(vi.mocked(redirect)).toHaveBeenCalledWith(
-      expect.stringMatching(/^\/highhill\/bookings\/booking-123\?token=[0-9a-f-]{36}&new=1$/)
+      expect.stringMatching(/^\/leon\/bookings\/booking-123\?token=[0-9a-f-]{36}&new=1$/)
     )
   })
 

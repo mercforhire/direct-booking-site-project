@@ -75,7 +75,7 @@ const mockBooking = {
   confirmedPrice: 500,
   checkin: new Date("2026-05-01T00:00:00.000Z"),
   checkout: new Date("2026-05-05T00:00:00.000Z"),
-  room: { name: "Ocean View Suite", landlord: { slug: "highhill" } },
+  room: { name: "Ocean View Suite", landlord: { slug: "leon" } },
 }
 
 function makePrismaNotFoundError() {
@@ -144,7 +144,7 @@ describe("createStripeCheckoutSession", () => {
 describe("markBookingAsPaid", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.landlord.findFirst.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
     mockPrisma.booking.findUnique.mockResolvedValue({ id: "booking-1", room: { landlordId: "landlord-1", name: "Ocean View" } } as any)
     mockGetUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null })
     mockPrisma.booking.update.mockResolvedValue({ ...mockBooking, status: "PAID" } as any)

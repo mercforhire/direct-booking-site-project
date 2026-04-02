@@ -37,7 +37,7 @@ const mockBooking = {
   guestName: "Jane Guest",
   status: "APPROVED",
   confirmedPrice: 500,
-  room: { name: "Ocean View Suite", landlord: { slug: "highhill" } },
+  room: { name: "Ocean View Suite", landlord: { slug: "leon" } },
 }
 
 const mockDeclinedBooking = {
@@ -46,7 +46,7 @@ const mockDeclinedBooking = {
   guestName: "Jane Guest",
   status: "DECLINED",
   declineReason: "Not available",
-  room: { name: "Ocean View Suite", landlord: { slug: "highhill" } },
+  room: { name: "Ocean View Suite", landlord: { slug: "leon" } },
 }
 
 function makePrismaNotFoundError() {
@@ -60,7 +60,7 @@ describe("approveBooking", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockGetUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null })
-    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.landlord.findFirst.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
     mockPrisma.booking.findUnique.mockResolvedValue({ id: "booking-1", room: { landlordId: "landlord-1" } } as any)
     mockPrisma.booking.update.mockResolvedValue(mockBooking as any)
   })
@@ -126,7 +126,7 @@ describe("declineBooking", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockGetUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null })
-    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.landlord.findFirst.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
     mockPrisma.booking.findUnique.mockResolvedValue({ id: "booking-1", room: { landlordId: "landlord-1" } } as any)
     mockPrisma.booking.update.mockResolvedValue(mockDeclinedBooking as any)
   })

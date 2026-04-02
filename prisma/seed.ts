@@ -11,15 +11,15 @@ async function main() {
     )
   }
 
-  // Upsert the High Hill landlord
+  // Upsert the Leon landlord
   const landlord = await prisma.landlord.upsert({
-    where: { slug: "highhill" },
+    where: { slug: "leon" },
     create: {
-      slug: "highhill",
-      name: "Leon's Home",
+      slug: "leon",
+      name: "Leon",
       ownerName: "Leon",
       address: "9 Highhill Dr, Scarborough, ON",
-      email: process.env.LANDLORD_EMAIL ?? "highhill@uptrendinvestments.net",
+      email: process.env.LANDLORD_EMAIL ?? "leon@uptrendinvestments.net",
       phone: null,
       bgColor: "#3a392a",
       textColor: "#f0ebe0",
@@ -28,7 +28,7 @@ async function main() {
     },
     update: {
       adminUserId,
-      email: process.env.LANDLORD_EMAIL ?? "highhill@uptrendinvestments.net",
+      email: process.env.LANDLORD_EMAIL ?? "leon@uptrendinvestments.net",
     },
   })
 

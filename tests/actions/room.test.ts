@@ -19,7 +19,7 @@ import { createRoom, updateRoom, deleteRoom } from "@/actions/room"
 
 const mockLandlord = {
   id: "landlord-1",
-  slug: "highhill",
+  slug: "leon",
   name: "Leon's Home",
   ownerName: "Leon",
   address: "9 Highhill Dr",
@@ -66,7 +66,7 @@ const mockRoomRecord = {
 
 function mockAuthenticatedAdmin() {
   mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
-  mockPrisma.landlord.findUnique.mockResolvedValue(mockLandlord as any)
+  mockPrisma.landlord.findFirst.mockResolvedValue(mockLandlord as any)
 }
 
 function mockUnauthenticated() {

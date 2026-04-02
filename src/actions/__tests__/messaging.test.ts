@@ -43,7 +43,7 @@ const mockBooking = {
   accessToken: "token-abc",
   checkin: new Date("2026-05-01T00:00:00.000Z"),
   checkout: new Date("2026-05-07T00:00:00.000Z"),
-  room: { name: "Ocean View Suite", landlordId: "landlord-1", landlord: { slug: "highhill" } },
+  room: { name: "Ocean View Suite", landlordId: "landlord-1", landlord: { slug: "leon" } },
 }
 
 describe("submitMessage", () => {
@@ -99,7 +99,7 @@ describe("submitMessage", () => {
 
   it("revalidates /{slug}/bookings/[id], /admin/bookings/[id], /admin/bookings", async () => {
     await submitMessage("booking-1", "token-abc", { body: "Hello!" })
-    expect(revalidatePath).toHaveBeenCalledWith("/highhill/bookings/booking-1")
+    expect(revalidatePath).toHaveBeenCalledWith("/leon/bookings/booking-1")
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings/booking-1")
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings")
   })
@@ -108,7 +108,7 @@ describe("submitMessage", () => {
 describe("sendMessageAsLandlord", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1", ownerName: "Host" } as any)
+    mockPrisma.landlord.findFirst.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1", ownerName: "Host" } as any)
     process.env.RESEND_API_KEY = "re_test_key"
     process.env.RESEND_FROM_EMAIL = "noreply@example.com"
     process.env.NEXT_PUBLIC_SITE_URL = "https://example.com"

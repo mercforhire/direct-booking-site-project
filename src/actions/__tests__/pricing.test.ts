@@ -27,7 +27,7 @@ const ROOM_ID = "room-1"
 
 describe("setDatePriceOverride", () => {
   beforeEach(() => {
-    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.landlord.findFirst.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
     mockPrisma.room.findUnique.mockResolvedValue({ id: "room-1", landlordId: "landlord-1" } as any)
   })
 
@@ -56,7 +56,7 @@ describe("setDatePriceOverride", () => {
 
 describe("clearDatePriceOverride", () => {
   beforeEach(() => {
-    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.landlord.findFirst.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
     mockPrisma.room.findUnique.mockResolvedValue({ id: "room-1", landlordId: "landlord-1" } as any)
   })
 

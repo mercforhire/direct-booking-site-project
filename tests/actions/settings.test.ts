@@ -19,7 +19,7 @@ import { upsertSettings } from "@/actions/settings"
 
 const mockLandlord = {
   id: "landlord-1",
-  slug: "highhill",
+  slug: "leon",
   name: "Leon's Home",
   ownerName: "Leon",
   address: "9 Highhill Dr",
@@ -48,7 +48,7 @@ const mockSettingsRecord = {
 
 function mockAuthenticatedAdmin() {
   mockGetUser.mockResolvedValue({ data: { user: { id: "user-1", email: "admin@test.com" } }, error: null })
-  mockPrisma.landlord.findUnique.mockResolvedValue(mockLandlord as any)
+  mockPrisma.landlord.findFirst.mockResolvedValue(mockLandlord as any)
 }
 
 describe("settings actions", () => {

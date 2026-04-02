@@ -81,7 +81,7 @@ const mockFullBooking = {
   checkin: new Date("2026-06-01T00:00:00.000Z"),
   checkout: new Date("2026-06-10T00:00:00.000Z"),
   confirmedPrice: 800,
-  room: { name: "Ocean View Suite", landlord: { slug: "highhill" } },
+  room: { name: "Ocean View Suite", landlord: { slug: "leon" } },
 }
 
 describe("Stripe webhook — date_change_topup branch", () => {

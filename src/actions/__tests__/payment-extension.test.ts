@@ -79,7 +79,7 @@ const mockExtension = {
     accessToken: "token-abc",
     checkin: new Date("2026-04-01T00:00:00.000Z"),
     checkout: new Date("2026-05-05T00:00:00.000Z"),
-    room: { name: "Ocean View Suite", landlord: { slug: "highhill" } },
+    room: { name: "Ocean View Suite", landlord: { slug: "leon" } },
   },
 }
 
@@ -163,7 +163,7 @@ describe("createExtensionStripeCheckoutSession", () => {
 describe("markExtensionAsPaid", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.landlord.findFirst.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
     mockPrisma.bookingExtension.findUnique.mockResolvedValue({ id: "ext-1", booking: { room: { landlordId: "landlord-1" } } } as any)
     mockGetUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null })
     mockPrisma.bookingExtension.update.mockResolvedValue({
@@ -207,7 +207,7 @@ describe("markExtensionAsPaid", () => {
   it("revalidates /admin/bookings/[bookingId] and /{slug}/bookings/[bookingId]", async () => {
     await markExtensionAsPaid("ext-1")
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings/booking-1")
-    expect(revalidatePath).toHaveBeenCalledWith("/highhill/bookings/booking-1")
+    expect(revalidatePath).toHaveBeenCalledWith("/leon/bookings/booking-1")
   })
 
   it("sends extension payment confirmation email to guest (non-fatal)", async () => {

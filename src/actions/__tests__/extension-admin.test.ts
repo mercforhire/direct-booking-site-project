@@ -40,7 +40,7 @@ const mockExtensionApproved = {
     guestName: "Jane Guest",
     accessToken: "token-abc",
     checkout: new Date("2026-05-05T00:00:00.000Z"),
-    room: { name: "Ocean View Suite", landlord: { slug: "highhill" } },
+    room: { name: "Ocean View Suite", landlord: { slug: "leon" } },
   },
   requestedCheckout: new Date("2026-05-10T00:00:00.000Z"),
 }
@@ -52,7 +52,7 @@ const mockExtensionDeclined = {
     guestEmail: "guest@example.com",
     guestName: "Jane Guest",
     accessToken: "token-abc",
-    room: { name: "Ocean View Suite", landlord: { slug: "highhill" } },
+    room: { name: "Ocean View Suite", landlord: { slug: "leon" } },
   },
   requestedCheckout: new Date("2026-05-10T00:00:00.000Z"),
 }
@@ -67,7 +67,7 @@ function makePrismaNotFoundError() {
 describe("approveExtension", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.landlord.findFirst.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
     mockPrisma.bookingExtension.findUnique.mockResolvedValue({ id: "ext-1", booking: { room: { landlordId: "landlord-1" } } } as any)
     mockGetUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null })
     mockPrisma.bookingExtension.update.mockResolvedValue(mockExtensionApproved as any)
@@ -105,14 +105,14 @@ describe("approveExtension", () => {
     await approveExtension("ext-1", { extensionPrice: 200 })
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings")
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings/booking-1")
-    expect(revalidatePath).toHaveBeenCalledWith("/highhill/bookings/booking-1")
+    expect(revalidatePath).toHaveBeenCalledWith("/leon/bookings/booking-1")
   })
 })
 
 describe("declineExtension", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockPrisma.landlord.findUnique.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
+    mockPrisma.landlord.findFirst.mockResolvedValue({ id: "landlord-1", adminUserId: "admin-1" } as any)
     mockPrisma.bookingExtension.findUnique.mockResolvedValue({ id: "ext-1", booking: { room: { landlordId: "landlord-1" } } } as any)
     mockGetUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null })
     mockPrisma.bookingExtension.update.mockResolvedValue(mockExtensionDeclined as any)
@@ -150,6 +150,6 @@ describe("declineExtension", () => {
     await declineExtension("ext-1", {})
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings")
     expect(revalidatePath).toHaveBeenCalledWith("/admin/bookings/booking-1")
-    expect(revalidatePath).toHaveBeenCalledWith("/highhill/bookings/booking-1")
+    expect(revalidatePath).toHaveBeenCalledWith("/leon/bookings/booking-1")
   })
 })

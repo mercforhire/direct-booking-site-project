@@ -33,7 +33,7 @@ export async function toggleBlockedDate(
     })
   } else {
     await prisma.blockedDate.create({
-      data: { roomId, date },
+      data: { roomId, date, source: "MANUAL" },
     })
   }
 
@@ -66,7 +66,7 @@ export async function saveBlockedRange(
 
   if (block) {
     await prisma.blockedDate.createMany({
-      data: dates.map((date) => ({ roomId, date })),
+      data: dates.map((date) => ({ roomId, date, source: "MANUAL" as const })),
       skipDuplicates: true,
     })
   } else {
@@ -74,6 +74,7 @@ export async function saveBlockedRange(
       where: {
         roomId,
         date: { in: dates },
+        source: "MANUAL",
       },
     })
   }

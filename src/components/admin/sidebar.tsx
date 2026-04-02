@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useSearchParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { LayoutDashboard, BedDouble, Settings, LogOut, CalendarDays, ClipboardList, Building2 } from "lucide-react"
+import { LayoutDashboard, BedDouble, Settings, LogOut, CalendarDays, ClipboardList, Building2, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,6 +20,7 @@ const navItems = [
   { href: "/availability", label: "Availability", icon: CalendarDays },
   { href: "/bookings", label: "Bookings", icon: ClipboardList },
   { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/admin/landlords/new", label: "Add Property", icon: Plus },
 ]
 
 /** Pages that operate on a specific landlord and need the switcher visible */

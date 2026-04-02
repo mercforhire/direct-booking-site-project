@@ -106,25 +106,25 @@ END:VCALENDAR`;
   });
 
   it("returns sorted array", () => {
-    // Events in reverse chronological order
+    // Events in reverse chronological order — both in the future
     const reversed = `BEGIN:VCALENDAR
 VERSION:2.0
 BEGIN:VEVENT
-DTEND;VALUE=DATE:20260502
-DTSTART;VALUE=DATE:20260501
+DTEND;VALUE=DATE:20260802
+DTSTART;VALUE=DATE:20260801
 UID:later@airbnb.com
 SUMMARY:Reserved
 END:VEVENT
 BEGIN:VEVENT
-DTEND;VALUE=DATE:20260402
-DTSTART;VALUE=DATE:20260401
+DTEND;VALUE=DATE:20260702
+DTSTART;VALUE=DATE:20260701
 UID:earlier@airbnb.com
 SUMMARY:Reserved
 END:VEVENT
 END:VCALENDAR`;
 
     const dates = parseIcalDates(reversed);
-    expect(dates).toEqual(["2026-04-01", "2026-05-01"]);
+    expect(dates).toEqual(["2026-07-01", "2026-08-01"]);
     // Verify ascending order even though later event was first in file
     expect(dates[0] < dates[1]).toBe(true);
   });
@@ -255,5 +255,63 @@ END:VCALENDAR`;
 
     const dates = parseIcalDates(boundary);
     expect(dates).toEqual(["2026-04-30", "2026-05-01", "2026-05-02"]);
+  });
+
+  it("skips past bookings where checkout (DTEND) <= today", () => {
+    const today = new Date(Date.UTC(2026, 3, 10)); // Apr 10, 2026
+    const mixed = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260405
+DTEND;VALUE=DATE:20260408
+UID:past@airbnb.com
+SUMMARY:Reserved
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260409
+DTEND;VALUE=DATE:20260412
+UID:current@airbnb.com
+SUMMARY:Reserved
+END:VEVENT
+END:VCALENDAR`;
+
+    const dates = parseIcalDates(mixed, today);
+    // Past event: DTEND Apr 8 < today Apr 10 → skipped
+    // Current event: DTEND Apr 12 > today Apr 10 → included
+    expect(dates).toEqual(["2026-04-09", "2026-04-10", "2026-04-11"]);
+  });
+
+  it("skips event where DTEND equals today (checkout is today = all nights past)", () => {
+    const today = new Date(Date.UTC(2026, 3, 10)); // Apr 10, 2026
+    const checkoutToday = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260407
+DTEND;VALUE=DATE:20260410
+UID:checkout-today@airbnb.com
+SUMMARY:Reserved
+END:VEVENT
+END:VCALENDAR`;
+
+    // DTEND Apr 10 = checkout today. All blocked nights (Apr 7,8,9) are past.
+    const dates = parseIcalDates(checkoutToday, today);
+    expect(dates).toEqual([]);
+  });
+
+  it("keeps event where DTEND is tomorrow (guest staying tonight)", () => {
+    const today = new Date(Date.UTC(2026, 3, 10)); // Apr 10, 2026
+    const checkoutTomorrow = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260409
+DTEND;VALUE=DATE:20260411
+UID:tonight@airbnb.com
+SUMMARY:Reserved
+END:VEVENT
+END:VCALENDAR`;
+
+    // DTEND Apr 11 > today Apr 10 → event kept. Blocked nights: Apr 9, 10
+    const dates = parseIcalDates(checkoutTomorrow, today);
+    expect(dates).toEqual(["2026-04-09", "2026-04-10"]);
   });
 });

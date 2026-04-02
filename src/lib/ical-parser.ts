@@ -8,9 +8,18 @@
  *  - All SUMMARY values treated equally (Reserved, Not available, etc.)
  */
 
-/** Extract all blocked dates from iCal content as sorted YYYY-MM-DD strings. */
-export function parseIcalDates(icsContent: string): string[] {
+/**
+ * Extract all blocked dates from iCal content as sorted YYYY-MM-DD strings.
+ *
+ * Past bookings (checkout/DTEND ≤ today) are skipped — only current and future
+ * reservations produce blocked dates. Pass `today` for testing; defaults to
+ * current UTC date.
+ */
+export function parseIcalDates(icsContent: string, today?: Date): string[] {
   const dates = new Set<string>();
+  const todayMidnight = today
+    ? new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
+    : (() => { const n = new Date(); return new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate())); })();
 
   // Split into VEVENT blocks
   const eventBlocks = extractVEvents(icsContent);
@@ -23,6 +32,10 @@ export function parseIcalDates(icsContent: string): string[] {
 
     // If no DTEND, treat as single-day event
     const end = dtend ?? addDays(dtstart, 1);
+
+    // Skip past bookings: DTEND (checkout) is exclusive, so if DTEND <= today
+    // all blocked nights are in the past
+    if (end <= todayMidnight) continue;
 
     // Expand range: DTSTART inclusive, DTEND exclusive
     let current = dtstart;

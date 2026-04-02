@@ -80,6 +80,14 @@ export async function syncRoomIcal(
     })
   }
 
+  // Clean up all past blocked dates (both MANUAL and AIRBNB_ICAL) to save space.
+  // Any date before today is historical and no longer relevant for availability.
+  const todayNoon = new Date()
+  todayNoon.setUTCHours(12, 0, 0, 0)
+  await prisma.blockedDate.deleteMany({
+    where: { roomId, date: { lt: todayNoon } },
+  })
+
   return { synced: allDates.size, errors }
 }
 

@@ -295,4 +295,34 @@ describe("ical-sync actions", () => {
       expect(results).toEqual([])
     })
   })
+
+  describe("past date cleanup", () => {
+    it("deletes past blocked dates (all sources) after syncing", async () => {
+      mockPrisma.icalSource.findMany.mockResolvedValue([makeSource()] as any)
+      mockPrisma.icalSource.update.mockResolvedValue({} as any)
+      mockPrisma.blockedDate.deleteMany.mockResolvedValue({ count: 0 })
+      mockPrisma.blockedDate.createMany.mockResolvedValue({ count: 3 })
+
+      const origFetch = globalThis.fetch
+      globalThis.fetch = mockFetchSuccess(SIMPLE_ICS)
+
+      try {
+        await syncRoomIcal("room-1")
+
+        // First deleteMany: AIRBNB_ICAL source-scoped
+        // Second deleteMany: past dates cleanup (all sources, date < today)
+        const deleteCalls = mockPrisma.blockedDate.deleteMany.mock.calls
+        expect(deleteCalls).toHaveLength(2)
+
+        // Second call should filter by date < today (noon UTC)
+        const cleanupCall = deleteCalls[1]![0] as any
+        expect(cleanupCall.where.roomId).toBe("room-1")
+        expect(cleanupCall.where.date).toHaveProperty("lt")
+        // Should NOT have a source filter — cleans up both MANUAL and AIRBNB_ICAL
+        expect(cleanupCall.where).not.toHaveProperty("source")
+      } finally {
+        globalThis.fetch = origFetch
+      }
+    })
+  })
 })

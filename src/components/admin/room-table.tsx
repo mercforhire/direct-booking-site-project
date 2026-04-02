@@ -20,19 +20,24 @@ interface RoomRow {
   baseNightlyRate: number
   isActive: boolean
   coverPhoto: string | null
+  landlordName?: string
 }
 
 interface RoomTableProps {
   rooms: RoomRow[]
+  selectedLandlordSlug?: string
+  showPropertyColumn?: boolean
 }
 
-export function RoomTable({ rooms }: RoomTableProps) {
+export function RoomTable({ rooms, selectedLandlordSlug, showPropertyColumn }: RoomTableProps) {
+  const landlordParam = selectedLandlordSlug ? `?landlord=${selectedLandlordSlug}` : ""
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">Rooms</h1>
         <Button asChild>
-          <Link href="/admin/rooms/new">New Room</Link>
+          <Link href={`/admin/rooms/new${landlordParam}`}>New Room</Link>
         </Button>
       </div>
       <div className="rounded-md border bg-white">
@@ -41,6 +46,7 @@ export function RoomTable({ rooms }: RoomTableProps) {
             <TableRow>
               <TableHead className="w-[64px]"></TableHead>
               <TableHead>Name</TableHead>
+              {showPropertyColumn && <TableHead>Property</TableHead>}
               <TableHead>Location</TableHead>
               <TableHead>Base Rate</TableHead>
               <TableHead>Status</TableHead>
@@ -50,7 +56,7 @@ export function RoomTable({ rooms }: RoomTableProps) {
           <TableBody>
             {rooms.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={showPropertyColumn ? 7 : 6} className="text-center py-8 text-gray-500">
                   No rooms yet. Create your first room.
                 </TableCell>
               </TableRow>
@@ -73,6 +79,9 @@ export function RoomTable({ rooms }: RoomTableProps) {
                   )}
                 </TableCell>
                 <TableCell className="font-medium">{room.name}</TableCell>
+                {showPropertyColumn && (
+                  <TableCell className="text-gray-500 text-sm">{room.landlordName}</TableCell>
+                )}
                 <TableCell>{room.location}</TableCell>
                 <TableCell>${Number(room.baseNightlyRate).toFixed(2)}/night</TableCell>
                 <TableCell>
@@ -82,7 +91,7 @@ export function RoomTable({ rooms }: RoomTableProps) {
                 </TableCell>
                 <TableCell>
                   <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/admin/rooms/${room.id}/edit`}>Edit</Link>
+                    <Link href={`/admin/rooms/${room.id}/edit${landlordParam}`}>Edit</Link>
                   </Button>
                 </TableCell>
               </TableRow>

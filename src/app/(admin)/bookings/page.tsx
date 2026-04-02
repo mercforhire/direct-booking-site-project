@@ -1,16 +1,22 @@
 import { prisma } from "@/lib/prisma"
-import { requireLandlordForAdmin } from "@/lib/landlord"
+import { requireLandlordsWithSelected } from "@/lib/landlord"
 import { BookingAdminList } from "@/components/admin/booking-admin-list"
 
 export const dynamic = "force-dynamic"
 
-export default async function BookingsPage() {
-  const landlord = await requireLandlordForAdmin()
+interface BookingsPageProps {
+  searchParams: Promise<{ landlord?: string }>
+}
+
+export default async function BookingsPage({ searchParams }: BookingsPageProps) {
+  const { landlord: landlordSlug } = await searchParams
+  const { landlords, selected } = await requireLandlordsWithSelected(landlordSlug)
+
   const bookings = await prisma.booking.findMany({
-    where: { room: { landlordId: landlord.id } },
+    where: { room: { landlordId: selected.id } },
     orderBy: { createdAt: "desc" },
     include: {
-      room: { select: { name: true } },
+      room: { select: { name: true, landlordId: true } },
       extensions: {
         select: { id: true, status: true, extensionPrice: true },
       },
@@ -30,9 +36,16 @@ export default async function BookingsPage() {
     paidExtensionsTotal: b.extensions
       .filter((e) => e.status === "PAID" && e.extensionPrice != null)
       .reduce((sum, e) => sum + Number(e.extensionPrice), 0),
+    landlordName: selected.name,
   }))
 
   const todayET = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" })
 
-  return <BookingAdminList bookings={serialized} todayET={todayET} />
+  return (
+    <BookingAdminList
+      bookings={serialized}
+      todayET={todayET}
+      showPropertyColumn={landlords.length > 1}
+    />
+  )
 }

@@ -5,8 +5,8 @@ import { getLandlordForAdmin } from "@/lib/landlord"
 import { settingsSchemaCoerced } from "@/lib/validations/settings"
 import { revalidatePath } from "next/cache"
 
-export async function upsertSettings(data: unknown) {
-  const landlord = await getLandlordForAdmin()
+export async function upsertSettings(data: unknown, landlordId?: string) {
+  const landlord = await getLandlordForAdmin(landlordId)
 
   const parsed = settingsSchemaCoerced.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }

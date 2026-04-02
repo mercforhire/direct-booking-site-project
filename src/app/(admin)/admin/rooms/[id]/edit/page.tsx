@@ -1,16 +1,17 @@
 import { prisma } from "@/lib/prisma"
-import { requireLandlordForAdmin } from "@/lib/landlord"
+import { getLandlordIdsForAdmin } from "@/lib/landlord"
 import { RoomForm } from "@/components/forms/room-form"
 import { notFound } from "next/navigation"
 
-export default async function EditRoomPage({ params }: { params: Promise<{ id: string }> }) {
-  const landlord = await requireLandlordForAdmin()
+export default async function EditRoomPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ landlord?: string }> }) {
+  const landlordIds = await getLandlordIdsForAdmin()
   const { id } = await params
+  const { landlord: landlordSlug } = await searchParams
   const room = await prisma.room.findUnique({
     where: { id },
-    include: { addOns: true, photos: { orderBy: { position: "asc" } } },
+    include: { addOns: true, photos: { orderBy: { position: "asc" } }, landlord: { select: { slug: true } } },
   })
-  if (!room || room.landlordId !== landlord.id) notFound()
+  if (!room || !landlordIds.includes(room.landlordId)) notFound()
   const roomForClient = {
     ...room,
     baseNightlyRate: Number(room.baseNightlyRate),
@@ -21,7 +22,7 @@ export default async function EditRoomPage({ params }: { params: Promise<{ id: s
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">Edit Room</h1>
-      <RoomForm room={roomForClient} />
+      <RoomForm room={roomForClient} landlordSlug={landlordSlug ?? room.landlord.slug} />
     </div>
   )
 }

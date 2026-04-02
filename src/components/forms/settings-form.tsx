@@ -20,9 +20,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface SettingsFormProps {
   defaultValues?: { serviceFeePercent: number; depositAmount: number; etransferEmail?: string | null }
+  landlordId: string
 }
 
-export function SettingsForm({ defaultValues }: SettingsFormProps) {
+export function SettingsForm({ defaultValues, landlordId }: SettingsFormProps) {
   const [saved, setSaved] = useState(false)
   const form = useForm<SettingsFormData>({
     resolver: zodResolver(settingsSchema),
@@ -36,7 +37,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
   })
 
   async function onSubmit(data: SettingsFormData) {
-    const result = await upsertSettings(data)
+    const result = await upsertSettings(data, landlordId)
     if ("error" in result && result.error) {
       // field errors are handled by zodResolver but show a fallback
       return

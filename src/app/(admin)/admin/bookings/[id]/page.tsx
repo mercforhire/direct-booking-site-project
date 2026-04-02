@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { requireLandlordForAdmin } from "@/lib/landlord"
+import { getLandlordIdsForAdmin } from "@/lib/landlord"
 import { notFound } from "next/navigation"
 import { BookingAdminDetail } from "@/components/admin/booking-admin-detail"
 import type { SerializedDateChange } from "@/components/admin/booking-admin-detail"
@@ -7,14 +7,14 @@ import type { SerializedDateChange } from "@/components/admin/booking-admin-deta
 export const dynamic = "force-dynamic"
 
 export default async function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const landlord = await requireLandlordForAdmin()
+  const landlordIds = await getLandlordIdsForAdmin()
   const { id } = await params
   const booking = await prisma.booking.findUnique({
     where: { id },
     include: { room: { select: { name: true, landlordId: true, addOns: true } } },
   })
 
-  if (!booking || booking.room.landlordId !== landlord.id) notFound()
+  if (!booking || !landlordIds.includes(booking.room.landlordId)) notFound()
 
   const activeExtension = await prisma.bookingExtension.findFirst({
     where: { bookingId: id },

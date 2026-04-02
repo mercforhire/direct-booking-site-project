@@ -52,9 +52,11 @@ interface SerializedRoom {
 
 interface RoomFormProps {
   room?: SerializedRoom
+  landlordId?: string
+  landlordSlug?: string
 }
 
-export function RoomForm({ room }: RoomFormProps) {
+export function RoomForm({ room, landlordId, landlordSlug }: RoomFormProps) {
   const router = useRouter()
   const [serverError, setServerError] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -97,18 +99,20 @@ export function RoomForm({ room }: RoomFormProps) {
     name: "addOns",
   })
 
+  const landlordParam = landlordSlug ? `?landlord=${landlordSlug}` : ""
+
   async function onSubmit(data: RoomFormData) {
     setServerError(null)
     const result = room
       ? await updateRoom(room.id, data)
-      : await createRoom(data)
+      : await createRoom(data, landlordId)
 
     if (result && "error" in result) {
       setServerError("Please correct the errors and try again.")
       return
     }
 
-    router.push("/admin/rooms")
+    router.push(`/admin/rooms${landlordParam}`)
   }
 
   async function handleDelete() {
@@ -121,7 +125,7 @@ export function RoomForm({ room }: RoomFormProps) {
       setIsDeleting(false)
       return
     }
-    router.push("/admin/rooms")
+    router.push(`/admin/rooms${landlordParam}`)
   }
 
   return (
@@ -401,7 +405,7 @@ export function RoomForm({ room }: RoomFormProps) {
             <Button type="submit" disabled={form.formState.isSubmitting}>
               {form.formState.isSubmitting ? "Saving..." : "Save Room"}
             </Button>
-            <Button type="button" variant="outline" onClick={() => router.push("/admin/rooms")}>
+            <Button type="button" variant="outline" onClick={() => router.push(`/admin/rooms${landlordParam}`)}>
               Cancel
             </Button>
           </div>

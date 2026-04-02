@@ -1,12 +1,18 @@
 import { prisma } from "@/lib/prisma"
-import { requireLandlordForAdmin } from "@/lib/landlord"
+import { requireLandlordsWithSelected } from "@/lib/landlord"
 import { SettingsForm } from "@/components/forms/settings-form"
 
 export const dynamic = "force-dynamic"
 
-export default async function SettingsPage() {
-  const landlord = await requireLandlordForAdmin()
-  const settings = await prisma.settings.findUnique({ where: { landlordId: landlord.id } })
+interface SettingsPageProps {
+  searchParams: Promise<{ landlord?: string }>
+}
+
+export default async function SettingsPage({ searchParams }: SettingsPageProps) {
+  const { landlord: landlordSlug } = await searchParams
+  const { selected } = await requireLandlordsWithSelected(landlordSlug)
+
+  const settings = await prisma.settings.findUnique({ where: { landlordId: selected.id } })
   const defaultValues = settings
     ? {
         serviceFeePercent: Number(settings.serviceFeePercent),
@@ -18,7 +24,7 @@ export default async function SettingsPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">Settings</h1>
-      <SettingsForm defaultValues={defaultValues} />
+      <SettingsForm defaultValues={defaultValues} landlordId={selected.id} />
     </div>
   )
 }

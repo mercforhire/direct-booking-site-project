@@ -47,6 +47,18 @@ export async function requireLandlordsForAdmin() {
 }
 
 /**
+ * For RSC property-scoped pages — resolves selected landlord from ?landlord slug.
+ * Returns { landlords, selected } where selected falls back to first landlord if slug missing/invalid.
+ */
+export async function requireLandlordsWithSelected(landlordSlug?: string) {
+  const landlords = await requireLandlordsForAdmin()
+  const selected = (landlordSlug
+    ? landlords.find((l) => l.slug === landlordSlug)
+    : null) ?? landlords[0]
+  return { landlords, selected }
+}
+
+/**
  * For RSC pages — redirects on failure instead of throwing.
  * Returns the first Landlord row for the currently logged-in admin.
  * @deprecated Use requireLandlordsForAdmin() for multi-landlord support.

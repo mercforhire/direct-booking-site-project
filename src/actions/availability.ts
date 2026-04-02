@@ -1,13 +1,13 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getLandlordForAdmin } from "@/lib/landlord"
+import { getLandlordIdsForAdmin } from "@/lib/landlord"
 import { roomAvailabilitySettingsSchemaCoerced } from "@/lib/validations/availability"
 import { revalidatePath } from "next/cache"
 
-async function verifyRoomOwnership(roomId: string, landlordId: string) {
+async function verifyRoomOwnership(roomId: string, landlordIds: string[]) {
   const room = await prisma.room.findUnique({ where: { id: roomId }, select: { landlordId: true } })
-  if (!room || room.landlordId !== landlordId) throw new Error("Room not found")
+  if (!room || !landlordIds.includes(room.landlordId)) throw new Error("Room not found")
 }
 
 /**
@@ -18,8 +18,8 @@ export async function toggleBlockedDate(
   roomId: string,
   dateStr: string
 ): Promise<void> {
-  const landlord = await getLandlordForAdmin()
-  await verifyRoomOwnership(roomId, landlord.id)
+  const landlordIds = await getLandlordIdsForAdmin()
+  await verifyRoomOwnership(roomId, landlordIds)
 
   const date = new Date(dateStr + "T12:00:00.000Z")
 
@@ -51,8 +51,8 @@ export async function saveBlockedRange(
   toStr: string,
   block: boolean
 ): Promise<void> {
-  const landlord = await getLandlordForAdmin()
-  await verifyRoomOwnership(roomId, landlord.id)
+  const landlordIds = await getLandlordIdsForAdmin()
+  await verifyRoomOwnership(roomId, landlordIds)
 
   // Build array of all dates in the range (UTC-safe)
   const dates: Date[] = []
@@ -89,8 +89,8 @@ export async function updateRoomAvailabilitySettings(
   roomId: string,
   data: unknown
 ): Promise<{ room: object } | { error: object }> {
-  const landlord = await getLandlordForAdmin()
-  await verifyRoomOwnership(roomId, landlord.id)
+  const landlordIds = await getLandlordIdsForAdmin()
+  await verifyRoomOwnership(roomId, landlordIds)
 
   const parsed = roomAvailabilitySettingsSchemaCoerced.safeParse(data)
   if (!parsed.success) {

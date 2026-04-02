@@ -1,12 +1,12 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getLandlordForAdmin } from "@/lib/landlord"
+import { getLandlordForAdmin, getLandlordIdsForAdmin } from "@/lib/landlord"
 import { roomSchemaCoerced } from "@/lib/validations/room"
 import { revalidatePath } from "next/cache"
 
-export async function createRoom(data: unknown) {
-  const landlord = await getLandlordForAdmin()
+export async function createRoom(data: unknown, landlordId?: string) {
+  const landlord = await getLandlordForAdmin(landlordId)
   const parsed = roomSchemaCoerced.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
   const { addOns, ...roomData } = parsed.data
@@ -33,13 +33,13 @@ export async function createRoom(data: unknown) {
 }
 
 export async function updateRoom(id: string, data: unknown) {
-  const landlord = await getLandlordForAdmin()
+  const landlordIds = await getLandlordIdsForAdmin()
   const parsed = roomSchemaCoerced.safeParse(data)
   if (!parsed.success) return { error: parsed.error.flatten() }
 
-  // Verify room belongs to this landlord
+  // Verify room belongs to one of the admin's landlords
   const existing = await prisma.room.findUnique({ where: { id }, select: { landlordId: true } })
-  if (!existing || existing.landlordId !== landlord.id) throw new Error("Room not found")
+  if (!existing || !landlordIds.includes(existing.landlordId)) throw new Error("Room not found")
 
   const { addOns, ...roomData } = parsed.data
   const room = await prisma.$transaction(async (tx) => {
@@ -60,11 +60,11 @@ export async function updateRoom(id: string, data: unknown) {
 }
 
 export async function deleteRoom(id: string) {
-  const landlord = await getLandlordForAdmin()
+  const landlordIds = await getLandlordIdsForAdmin()
 
-  // Verify room belongs to this landlord
+  // Verify room belongs to one of the admin's landlords
   const existing = await prisma.room.findUnique({ where: { id }, select: { landlordId: true } })
-  if (!existing || existing.landlordId !== landlord.id) throw new Error("Room not found")
+  if (!existing || !landlordIds.includes(existing.landlordId)) throw new Error("Room not found")
 
   const bookingCount = await prisma.booking.count({ where: { roomId: id } })
   if (bookingCount > 0) {

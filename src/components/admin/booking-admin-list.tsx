@@ -52,6 +52,7 @@ type SerializedBooking = {
   updatedAt: string
   hasPendingExtension: boolean
   paidExtensionsTotal: number
+  landlordName?: string
 }
 
 function CancelBookingRowAction({ bookingId }: { bookingId: string }) {
@@ -128,7 +129,7 @@ function StatusBadge({ status }: { status: BookingStatus }) {
   )
 }
 
-function BookingsTable({ bookings }: { bookings: SerializedBooking[] }) {
+function BookingsTable({ bookings, showPropertyColumn }: { bookings: SerializedBooking[]; showPropertyColumn?: boolean }) {
   if (bookings.length === 0) {
     return (
       <div className="py-12 text-center text-sm text-muted-foreground">
@@ -143,6 +144,7 @@ function BookingsTable({ bookings }: { bookings: SerializedBooking[] }) {
         <TableRow>
           <TableHead>Guest</TableHead>
           <TableHead>Room</TableHead>
+          {showPropertyColumn && <TableHead>Property</TableHead>}
           <TableHead>Check-in</TableHead>
           <TableHead>Check-out</TableHead>
           <TableHead>Guests</TableHead>
@@ -167,6 +169,9 @@ function BookingsTable({ bookings }: { bookings: SerializedBooking[] }) {
               <div className="text-xs text-muted-foreground font-mono mt-0.5">{b.id}</div>
             </TableCell>
             <TableCell>{b.room.name}</TableCell>
+            {showPropertyColumn && (
+              <TableCell className="text-gray-500 text-sm">{b.landlordName}</TableCell>
+            )}
             <TableCell>{format(new Date(b.checkin.slice(0, 10) + "T00:00:00"), "MMM d, yyyy")}</TableCell>
             <TableCell>{format(new Date(b.checkout.slice(0, 10) + "T00:00:00"), "MMM d, yyyy")}</TableCell>
             <TableCell>{b.numGuests}</TableCell>
@@ -204,16 +209,16 @@ function BookingsTable({ bookings }: { bookings: SerializedBooking[] }) {
   )
 }
 
-function SectionTable({ bookings, emptyLabel }: { bookings: SerializedBooking[]; emptyLabel: string }) {
+function SectionTable({ bookings, emptyLabel, showPropertyColumn }: { bookings: SerializedBooking[]; emptyLabel: string; showPropertyColumn?: boolean }) {
   if (bookings.length === 0) {
     return (
       <div className="py-6 text-center text-sm text-muted-foreground">{emptyLabel}</div>
     )
   }
-  return <BookingsTable bookings={bookings} />
+  return <BookingsTable bookings={bookings} showPropertyColumn={showPropertyColumn} />
 }
 
-export function BookingAdminList({ bookings, todayET }: { bookings: SerializedBooking[]; todayET: string }) {
+export function BookingAdminList({ bookings, todayET, showPropertyColumn }: { bookings: SerializedBooking[]; todayET: string; showPropertyColumn?: boolean }) {
   const actionRequired = bookings.filter(
     (b) => b.status === "PENDING" || b.status === "APPROVED"
   )
@@ -228,12 +233,12 @@ export function BookingAdminList({ bookings, todayET }: { bookings: SerializedBo
 
       <section className="space-y-2">
         <h2 className="text-lg font-semibold">Action Required</h2>
-        <SectionTable bookings={actionRequired} emptyLabel="No bookings require action." />
+        <SectionTable bookings={actionRequired} emptyLabel="No bookings require action." showPropertyColumn={showPropertyColumn} />
       </section>
 
       <section className="space-y-2">
         <h2 className="text-lg font-semibold">Currently Staying</h2>
-        <SectionTable bookings={currentlyStaying} emptyLabel="No guests currently staying." />
+        <SectionTable bookings={currentlyStaying} emptyLabel="No guests currently staying." showPropertyColumn={showPropertyColumn} />
       </section>
 
       <section className="space-y-2">
@@ -260,7 +265,7 @@ export function BookingAdminList({ bookings, todayET }: { bookings: SerializedBo
                   No {tab.label.toLowerCase()} bookings.
                 </div>
               ) : (
-                <BookingsTable bookings={filtered} />
+                <BookingsTable bookings={filtered} showPropertyColumn={showPropertyColumn} />
               )}
             </TabsContent>
           )

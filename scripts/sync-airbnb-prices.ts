@@ -225,9 +225,13 @@ async function main() {
     return
   }
 
-  // Load room-to-Airbnb mappings from iCal source URLs
+  // Load room-to-Airbnb mappings — only Leon's and Henry's listings
+  // (this Airbnb account only manages those two landlords)
   const rooms = await prisma.room.findMany({
-    where: { isActive: true },
+    where: {
+      isActive: true,
+      landlord: { slug: { in: ['leon', 'henry'] } },
+    },
     include: {
       icalSources: true,
       landlord: { select: { name: true } },

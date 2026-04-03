@@ -19,6 +19,10 @@ import { chromium, type BrowserContext } from 'playwright'
 import { PrismaClient } from '@prisma/client'
 import * as fs from 'fs'
 import * as path from 'path'
+import { config } from 'dotenv'
+
+// Load .env.local (Next.js convention) so DATABASE_URL is available
+config({ path: '.env.local' })
 
 const prisma = new PrismaClient()
 

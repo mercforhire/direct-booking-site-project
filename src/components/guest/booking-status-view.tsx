@@ -174,7 +174,7 @@ function PaymentSection({
       >
         <span style={{ fontSize: "1.1rem" }}>✓</span>
         <span style={{ fontSize: "0.85rem", color: "#6ee7b7" }}>
-          Payment received — Leon will be in touch with check-in details.
+          Payment received — Your host will be in touch with check-in details.
         </span>
       </div>
     )
@@ -251,7 +251,7 @@ function PaymentSection({
         <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
           {[
             ["Amount", booking.confirmedPrice != null ? formatCurrency(booking.confirmedPrice) : "—"],
-            ["Send to", etransferEmail ?? "Contact Leon for e-transfer details"],
+            ["Send to", etransferEmail ?? "Contact host for e-transfer details"],
             ["Reference", booking.id],
           ].map(([label, value]) => (
             <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: "0.8rem" }}>
@@ -307,7 +307,7 @@ export function BookingStatusView({
       {showSuccessBanner && (
         <div className="bs-banner-success">
           <span style={{ fontSize: "1rem" }}>✓</span>
-          <span>Request submitted — Leon will email you once it&apos;s reviewed.</span>
+          <span>Request submitted — Your host will email you once it&apos;s reviewed.</span>
         </div>
       )}
       {showPaidBanner && (
@@ -325,17 +325,6 @@ export function BookingStatusView({
 
       {/* ── Header: room name + status ────────────────────── */}
       <div style={{ marginBottom: "0.5rem" }}>
-        <div
-          style={{
-            fontSize: "0.63rem",
-            letterSpacing: "0.22em",
-            textTransform: "uppercase",
-            opacity: 0.35,
-            marginBottom: "0.5rem",
-          }}
-        >
-          9 Highhill Dr &middot; Scarborough, ON
-        </div>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <h1
             style={{
@@ -397,7 +386,7 @@ export function BookingStatusView({
         {/* Note to landlord */}
         {booking.noteToLandlord && (
           <div className="bs-row">
-            <div className="bs-label">Note to Leon</div>
+            <div className="bs-label">Note to host</div>
             <div className="bs-value" style={{ whiteSpace: "pre-line", opacity: 0.75, lineHeight: 1.6 }}>
               {booking.noteToLandlord}
             </div>
@@ -405,7 +394,7 @@ export function BookingStatusView({
         )}
 
         {/* Estimated total */}
-        <div className="bs-row" style={{ borderBottom: "none" }}>
+        <div className="bs-row" style={{ borderBottom: booking.confirmedPrice != null ? undefined : "none" }}>
           <div className="bs-label">Estimated total</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: "0.5rem" }}>
             <span
@@ -413,17 +402,43 @@ export function BookingStatusView({
                 fontFamily: "var(--font-bebas)",
                 fontSize: "1.8rem",
                 letterSpacing: "0.04em",
-                color: "#d4956a",
+                color: booking.confirmedPrice != null ? "rgba(212,149,106,0.4)" : "#d4956a",
                 lineHeight: 1,
+                textDecoration: booking.confirmedPrice != null ? "line-through" : "none",
               }}
             >
               {formatCurrency(booking.estimatedTotal)}
             </span>
           </div>
-          <p style={{ fontSize: "0.68rem", opacity: 0.3, marginTop: "0.25rem", lineHeight: 1.5 }}>
-            Final price confirmed by Leon at approval
-          </p>
+          {booking.confirmedPrice == null && (
+            <p style={{ fontSize: "0.68rem", opacity: 0.3, marginTop: "0.25rem", lineHeight: 1.5 }}>
+              Final price confirmed at approval
+            </p>
+          )}
         </div>
+
+        {/* Confirmed price — shown after landlord approves */}
+        {booking.confirmedPrice != null && (
+          <div className="bs-row" style={{ borderBottom: "none" }}>
+            <div className="bs-label" style={{ color: "#6ee7b7" }}>Confirmed price</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "0.5rem" }}>
+              <span
+                style={{
+                  fontFamily: "var(--font-bebas)",
+                  fontSize: "2rem",
+                  letterSpacing: "0.04em",
+                  color: "#d4956a",
+                  lineHeight: 1,
+                }}
+              >
+                {formatCurrency(booking.confirmedPrice)}
+              </span>
+            </div>
+            <p style={{ fontSize: "0.68rem", opacity: 0.3, marginTop: "0.25rem", lineHeight: 1.5 }}>
+              This is the amount you will be charged
+            </p>
+          </div>
+        )}
       </div>
 
       {/* ── Cancellation notice ───────────────────────────── */}

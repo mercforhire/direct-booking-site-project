@@ -72,11 +72,11 @@ export default async function LandlordRoomPage({
         .rd-fade   { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
         .rd-fade-2 { animation: fadeUp 0.8s 0.12s cubic-bezier(0.16,1,0.3,1) both; }
         .rd-fade-3 { animation: fadeUp 0.8s 0.22s cubic-bezier(0.16,1,0.3,1) both; }
-        .book-cta:hover     { background: #6a3214 !important; }
+        .book-cta:hover     { filter: brightness(0.85) !important; }
         .thumb-btn:hover img { transform: scale(1.06) !important; }
         .rd-card {
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.07);
+          background: color-mix(in srgb, var(--ll-text) 3%, transparent);
+          border: 1px solid color-mix(in srgb, var(--ll-text) 7%, transparent);
           border-radius: 10px;
           padding: 1.5rem;
         }
@@ -85,7 +85,7 @@ export default async function LandlordRoomPage({
           font-size: 1.3rem !important;
           letter-spacing: 0.08em !important;
           text-transform: uppercase !important;
-          color: ${landlord.textColor} !important;
+          color: var(--ll-text) !important;
           margin: 0 0 1rem !important;
           font-weight: 400 !important;
         }
@@ -97,20 +97,20 @@ export default async function LandlordRoomPage({
           margin-bottom: 0.6rem;
         }
         .room-dark .rdp-root {
-          --rdp-accent-color: ${landlord.accentColor};
-          --rdp-accent-background-color: ${landlord.accentColor}2E;
-          --rdp-background-color: rgba(255,255,255,0.07);
-          color: ${landlord.textColor};
+          --rdp-accent-color: var(--ll-accent);
+          --rdp-accent-background-color: color-mix(in srgb, var(--ll-accent) 18%, transparent);
+          --rdp-background-color: color-mix(in srgb, var(--ll-text) 7%, transparent);
+          color: var(--ll-text);
           background: transparent;
         }
         .room-dark .rdp-month_caption,
-        .room-dark .rdp-caption_label { color: ${landlord.textColor} !important; }
-        .room-dark .rdp-nav button { color: ${landlord.textColor}99 !important; }
-        .room-dark .rdp-nav button:hover { color: ${landlord.textColor} !important; background: rgba(255,255,255,0.07) !important; }
-        .room-dark .rdp-weekday { color: ${landlord.textColor}4D !important; font-size: 0.7rem !important; }
-        .room-dark .rdp-day_button { color: ${landlord.textColor} !important; border-radius: 6px !important; }
+        .room-dark .rdp-caption_label { color: var(--ll-text) !important; }
+        .room-dark .rdp-nav button { color: color-mix(in srgb, var(--ll-text) 60%, transparent) !important; }
+        .room-dark .rdp-nav button:hover { color: var(--ll-text) !important; background: color-mix(in srgb, var(--ll-text) 7%, transparent) !important; }
+        .room-dark .rdp-weekday { color: color-mix(in srgb, var(--ll-text) 30%, transparent) !important; font-size: 0.7rem !important; }
+        .room-dark .rdp-day_button { color: var(--ll-text) !important; border-radius: 6px !important; }
         .room-dark .rdp-disabled .rdp-day_button,
-        .room-dark .rdp-day.rdp-disabled .rdp-day_button { color: ${landlord.textColor}33 !important; }
+        .room-dark .rdp-day.rdp-disabled .rdp-day_button { color: color-mix(in srgb, var(--ll-text) 20%, transparent) !important; }
         .room-dark .rdp-outside .rdp-day_button { opacity: 0.2 !important; }
         @media (max-width: 860px) {
           .rd-two-col { grid-template-columns: 1fr !important; }
@@ -129,7 +129,7 @@ export default async function LandlordRoomPage({
           alignItems: "center",
           justifyContent: "space-between",
           padding: "1.4rem 3rem",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "1px solid color-mix(in srgb, var(--ll-text) 8%, transparent)",
         }}
       >
         <Link
@@ -139,7 +139,7 @@ export default async function LandlordRoomPage({
             display: "flex",
             alignItems: "center",
             gap: "0.4rem",
-            color: landlord.textColor,
+            color: "var(--ll-text)",
             textDecoration: "none",
             fontSize: "0.75rem",
             letterSpacing: "0.14em",
@@ -155,8 +155,8 @@ export default async function LandlordRoomPage({
           href={`${base}/guest/login?next=${base}/my-bookings`}
           className="my-bookings-btn"
           style={{
-            border: "1px solid rgba(255,255,255,0.18)",
-            color: `${landlord.textColor}99`,
+            border: "1px solid color-mix(in srgb, var(--ll-text) 18%, transparent)",
+            color: `color-mix(in srgb, var(--ll-text) 60%, transparent)`,
             padding: "0.42rem 1.2rem",
             borderRadius: "9999px",
             fontSize: "0.7rem",
@@ -206,7 +206,7 @@ export default async function LandlordRoomPage({
               letterSpacing: "0.02em",
               textTransform: "uppercase",
               margin: "0 0 0.75rem",
-              color: landlord.textColor,
+              color: "var(--ll-text)",
             }}
           >
             {room.name}
@@ -310,8 +310,8 @@ export default async function LandlordRoomPage({
                 display: "block",
                 width: "100%",
                 marginTop: "0.75rem",
-                background: "#7c3d18",
-                color: landlord.textColor,
+                background: "var(--ll-accent)",
+                color: "var(--ll-bg)",
                 borderRadius: "9999px",
                 padding: "0.9rem 1.5rem",
                 fontSize: "0.82rem",

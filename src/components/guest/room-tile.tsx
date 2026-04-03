@@ -37,13 +37,13 @@ export function RoomTile({ room, isAvailable, searchParams, basePath = "" }: Roo
       className="room-tile tile-grid"
       style={{
         textDecoration: "none",
-        color: "#f0ebe0",
+        color: "var(--ll-text)",
         display: "grid",
         gridTemplateColumns: "400px 1fr",
         borderRadius: "12px",
         overflow: "hidden",
-        border: "1px solid rgba(255,255,255,0.08)",
-        background: "rgba(255,255,255,0.03)",
+        border: "1px solid color-mix(in srgb, var(--ll-text) 8%, transparent)",
+        background: "color-mix(in srgb, var(--ll-text) 3%, transparent)",
         opacity: isAvailable ? 1 : 0.42,
         transition: "border-color 0.25s ease",
         minHeight: "260px",
@@ -55,7 +55,7 @@ export function RoomTile({ room, isAvailable, searchParams, basePath = "" }: Roo
         style={{
           position: "relative",
           overflow: "hidden",
-          background: "#2a2618",
+          background: "color-mix(in srgb, var(--ll-bg) 80%, black)",
           minHeight: "260px",
         }}
       >
@@ -95,14 +95,14 @@ export function RoomTile({ room, isAvailable, searchParams, basePath = "" }: Roo
               position: "absolute",
               top: "1rem",
               left: "1rem",
-              background: "rgba(20,18,12,0.82)",
+              background: "color-mix(in srgb, var(--ll-bg) 82%, transparent)",
               backdropFilter: "blur(6px)",
               borderRadius: "9999px",
               padding: "0.28rem 0.85rem",
               fontSize: "0.65rem",
               letterSpacing: "0.14em",
               textTransform: "uppercase",
-              color: "#f0ebe0",
+              color: "var(--ll-text)",
             }}
           >
             Unavailable
@@ -194,7 +194,7 @@ export function RoomTile({ room, isAvailable, searchParams, basePath = "" }: Roo
                 fontSize: "2.2rem",
                 letterSpacing: "0.04em",
                 lineHeight: 1,
-                color: "#f0ebe0",
+                color: "var(--ll-text)",
               }}
             >
               ${(room.fromPrice ?? room.baseNightlyRate).toFixed(0)}
@@ -215,8 +215,8 @@ export function RoomTile({ room, isAvailable, searchParams, basePath = "" }: Roo
           <div
             className={isAvailable ? "tile-cta" : ""}
             style={{
-              background: isAvailable ? "#7c3d18" : "rgba(255,255,255,0.08)",
-              color: "#f0ebe0",
+              background: isAvailable ? "var(--ll-accent)" : "color-mix(in srgb, var(--ll-text) 8%, transparent)",
+              color: isAvailable ? "var(--ll-bg)" : "var(--ll-text)",
               padding: "0.72rem 1.9rem",
               borderRadius: "9999px",
               fontSize: "0.72rem",

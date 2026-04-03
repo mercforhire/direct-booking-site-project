@@ -19,10 +19,10 @@ type SerializedBooking = {
 }
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  PENDING:   { label: "Pending",   color: "#d4956a", bg: "rgba(212,149,106,0.1)",  border: "rgba(212,149,106,0.3)" },
+  PENDING:   { label: "Pending",   color: "var(--ll-accent)", bg: "color-mix(in srgb, var(--ll-accent) 10%, transparent)",  border: "color-mix(in srgb, var(--ll-accent) 30%, transparent)" },
   APPROVED:  { label: "Approved",  color: "#7ab3d4", bg: "rgba(122,179,212,0.1)",  border: "rgba(122,179,212,0.3)" },
   PAID:      { label: "Paid",      color: "#7abf8e", bg: "rgba(122,191,142,0.1)",  border: "rgba(122,191,142,0.3)" },
-  CANCELLED: { label: "Cancelled", color: "rgba(240,235,224,0.35)", bg: "rgba(255,255,255,0.05)", border: "rgba(255,255,255,0.12)" },
+  CANCELLED: { label: "Cancelled", color: "color-mix(in srgb, var(--ll-text) 35%, transparent)", bg: "color-mix(in srgb, var(--ll-text) 5%, transparent)", border: "color-mix(in srgb, var(--ll-text) 12%, transparent)" },
   DECLINED:  { label: "Declined",  color: "#d47a7a", bg: "rgba(212,122,122,0.1)",  border: "rgba(212,122,122,0.3)" },
   COMPLETED: { label: "Completed", color: "#7abf8e", bg: "rgba(122,191,142,0.1)",  border: "rgba(122,191,142,0.3)" },
 }
@@ -56,9 +56,9 @@ function BookingCard({ booking, basePath = "" }: { booking: SerializedBooking; b
   const price = booking.confirmedPrice ?? booking.estimatedTotal
   const badge = statusConfig[booking.status] ?? {
     label: booking.status,
-    color: "rgba(240,235,224,0.35)",
-    bg: "rgba(255,255,255,0.05)",
-    border: "rgba(255,255,255,0.12)",
+    color: "color-mix(in srgb, var(--ll-text) 35%, transparent)",
+    bg: "color-mix(in srgb, var(--ll-text) 5%, transparent)",
+    border: "color-mix(in srgb, var(--ll-text) 12%, transparent)",
   }
 
   return (
@@ -69,10 +69,10 @@ function BookingCard({ booking, basePath = "" }: { booking: SerializedBooking; b
         display: "flex",
         flexDirection: "column",
         borderRadius: "10px",
-        border: "1px solid rgba(255,255,255,0.07)",
-        background: "rgba(255,255,255,0.03)",
+        border: "1px solid color-mix(in srgb, var(--ll-text) 7%, transparent)",
+        background: "color-mix(in srgb, var(--ll-text) 3%, transparent)",
         textDecoration: "none",
-        color: "#f0ebe0",
+        color: "var(--ll-text)",
         overflow: "hidden",
         transition: "border-color 0.2s ease, background 0.2s ease",
       }}
@@ -82,7 +82,7 @@ function BookingCard({ booking, basePath = "" }: { booking: SerializedBooking; b
         style={{
           position: "relative",
           height: "180px",
-          background: "#2a2618",
+          background: "color-mix(in srgb, var(--ll-bg) 80%, black)",
           overflow: "hidden",
           flexShrink: 0,
         }}
@@ -157,7 +157,7 @@ function BookingCard({ booking, basePath = "" }: { booking: SerializedBooking; b
           <span
             className="booking-card-arrow"
             style={{
-              color: "#d4956a",
+              color: "var(--ll-accent)",
               fontSize: "0.85rem",
               opacity: 0.5,
               transition: "transform 0.2s ease, opacity 0.2s ease",
@@ -189,8 +189,8 @@ export default function BookingHistoryList({ upcoming, past, basePath = "" }: Bo
           className="browse-btn"
           style={{
             display: "inline-block",
-            background: "#7c3d18",
-            color: "#f0ebe0",
+            background: "var(--ll-accent)",
+            color: "var(--ll-text)",
             textDecoration: "none",
             borderRadius: "9999px",
             padding: "0.75rem 2rem",
@@ -210,10 +210,10 @@ export default function BookingHistoryList({ upcoming, past, basePath = "" }: Bo
   return (
     <>
       <style>{`
-        .booking-card:hover { border-color: rgba(255,255,255,0.18) !important; background: rgba(255,255,255,0.05) !important; }
+        .booking-card:hover { border-color: color-mix(in srgb, var(--ll-text) 18%, transparent) !important; background: color-mix(in srgb, var(--ll-text) 5%, transparent) !important; }
         .booking-card:hover .booking-card-img { transform: scale(1.06); }
         .booking-card:hover .booking-card-arrow { transform: translateX(3px); opacity: 1 !important; }
-        .browse-btn:hover { background: #6a3214 !important; }
+        .browse-btn:hover { background: color-mix(in srgb, var(--ll-accent) 85%, black) !important; }
         .section-label {
           font-family: var(--font-bebas);
           font-size: 1.25rem;

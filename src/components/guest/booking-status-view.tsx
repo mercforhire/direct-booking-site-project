@@ -76,8 +76,8 @@ const STATUS_STYLES: Record<string, { bg: string; border: string; color: string 
   APPROVED:  { bg: "rgba(52,211,153,0.1)",   border: "rgba(52,211,153,0.3)",   color: "#6ee7b7" },
   PAID:      { bg: "rgba(52,211,153,0.14)",  border: "rgba(52,211,153,0.4)",   color: "#34d399" },
   DECLINED:  { bg: "rgba(248,113,113,0.1)",  border: "rgba(248,113,113,0.3)",  color: "#f87171" },
-  CANCELLED: { bg: "rgba(255,255,255,0.05)", border: "rgba(255,255,255,0.12)", color: "rgba(240,235,224,0.4)" },
-  COMPLETED: { bg: "rgba(212,149,106,0.1)",  border: "rgba(212,149,106,0.3)",  color: "#d4956a" },
+  CANCELLED: { bg: "color-mix(in srgb, var(--ll-text) 5%, transparent)", border: "color-mix(in srgb, var(--ll-text) 12%, transparent)", color: "color-mix(in srgb, var(--ll-text) 40%, transparent)" },
+  COMPLETED: { bg: "color-mix(in srgb, var(--ll-accent) 10%, transparent)",  border: "color-mix(in srgb, var(--ll-accent) 30%, transparent)",  color: "var(--ll-accent)" },
 }
 
 function formatDate(iso: string): string {
@@ -131,17 +131,17 @@ function CancellationNotice({ booking }: { booking: SerializedBooking }) {
         Booking Cancelled
       </div>
       {!hasPayment && (
-        <p style={{ fontSize: "0.82rem", color: "rgba(240,235,224,0.55)", margin: 0 }}>
+        <p style={{ fontSize: "0.82rem", color: "color-mix(in srgb, var(--ll-text) 55%, transparent)", margin: 0 }}>
           This booking was cancelled. No payment was taken.
         </p>
       )}
       {hasPayment && isStripe && (
-        <p style={{ fontSize: "0.82rem", color: "rgba(240,235,224,0.65)", margin: 0 }}>
+        <p style={{ fontSize: "0.82rem", color: "color-mix(in srgb, var(--ll-text) 65%, transparent)", margin: 0 }}>
           Refund of {formatCurrency(booking.refundAmount!)} will be returned to your card within 5–10 business days.
         </p>
       )}
       {hasPayment && !isStripe && (
-        <p style={{ fontSize: "0.82rem", color: "rgba(240,235,224,0.65)", margin: 0 }}>
+        <p style={{ fontSize: "0.82rem", color: "color-mix(in srgb, var(--ll-text) 65%, transparent)", margin: 0 }}>
           Refund of {formatCurrency(booking.refundAmount!)} will be sent via e-transfer.
         </p>
       )}
@@ -198,8 +198,8 @@ function PaymentSection({
       {/* Pay by Card */}
       <div
         style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.07)",
+          background: "color-mix(in srgb, var(--ll-text) 3%, transparent)",
+          border: "1px solid color-mix(in srgb, var(--ll-text) 7%, transparent)",
           borderRadius: "10px",
           padding: "1.25rem",
         }}
@@ -219,8 +219,8 @@ function PaymentSection({
             type="submit"
             disabled={isPending}
             style={{
-              background: "#7c3d18",
-              color: "#f0ebe0",
+              background: "var(--ll-accent)",
+              color: "var(--ll-text)",
               border: "none",
               borderRadius: "9999px",
               padding: "0.7rem 1.8rem",
@@ -241,8 +241,8 @@ function PaymentSection({
       {/* Pay by E-Transfer */}
       <div
         style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.07)",
+          background: "color-mix(in srgb, var(--ll-text) 3%, transparent)",
+          border: "1px solid color-mix(in srgb, var(--ll-text) 7%, transparent)",
           borderRadius: "10px",
           padding: "1.25rem",
         }}
@@ -334,7 +334,7 @@ export function BookingStatusView({
               letterSpacing: "0.02em",
               textTransform: "uppercase",
               margin: 0,
-              color: "#f0ebe0",
+              color: "var(--ll-text)",
             }}
           >
             {booking.room.name}
@@ -352,11 +352,11 @@ export function BookingStatusView({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
         <div className="bs-card" style={{ padding: "1rem 1.25rem" }}>
           <div className="bs-label">Check-in</div>
-          <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#f0ebe0" }}>{formatDate(checkinStr)}</div>
+          <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--ll-text)" }}>{formatDate(checkinStr)}</div>
         </div>
         <div className="bs-card" style={{ padding: "1rem 1.25rem" }}>
           <div className="bs-label">Check-out</div>
-          <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#f0ebe0" }}>{formatDate(checkoutStr)}</div>
+          <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--ll-text)" }}>{formatDate(checkoutStr)}</div>
         </div>
       </div>
 
@@ -374,7 +374,7 @@ export function BookingStatusView({
             <div className="bs-label">Add-ons</div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", marginTop: "0.1rem" }}>
               {selectedAddOns.map((addon) => (
-                <div key={addon.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "#f0ebe0" }}>
+                <div key={addon.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "var(--ll-text)" }}>
                   <span>{addon.name}</span>
                   <span style={{ opacity: 0.65 }}>{formatCurrency(addon.price)}</span>
                 </div>
@@ -402,7 +402,7 @@ export function BookingStatusView({
                 fontFamily: "var(--font-bebas)",
                 fontSize: "1.8rem",
                 letterSpacing: "0.04em",
-                color: booking.confirmedPrice != null ? "rgba(212,149,106,0.4)" : "#d4956a",
+                color: booking.confirmedPrice != null ? "rgba(212,149,106,0.4)" : "var(--ll-accent)",
                 lineHeight: 1,
                 textDecoration: booking.confirmedPrice != null ? "line-through" : "none",
               }}
@@ -427,7 +427,7 @@ export function BookingStatusView({
                   fontFamily: "var(--font-bebas)",
                   fontSize: "2rem",
                   letterSpacing: "0.04em",
-                  color: "#d4956a",
+                  color: "var(--ll-accent)",
                   lineHeight: 1,
                 }}
               >

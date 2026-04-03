@@ -69,20 +69,20 @@ export function MessageSection({ bookingId, token, messages, isAdmin = false }: 
     textareaColor: "#1a1a1a",
     textareaFocus: "rgba(212,149,106,0.6)",
   } : {
-    label:       "rgba(255,255,255,0.35)",
-    container:   "rgba(255,255,255,0.03)",
-    containerBorder: "rgba(255,255,255,0.07)",
-    emptyText:   "rgba(240,235,224,0.3)",
+    label:       "color-mix(in srgb, var(--ll-text) 35%, transparent)",
+    container:   "color-mix(in srgb, var(--ll-text) 3%, transparent)",
+    containerBorder: "color-mix(in srgb, var(--ll-text) 7%, transparent)",
+    emptyText:   "color-mix(in srgb, var(--ll-text) 30%, transparent)",
     guestBubble: "rgba(212,149,106,0.14)",
     guestBubbleBorder: "rgba(212,149,106,0.22)",
-    adminBubble: "rgba(255,255,255,0.06)",
-    adminBubbleBorder: "rgba(255,255,255,0.09)",
-    msgText:     "#f0ebe0",
-    meta:        "rgba(240,235,224,0.3)",
-    divider:     "rgba(255,255,255,0.06)",
-    textareaBg:  "rgba(255,255,255,0.05)",
-    textareaBorder: "rgba(255,255,255,0.1)",
-    textareaColor: "#f0ebe0",
+    adminBubble: "color-mix(in srgb, var(--ll-text) 6%, transparent)",
+    adminBubbleBorder: "color-mix(in srgb, var(--ll-text) 9%, transparent)",
+    msgText:     "var(--ll-text)",
+    meta:        "color-mix(in srgb, var(--ll-text) 30%, transparent)",
+    divider:     "color-mix(in srgb, var(--ll-text) 6%, transparent)",
+    textareaBg:  "color-mix(in srgb, var(--ll-text) 5%, transparent)",
+    textareaBorder: "color-mix(in srgb, var(--ll-text) 10%, transparent)",
+    textareaColor: "var(--ll-text)",
     textareaFocus: "rgba(212,149,106,0.5)",
   }
 
@@ -210,8 +210,8 @@ export function MessageSection({ bookingId, token, messages, isAdmin = false }: 
               onClick={handleSend}
               disabled={isPending || !body.trim()}
               style={{
-                background: "#7c3d18",
-                color: "#f0ebe0",
+                background: "var(--ll-accent)",
+                color: "var(--ll-text)",
                 border: "none",
                 borderRadius: "9999px",
                 padding: "0.55rem 1.5rem",

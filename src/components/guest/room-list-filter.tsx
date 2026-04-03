@@ -64,33 +64,33 @@ export function RoomListFilter() {
       <style>{`
         /* Override DayPicker for dark olive theme */
         .rdp-root {
-          --rdp-accent-color: #d4956a !important;
+          --rdp-accent-color: var(--ll-accent) !important;
           --rdp-accent-background-color: rgba(212,149,106,0.15) !important;
           --rdp-range_middle-background-color: rgba(212,149,106,0.12) !important;
-          --rdp-range_start-date-background-color: #7c3d18 !important;
-          --rdp-range_end-date-background-color: #7c3d18 !important;
-          --rdp-range_start-color: #f0ebe0 !important;
-          --rdp-range_end-color: #f0ebe0 !important;
-          --rdp-today-color: #d4956a !important;
+          --rdp-range_start-date-background-color: var(--ll-accent) !important;
+          --rdp-range_end-date-background-color: var(--ll-accent) !important;
+          --rdp-range_start-color: var(--ll-text) !important;
+          --rdp-range_end-color: var(--ll-text) !important;
+          --rdp-today-color: var(--ll-accent) !important;
           --rdp-disabled-opacity: 0.25 !important;
           --rdp-outside-opacity: 0.3 !important;
-          color: #f0ebe0 !important;
+          color: var(--ll-text) !important;
           background: transparent !important;
         }
         .rdp-root button {
-          color: #f0ebe0 !important;
+          color: var(--ll-text) !important;
         }
         .rdp-root button:hover:not(:disabled) {
           background: rgba(212,149,106,0.15) !important;
         }
         .rdp-day_button { border-radius: 6px !important; }
-        .rdp-month_caption { color: #f0ebe0 !important; font-size: 0.85rem !important; letter-spacing: 0.06em !important; }
-        .rdp-weekday { color: rgba(240,235,224,0.35) !important; font-size: 0.68rem !important; letter-spacing: 0.08em !important; }
-        .rdp-nav button { color: #f0ebe0 !important; opacity: 0.6; }
-        .rdp-nav button:hover { opacity: 1; background: rgba(255,255,255,0.06) !important; }
-        .filter-toggle:hover { border-color: rgba(255,255,255,0.3) !important; }
-        .clear-btn:hover { color: #f0ebe0 !important; opacity: 1 !important; }
-        .guest-btn:hover { border-color: rgba(255,255,255,0.4) !important; }
+        .rdp-month_caption { color: var(--ll-text) !important; font-size: 0.85rem !important; letter-spacing: 0.06em !important; }
+        .rdp-weekday { color: color-mix(in srgb, var(--ll-text) 35%, transparent) !important; font-size: 0.68rem !important; letter-spacing: 0.08em !important; }
+        .rdp-nav button { color: var(--ll-text) !important; opacity: 0.6; }
+        .rdp-nav button:hover { opacity: 1; background: color-mix(in srgb, var(--ll-text) 6%, transparent) !important; }
+        .filter-toggle:hover { border-color: color-mix(in srgb, var(--ll-text) 30%, transparent) !important; }
+        .clear-btn:hover { color: var(--ll-text) !important; opacity: 1 !important; }
+        .guest-btn:hover { border-color: color-mix(in srgb, var(--ll-text) 40%, transparent) !important; }
       `}</style>
 
       {/* Toggle button */}
@@ -103,10 +103,10 @@ export function RoomListFilter() {
           alignItems: "center",
           gap: "0.75rem",
           background: "transparent",
-          border: "1px solid rgba(255,255,255,0.14)",
+          border: "1px solid color-mix(in srgb, var(--ll-text) 14%, transparent)",
           borderRadius: "9999px",
           padding: "0.6rem 1.4rem",
-          color: hasFilter ? "#d4956a" : "rgba(240,235,224,0.55)",
+          color: hasFilter ? "var(--ll-accent)" : "color-mix(in srgb, var(--ll-text) 55%, transparent)",
           fontSize: "0.75rem",
           letterSpacing: "0.12em",
           textTransform: "uppercase",
@@ -122,7 +122,7 @@ export function RoomListFilter() {
               width: "6px",
               height: "6px",
               borderRadius: "50%",
-              background: "#d4956a",
+              background: "var(--ll-accent)",
               flexShrink: 0,
             }}
           />
@@ -134,8 +134,8 @@ export function RoomListFilter() {
         <div
           style={{
             marginTop: "0.75rem",
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            background: "color-mix(in srgb, var(--ll-text) 4%, transparent)",
+            border: "1px solid color-mix(in srgb, var(--ll-text) 8%, transparent)",
             borderRadius: "12px",
             padding: "1.75rem 2rem",
             display: "flex",
@@ -189,9 +189,9 @@ export function RoomListFilter() {
                     width: "32px",
                     height: "32px",
                     borderRadius: "50%",
-                    border: "1px solid rgba(255,255,255,0.2)",
+                    border: "1px solid color-mix(in srgb, var(--ll-text) 20%, transparent)",
                     background: "transparent",
-                    color: "#f0ebe0",
+                    color: "var(--ll-text)",
                     fontSize: "1.1rem",
                     cursor: "pointer",
                     display: "flex",
@@ -213,9 +213,9 @@ export function RoomListFilter() {
                     width: "32px",
                     height: "32px",
                     borderRadius: "50%",
-                    border: "1px solid rgba(255,255,255,0.2)",
+                    border: "1px solid color-mix(in srgb, var(--ll-text) 20%, transparent)",
                     background: "transparent",
-                    color: "#f0ebe0",
+                    color: "var(--ll-text)",
                     fontSize: "1.1rem",
                     cursor: "pointer",
                     display: "flex",
@@ -237,7 +237,7 @@ export function RoomListFilter() {
                 style={{
                   background: "transparent",
                   border: "none",
-                  color: "rgba(240,235,224,0.4)",
+                  color: "color-mix(in srgb, var(--ll-text) 40%, transparent)",
                   fontSize: "0.72rem",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",

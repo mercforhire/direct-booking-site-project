@@ -266,7 +266,7 @@ export function BookingForm({
                         padding: "0.6rem 0.75rem",
                         borderRadius: "8px",
                         background: isChecked ? "rgba(212,149,106,0.08)" : "transparent",
-                        border: `1px solid ${isChecked ? "rgba(212,149,106,0.3)" : "rgba(255,255,255,0.06)"}`,
+                        border: `1px solid ${isChecked ? "color-mix(in srgb, var(--ll-accent) 30%, transparent)" : "color-mix(in srgb, var(--ll-text) 6%, transparent)"}`,
                         transition: "all 0.15s ease",
                       }}
                     >
@@ -290,7 +290,7 @@ export function BookingForm({
                       <span
                         style={{
                           fontSize: "0.75rem",
-                          color: addOn.price === 0 ? "rgba(212,149,106,0.8)" : "rgba(240,235,224,0.55)",
+                          color: addOn.price === 0 ? "color-mix(in srgb, var(--ll-accent) 80%, transparent)" : "color-mix(in srgb, var(--ll-text) 55%, transparent)",
                           letterSpacing: "0.04em",
                         }}
                       >
@@ -384,7 +384,7 @@ export function BookingForm({
           {/* Section 5: Signed-in banner OR account creation */}
           {isLoggedIn ? (
             <section className="bk-section" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-              <span style={{ color: "#d4956a", fontSize: "1rem", flexShrink: 0 }}>&#10003;</span>
+              <span style={{ color: "var(--ll-accent)", fontSize: "1rem", flexShrink: 0 }}>&#10003;</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: "0.82rem", fontWeight: 600 }}>
                   Signed in as {prefillData?.name}

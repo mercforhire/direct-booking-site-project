@@ -17,9 +17,9 @@ export default function SignOutButton() {
       onClick={handleSignOut}
       style={{
         background: "transparent",
-        border: "1px solid rgba(255,255,255,0.18)",
+        border: "1px solid color-mix(in srgb, var(--ll-text) 18%, transparent)",
         borderRadius: "9999px",
-        color: "rgba(240,235,224,0.5)",
+        color: "color-mix(in srgb, var(--ll-text) 50%, transparent)",
         fontSize: "0.7rem",
         letterSpacing: "0.14em",
         textTransform: "uppercase",
@@ -29,12 +29,12 @@ export default function SignOutButton() {
         fontFamily: "inherit",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.35)"
-        e.currentTarget.style.color = "rgba(240,235,224,0.8)"
+        e.currentTarget.style.borderColor = "color-mix(in srgb, var(--ll-text) 35%, transparent)"
+        e.currentTarget.style.color = "color-mix(in srgb, var(--ll-text) 80%, transparent)"
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)"
-        e.currentTarget.style.color = "rgba(240,235,224,0.5)"
+        e.currentTarget.style.borderColor = "color-mix(in srgb, var(--ll-text) 18%, transparent)"
+        e.currentTarget.style.color = "color-mix(in srgb, var(--ll-text) 50%, transparent)"
       }}
     >
       Sign out

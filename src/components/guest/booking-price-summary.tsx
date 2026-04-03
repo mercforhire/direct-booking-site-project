@@ -31,7 +31,7 @@ export function BookingPriceSummary({
     justifyContent: "space-between",
     alignItems: "baseline",
     fontSize: "0.8rem",
-    color: "rgba(240,235,224,0.65)",
+    color: "color-mix(in srgb, var(--ll-text) 65%, transparent)",
   }
 
   const priceContent =
@@ -87,7 +87,7 @@ export function BookingPriceSummary({
           <span>${estimate.serviceFee.toFixed(2)}</span>
         </div>
 
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", margin: "0.25rem 0" }} />
+        <div style={{ borderTop: "1px solid color-mix(in srgb, var(--ll-text) 10%, transparent)", margin: "0.25rem 0" }} />
 
         {/* Total */}
         <div
@@ -97,11 +97,11 @@ export function BookingPriceSummary({
             alignItems: "baseline",
             fontSize: "0.92rem",
             fontWeight: 600,
-            color: "#f0ebe0",
+            color: "var(--ll-text)",
           }}
         >
           <span>Total estimate</span>
-          <span style={{ color: "#d4956a" }}>${estimate.total.toFixed(2)}</span>
+          <span style={{ color: "var(--ll-accent)" }}>${estimate.total.toFixed(2)}</span>
         </div>
 
         <p style={{ fontSize: "0.68rem", opacity: 0.35, margin: "0.1rem 0 0", lineHeight: 1.5 }}>

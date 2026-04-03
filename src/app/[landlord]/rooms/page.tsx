@@ -19,7 +19,7 @@ function RoomListSkeleton() {
           style={{
             height: "280px",
             borderRadius: "12px",
-            background: "rgba(255,255,255,0.05)",
+            background: "color-mix(in srgb, var(--ll-text) 5%, transparent)",
             animation: "shimmer 1.8s ease-in-out infinite",
           }}
         />
@@ -81,9 +81,9 @@ export default async function LandlordRoomsPage({
     <>
       <style>{`
         .rooms-header { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
-        .room-tile:hover { border-color: rgba(255,255,255,0.18) !important; }
+        .room-tile:hover { border-color: color-mix(in srgb, var(--ll-text) 18%, transparent) !important; }
         .room-tile:hover .tile-photo { transform: scale(1.04) !important; }
-        .room-tile:hover .tile-cta { background: #6a3214 !important; }
+        .room-tile:hover .tile-cta { filter: brightness(0.85) !important; }
         @media (max-width: 860px) {
           .tile-grid { grid-template-columns: 1fr !important; }
           .tile-photo-wrap { height: 220px !important; }
@@ -102,7 +102,7 @@ export default async function LandlordRoomsPage({
           alignItems: "center",
           justifyContent: "space-between",
           padding: "1.4rem 3rem",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "1px solid color-mix(in srgb, var(--ll-text) 8%, transparent)",
         }}
       >
         <Link
@@ -112,7 +112,7 @@ export default async function LandlordRoomsPage({
             display: "flex",
             alignItems: "center",
             gap: "0.4rem",
-            color: landlord.textColor,
+            color: "var(--ll-text)",
             textDecoration: "none",
             fontSize: "0.75rem",
             letterSpacing: "0.14em",
@@ -128,8 +128,8 @@ export default async function LandlordRoomsPage({
           href={`${base}/guest/login?next=${base}/my-bookings`}
           className="my-bookings-btn"
           style={{
-            border: "1px solid rgba(255,255,255,0.18)",
-            color: `${landlord.textColor}99`,
+            border: "1px solid color-mix(in srgb, var(--ll-text) 18%, transparent)",
+            color: "color-mix(in srgb, var(--ll-text) 60%, transparent)",
             padding: "0.42rem 1.2rem",
             borderRadius: "9999px",
             fontSize: "0.7rem",

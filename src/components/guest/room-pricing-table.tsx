@@ -22,7 +22,6 @@ export function RoomPricingTable({
   checkout,
 }: RoomPricingTableProps) {
   let nights: number | null = null
-  let subtotal: number | null = null
 
   if (checkin && checkout) {
     const n = differenceInDays(
@@ -31,7 +30,6 @@ export function RoomPricingTable({
     )
     if (n > 0) {
       nights = n
-      subtotal = n * baseNightlyRate
     }
   }
 
@@ -40,17 +38,18 @@ export function RoomPricingTable({
     justifyContent: "space-between",
     alignItems: "baseline",
     padding: "0.55rem 0",
-    borderBottom: "1px solid rgba(255,255,255,0.06)",
+    borderBottom: "1px solid color-mix(in srgb, var(--ll-text) 6%, transparent)",
     fontSize: "0.8rem",
   }
 
   return (
     <div
       style={{
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.07)",
+        background: "color-mix(in srgb, var(--ll-text) 3%, transparent)",
+        border: "1px solid color-mix(in srgb, var(--ll-text) 7%, transparent)",
         borderRadius: "10px",
         padding: "1.5rem",
+        color: "var(--ll-text)",
       }}
     >
       <div
@@ -83,7 +82,7 @@ export function RoomPricingTable({
             fontFamily: "var(--font-bebas, serif)",
             fontSize: "2rem",
             letterSpacing: "0.04em",
-            color: "#d4956a",
+            color: "var(--ll-accent)",
             lineHeight: 1,
           }}
         >
@@ -114,7 +113,7 @@ export function RoomPricingTable({
           <div
             style={{
               ...rowStyle,
-              background: "rgba(212,149,106,0.07)",
+              background: "color-mix(in srgb, var(--ll-accent) 7%, transparent)",
               borderRadius: "6px",
               padding: "0.55rem 0.65rem",
               borderBottom: "none",
@@ -135,7 +134,7 @@ export function RoomPricingTable({
           <span style={{ opacity: 0.55 }}>Cleaning fee</span>
           <span style={{ fontWeight: 500 }}>
             {cleaningFee === 0 ? (
-              <span style={{ color: "rgba(212,149,106,0.8)", fontWeight: 500 }}>Included</span>
+              <span style={{ color: "var(--ll-accent)", fontWeight: 500 }}>Included</span>
             ) : (
               `$${cleaningFee.toFixed(2)}`
             )}
@@ -146,7 +145,7 @@ export function RoomPricingTable({
           <span style={{ opacity: 0.55 }}>Extra guest fee</span>
           <span style={{ fontWeight: 500, fontSize: "0.75rem", maxWidth: "140px", textAlign: "right", lineHeight: 1.4 }}>
             {extraGuestFee === 0 ? (
-              <span style={{ color: "rgba(212,149,106,0.8)" }}>None</span>
+              <span style={{ color: "var(--ll-accent)" }}>None</span>
             ) : (
               <>
                 ${extraGuestFee.toFixed(2)}/guest/night
@@ -161,7 +160,7 @@ export function RoomPricingTable({
 
       {/* Add-ons */}
       {addOns.length > 0 && (
-        <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid color-mix(in srgb, var(--ll-text) 6%, transparent)" }}>
           <p
             style={{
               fontSize: "0.63rem",
@@ -187,7 +186,7 @@ export function RoomPricingTable({
                 <span>{addon.name}</span>
                 <span style={{ opacity: 0.8 }}>
                   {addon.price === 0 ? (
-                    <span style={{ color: "rgba(212,149,106,0.8)" }}>Free</span>
+                    <span style={{ color: "var(--ll-accent)" }}>Free</span>
                   ) : (
                     `$${addon.price.toFixed(2)}`
                   )}

@@ -58,7 +58,7 @@ export default async function LandlordHomePage({
           justifyContent: "space-between",
           alignItems: "center",
           padding: "1.4rem 3rem",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "1px solid color-mix(in srgb, var(--ll-text) 8%, transparent)",
         }}
       >
         <div>
@@ -214,7 +214,7 @@ export default async function LandlordHomePage({
               href={`${base}/rooms`}
               className="brown-btn"
               style={{
-                background: "#7c3d18",
+                background: "var(--ll-accent)",
                 color: landlord.textColor,
                 padding: "0.9rem 2.4rem",
                 borderRadius: "9999px",
@@ -401,8 +401,8 @@ export default async function LandlordHomePage({
                   color: "inherit",
                   display: "flex",
                   flexDirection: "column",
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.07)",
+                  background: "color-mix(in srgb, var(--ll-text) 4%, transparent)",
+                  border: "1px solid color-mix(in srgb, var(--ll-text) 7%, transparent)",
                   borderRadius: "10px",
                   overflow: "hidden",
                   transition: "border-color 0.2s ease",
@@ -471,7 +471,7 @@ export default async function LandlordHomePage({
         style={{
           marginTop: "auto",
           padding: "2rem 3rem",
-          borderTop: "1px solid rgba(255,255,255,0.07)",
+          borderTop: "1px solid color-mix(in srgb, var(--ll-text) 7%, transparent)",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -507,7 +507,7 @@ export default async function LandlordHomePage({
             href={`${base}/guest/login?next=${base}/my-bookings`}
             className="ghost-btn"
             style={{
-              border: "1px solid rgba(255,255,255,0.2)",
+              border: "1px solid color-mix(in srgb, var(--ll-text) 20%, transparent)",
               color: `${landlord.textColor}A6`,
               padding: "0.55rem 1.4rem",
               borderRadius: "9999px",
@@ -530,7 +530,7 @@ export default async function LandlordHomePage({
           display: "flex",
           justifyContent: "flex-end",
           padding: "0.8rem 3rem",
-          borderTop: "1px solid rgba(255,255,255,0.04)",
+          borderTop: "1px solid color-mix(in srgb, var(--ll-text) 4%, transparent)",
         }}
       >
         <Link

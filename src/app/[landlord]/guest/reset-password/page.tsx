@@ -53,7 +53,7 @@ export default function ResetPasswordPage({
       <style>{`
         .login-panel { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
         .login-panel-delay { animation: fadeUp 0.8s 0.1s cubic-bezier(0.16,1,0.3,1) both; }
-        .field-input:focus { border-bottom-color: var(--ll-accent, #d4956a) !important; outline: none; }
+        .field-input:focus { border-bottom-color: var(--ll-accent, var(--ll-accent)) !important; outline: none; }
         .field-input::placeholder { color: rgba(240,235,224,0.2); }
         .submit-btn:hover:not(:disabled) { filter: brightness(0.85); }
         .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -67,7 +67,7 @@ export default function ResetPasswordPage({
           display: "flex",
           alignItems: "center",
           padding: "1.4rem 3rem",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "1px solid color-mix(in srgb, var(--ll-text) 8%, transparent)",
         }}
       >
         <Link
@@ -77,7 +77,7 @@ export default function ResetPasswordPage({
             display: "flex",
             alignItems: "center",
             gap: "0.4rem",
-            color: "var(--ll-text, #f0ebe0)",
+            color: "var(--ll-text, var(--ll-text))",
             textDecoration: "none",
             fontSize: "0.75rem",
             letterSpacing: "0.14em",
@@ -107,7 +107,7 @@ export default function ResetPasswordPage({
             style={{
               width: "100%",
               height: "1px",
-              background: "rgba(255,255,255,0.08)",
+              background: "color-mix(in srgb, var(--ll-text) 8%, transparent)",
               marginBottom: "2.25rem",
             }}
           />
@@ -124,7 +124,7 @@ export default function ResetPasswordPage({
               margin: "0 0 1rem",
             }}
           >
-            New <span style={{ color: "var(--ll-accent, #d4956a)" }}>Password</span>
+            New <span style={{ color: "var(--ll-accent, var(--ll-accent))" }}>Password</span>
           </h1>
 
           <p
@@ -169,10 +169,10 @@ export default function ResetPasswordPage({
                 style={{
                   background: "transparent",
                   border: "none",
-                  borderBottom: "1px solid rgba(255,255,255,0.18)",
+                  borderBottom: "1px solid color-mix(in srgb, var(--ll-text) 18%, transparent)",
                   borderRadius: 0,
                   padding: "0.5rem 0",
-                  color: "var(--ll-text, #f0ebe0)",
+                  color: "var(--ll-text, var(--ll-text))",
                   fontSize: "0.95rem",
                   fontFamily: "var(--font-dm), sans-serif",
                   transition: "border-bottom-color 0.2s ease",
@@ -206,10 +206,10 @@ export default function ResetPasswordPage({
                 style={{
                   background: "transparent",
                   border: "none",
-                  borderBottom: "1px solid rgba(255,255,255,0.18)",
+                  borderBottom: "1px solid color-mix(in srgb, var(--ll-text) 18%, transparent)",
                   borderRadius: 0,
                   padding: "0.5rem 0",
-                  color: "var(--ll-text, #f0ebe0)",
+                  color: "var(--ll-text, var(--ll-text))",
                   fontSize: "0.95rem",
                   fontFamily: "var(--font-dm), sans-serif",
                   transition: "border-bottom-color 0.2s ease",
@@ -237,8 +237,8 @@ export default function ResetPasswordPage({
               disabled={loading}
               className="submit-btn brown-btn"
               style={{
-                background: "#7c3d18",
-                color: "var(--ll-text, #f0ebe0)",
+                background: "var(--ll-accent)",
+                color: "var(--ll-text, var(--ll-text))",
                 border: "none",
                 borderRadius: "9999px",
                 padding: "0.85rem",

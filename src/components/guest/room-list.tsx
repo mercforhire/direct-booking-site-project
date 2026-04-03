@@ -80,8 +80,8 @@ export function RoomList({ rooms, basePath = "" }: RoomListProps) {
             type="button"
             onClick={() => { window.location.href = `${basePath}/rooms` }}
             style={{
-              border: "1px solid rgba(255,255,255,0.2)",
-              color: "rgba(240,235,224,0.65)",
+              border: "1px solid color-mix(in srgb, var(--ll-text) 20%, transparent)",
+              color: "color-mix(in srgb, var(--ll-text) 65%, transparent)",
               padding: "0.5rem 1.4rem",
               borderRadius: "9999px",
               fontSize: "0.72rem",

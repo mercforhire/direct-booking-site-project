@@ -279,30 +279,30 @@ export default async function LandlordBookingPage({
       <style>{`
         .bs-fade { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
         .bs-card {
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.07);
+          background: color-mix(in srgb, var(--ll-text) 3%, transparent);
+          border: 1px solid color-mix(in srgb, var(--ll-text) 7%, transparent);
           border-radius: 10px;
           overflow: hidden;
         }
-        .bs-row { padding: 0.85rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .bs-row { padding: 0.85rem 1.25rem; border-bottom: 1px solid color-mix(in srgb, var(--ll-text) 5%, transparent); }
         .bs-row:last-child { border-bottom: none; }
         .bs-label { font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.35; margin-bottom: 0.3rem; }
-        .bs-value { font-size: 0.88rem; color: ${landlord.textColor}; }
+        .bs-value { font-size: 0.88rem; color: var(--ll-text); }
         .bs-banner-success { background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.25); border-radius: 10px; padding: 1rem 1.25rem; color: #6ee7b7; font-size: 0.85rem; display: flex; align-items: center; gap: 0.65rem; }
         .bs-banner-info { background: ${landlord.accentColor}14; border: 1px solid ${landlord.accentColor}40; border-radius: 10px; padding: 1rem 1.25rem; color: ${landlord.accentColor}; font-size: 0.85rem; display: flex; align-items: center; gap: 0.65rem; }
-        .bk-status h2 { font-family: var(--font-bebas) !important; font-size: 1.3rem !important; letter-spacing: 0.08em !important; text-transform: uppercase !important; color: ${landlord.textColor} !important; font-weight: 400 !important; margin: 0 0 1rem !important; }
-        .bk-status .bg-white { background: rgba(255,255,255,0.03) !important; }
-        .bk-status .border-gray-200 { border-color: rgba(255,255,255,0.08) !important; }
-        .bk-status .divide-y > * + * { border-top: 1px solid rgba(255,255,255,0.06) !important; }
-        .bk-status .divide-gray-100 > * + * { border-top-color: rgba(255,255,255,0.06) !important; }
-        .bk-status .text-gray-900 { color: ${landlord.textColor} !important; }
-        .bk-status .text-gray-700 { color: ${landlord.textColor}B8 !important; }
-        .bk-status .text-gray-600 { color: ${landlord.textColor}99 !important; }
-        .bk-status .text-gray-500 { color: ${landlord.textColor}73 !important; }
-        .bk-status .text-gray-400 { color: ${landlord.textColor}59 !important; }
-        .bk-status .text-muted-foreground { color: ${landlord.textColor}66 !important; }
-        .bk-status .border-t { border-color: rgba(255,255,255,0.07) !important; }
-        .bk-status .border-t.border-gray-100 { border-top-color: rgba(255,255,255,0.07) !important; }
+        .bk-status h2 { font-family: var(--font-bebas) !important; font-size: 1.3rem !important; letter-spacing: 0.08em !important; text-transform: uppercase !important; color: var(--ll-text) !important; font-weight: 400 !important; margin: 0 0 1rem !important; }
+        .bk-status .bg-white { background: color-mix(in srgb, var(--ll-text) 3%, transparent) !important; }
+        .bk-status .border-gray-200 { border-color: color-mix(in srgb, var(--ll-text) 8%, transparent) !important; }
+        .bk-status .divide-y > * + * { border-top: 1px solid color-mix(in srgb, var(--ll-text) 6%, transparent) !important; }
+        .bk-status .divide-gray-100 > * + * { border-top-color: color-mix(in srgb, var(--ll-text) 6%, transparent) !important; }
+        .bk-status .text-gray-900 { color: var(--ll-text) !important; }
+        .bk-status .text-gray-700 { color: var(--ll-text)B8 !important; }
+        .bk-status .text-gray-600 { color: var(--ll-text)99 !important; }
+        .bk-status .text-gray-500 { color: var(--ll-text)73 !important; }
+        .bk-status .text-gray-400 { color: var(--ll-text)59 !important; }
+        .bk-status .text-muted-foreground { color: var(--ll-text)66 !important; }
+        .bk-status .border-t { border-color: color-mix(in srgb, var(--ll-text) 7%, transparent) !important; }
+        .bk-status .border-t.border-gray-100 { border-top-color: color-mix(in srgb, var(--ll-text) 7%, transparent) !important; }
         .bk-status .bg-green-50 { background: rgba(52,211,153,0.07) !important; }
         .bk-status .border-green-200 { border-color: rgba(52,211,153,0.25) !important; }
         .bk-status .text-green-800 { color: #6ee7b7 !important; }
@@ -319,19 +319,19 @@ export default async function LandlordBookingPage({
         .bk-status .border-blue-200 { border-color: rgba(96,165,250,0.25) !important; }
         .bk-status .text-blue-800 { color: #93c5fd !important; }
         .bk-status input[type="date"],
-        .bk-status textarea { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.12) !important; color: ${landlord.textColor} !important; border-radius: 8px !important; }
+        .bk-status textarea { background: color-mix(in srgb, var(--ll-text) 5%, transparent) !important; border: 1px solid color-mix(in srgb, var(--ll-text) 12%, transparent) !important; color: var(--ll-text) !important; border-radius: 8px !important; }
         .bk-status input[type="date"]:focus,
         .bk-status textarea:focus { border-color: ${landlord.accentColor}80 !important; box-shadow: 0 0 0 3px ${landlord.accentColor}1A !important; outline: none !important; }
         .bk-status input::placeholder,
-        .bk-status textarea::placeholder { color: ${landlord.textColor}40 !important; }
-        .bk-status .bg-blue-600 { background: #7c3d18 !important; border-radius: 9999px !important; letter-spacing: 0.1em !important; }
+        .bk-status textarea::placeholder { color: var(--ll-text)40 !important; }
+        .bk-status .bg-blue-600 { background: var(--ll-accent) !important; border-radius: 9999px !important; letter-spacing: 0.1em !important; }
         .bk-status .bg-blue-600:hover { background: #6a3214 !important; }
         .bk-status .hover\\:bg-blue-700:hover { background: #6a3214 !important; }
         .bk-status button[class*="bg-primary"],
-        .bk-status .inline-flex.bg-primary { background: #7c3d18 !important; color: ${landlord.textColor} !important; border-radius: 9999px !important; }
+        .bk-status .inline-flex.bg-primary { background: var(--ll-accent) !important; color: var(--ll-text) !important; border-radius: 9999px !important; }
         .bk-status button[class*="border"][class*="bg-background"],
-        .bk-status .inline-flex.border.bg-background { background: transparent !important; border-color: rgba(255,255,255,0.2) !important; color: ${landlord.textColor}A6 !important; border-radius: 9999px !important; }
-        .bk-status .font-mono { color: ${landlord.textColor}8C !important; }
+        .bk-status .inline-flex.border.bg-background { background: transparent !important; border-color: color-mix(in srgb, var(--ll-text) 20%, transparent) !important; color: var(--ll-text)A6 !important; border-radius: 9999px !important; }
+        .bk-status .font-mono { color: var(--ll-text)8C !important; }
         @media (max-width: 640px) {
           .bs-content { padding: 1.5rem 1.5rem 4rem !important; }
         }
@@ -345,7 +345,7 @@ export default async function LandlordBookingPage({
           alignItems: "center",
           justifyContent: "space-between",
           padding: "1.4rem 3rem",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "1px solid color-mix(in srgb, var(--ll-text) 8%, transparent)",
         }}
       >
         <Link
@@ -371,8 +371,8 @@ export default async function LandlordBookingPage({
           href={`${base}/guest/login?next=${base}/my-bookings`}
           className="my-bookings-btn"
           style={{
-            border: "1px solid rgba(255,255,255,0.18)",
-            color: `${landlord.textColor}99`,
+            border: "1px solid color-mix(in srgb, var(--ll-text) 18%, transparent)",
+            color: `var(--ll-text)99`,
             padding: "0.42rem 1.2rem",
             borderRadius: "9999px",
             fontSize: "0.7rem",

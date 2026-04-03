@@ -38,8 +38,8 @@ function formatCurrency(amount: number): string {
 
 const ghostBtn: React.CSSProperties = {
   background: "transparent",
-  border: "1px solid rgba(255,255,255,0.2)",
-  color: "rgba(240,235,224,0.65)",
+  border: "1px solid color-mix(in srgb, var(--ll-text) 20%, transparent)",
+  color: "color-mix(in srgb, var(--ll-text) 65%, transparent)",
   borderRadius: "9999px",
   padding: "0.5rem 1.2rem",
   fontSize: "0.75rem",
@@ -51,9 +51,9 @@ const ghostBtn: React.CSSProperties = {
 }
 
 const primaryBtn: React.CSSProperties = {
-  background: "#7c3d18",
+  background: "var(--ll-accent)",
   border: "none",
-  color: "#f0ebe0",
+  color: "var(--ll-text)",
   borderRadius: "9999px",
   padding: "0.55rem 1.5rem",
   fontSize: "0.75rem",
@@ -66,11 +66,11 @@ const primaryBtn: React.CSSProperties = {
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
-  background: "rgba(255,255,255,0.05)",
-  border: "1px solid rgba(255,255,255,0.12)",
+  background: "color-mix(in srgb, var(--ll-text) 5%, transparent)",
+  border: "1px solid color-mix(in srgb, var(--ll-text) 12%, transparent)",
   borderRadius: "8px",
   padding: "0.55rem 0.85rem",
-  color: "#f0ebe0",
+  color: "var(--ll-text)",
   fontSize: "0.85rem",
   outline: "none",
   boxSizing: "border-box",
@@ -246,8 +246,8 @@ export function DateChangeSection({ booking, activeDateChange, token }: Props) {
           {activeDateChange.stripeSessionId !== null && activeDateChange.newPrice !== null && (
             <div
               style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.07)",
+                background: "color-mix(in srgb, var(--ll-text) 3%, transparent)",
+                border: "1px solid color-mix(in srgb, var(--ll-text) 7%, transparent)",
                 borderRadius: "10px",
                 padding: "1.25rem",
               }}
@@ -256,7 +256,7 @@ export function DateChangeSection({ booking, activeDateChange, token }: Props) {
                 Payment Required
               </div>
               <p style={{ fontSize: "0.78rem", opacity: 0.55, marginBottom: "1rem", lineHeight: 1.5 }}>
-                A top-up of <strong style={{ color: "#d4956a" }}>{formatCurrency(activeDateChange.newPrice)}</strong> is required to confirm your new dates.
+                A top-up of <strong style={{ color: "var(--ll-accent)" }}>{formatCurrency(activeDateChange.newPrice)}</strong> is required to confirm your new dates.
               </p>
               <form action={() => handleStripePayment(activeDateChange.id)}>
                 <button type="submit" disabled={isStripeLoading} style={{ ...primaryBtn, opacity: isStripeLoading ? 0.5 : 1 }}>
@@ -275,7 +275,7 @@ export function DateChangeSection({ booking, activeDateChange, token }: Props) {
                 borderRadius: "10px",
                 padding: "1rem 1.25rem",
                 fontSize: "0.85rem",
-                color: "#d4956a",
+                color: "var(--ll-accent)",
               }}
             >
               Payment of <strong>{formatCurrency(activeDateChange.newPrice)}</strong> required via e-transfer to confirm your new dates.
@@ -314,7 +314,7 @@ export function DateChangeSection({ booking, activeDateChange, token }: Props) {
             Date change declined
           </div>
           {activeDateChange.declineReason && (
-            <p style={{ fontSize: "0.82rem", color: "rgba(240,235,224,0.55)", margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontSize: "0.82rem", color: "color-mix(in srgb, var(--ll-text) 55%, transparent)", margin: 0, lineHeight: 1.5 }}>
               Reason: {activeDateChange.declineReason}
             </p>
           )}
@@ -348,8 +348,8 @@ export function DateChangeSection({ booking, activeDateChange, token }: Props) {
           ) : (
             <div
               style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.07)",
+                background: "color-mix(in srgb, var(--ll-text) 3%, transparent)",
+                border: "1px solid color-mix(in srgb, var(--ll-text) 7%, transparent)",
                 borderRadius: "10px",
                 padding: "1.25rem",
                 display: "flex",

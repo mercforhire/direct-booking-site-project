@@ -27,7 +27,7 @@ export function RoomPhotoGallery({ photos }: RoomPhotoGalleryProps) {
           width: "100%",
           aspectRatio: "16/7",
           overflow: "hidden",
-          background: "#2a2618",
+          background: "color-mix(in srgb, var(--ll-bg) 80%, black)",
         }}
       >
         {photos.length === 0 ? (
@@ -40,7 +40,7 @@ export function RoomPhotoGallery({ photos }: RoomPhotoGalleryProps) {
               height: "100%",
             }}
           >
-            <BedDouble style={{ color: "rgba(240,235,224,0.2)" }} size={48} />
+            <BedDouble style={{ color: "color-mix(in srgb, var(--ll-text) 20%, transparent)" }} size={48} />
           </div>
         ) : (
           <button
@@ -85,7 +85,7 @@ export function RoomPhotoGallery({ photos }: RoomPhotoGalleryProps) {
                   borderRadius: "9999px",
                   padding: "0.3rem 0.85rem",
                   fontSize: "0.7rem",
-                  color: "rgba(240,235,224,0.75)",
+                  color: "color-mix(in srgb, var(--ll-text) 75%, transparent)",
                   letterSpacing: "0.1em",
                   pointerEvents: "none",
                 }}
@@ -104,7 +104,7 @@ export function RoomPhotoGallery({ photos }: RoomPhotoGalleryProps) {
             display: "flex",
             gap: "3px",
             overflowX: "auto",
-            background: "#2a2618",
+            background: "color-mix(in srgb, var(--ll-bg) 80%, black)",
             padding: "3px 0 0",
             scrollbarWidth: "none",
           }}
@@ -122,7 +122,7 @@ export function RoomPhotoGallery({ photos }: RoomPhotoGalleryProps) {
                 border: "none",
                 padding: 0,
                 cursor: "pointer",
-                background: "#2a2618",
+                background: "color-mix(in srgb, var(--ll-bg) 80%, black)",
                 opacity: 0.82,
                 transition: "opacity 0.2s ease",
               }}
@@ -198,7 +198,7 @@ export function RoomPhotoGallery({ photos }: RoomPhotoGalleryProps) {
                     left: "50%",
                     transform: "translateX(-50%)",
                     fontSize: "0.72rem",
-                    color: "rgba(240,235,224,0.35)",
+                    color: "color-mix(in srgb, var(--ll-text) 35%, transparent)",
                     letterSpacing: "0.12em",
                     whiteSpace: "nowrap",
                   }}
@@ -215,9 +215,9 @@ export function RoomPhotoGallery({ photos }: RoomPhotoGalleryProps) {
                     left: "1.5rem",
                     top: "50%",
                     transform: "translateY(-50%)",
-                    color: "rgba(240,235,224,0.8)",
+                    color: "color-mix(in srgb, var(--ll-text) 80%, transparent)",
                     background: "rgba(30,28,20,0.6)",
-                    border: "1px solid rgba(255,255,255,0.12)",
+                    border: "1px solid color-mix(in srgb, var(--ll-text) 12%, transparent)",
                     borderRadius: "9999px",
                     width: "2.5rem",
                     height: "2.5rem",
@@ -243,9 +243,9 @@ export function RoomPhotoGallery({ photos }: RoomPhotoGalleryProps) {
                     right: "1.5rem",
                     top: "50%",
                     transform: "translateY(-50%)",
-                    color: "rgba(240,235,224,0.8)",
+                    color: "color-mix(in srgb, var(--ll-text) 80%, transparent)",
                     background: "rgba(30,28,20,0.6)",
-                    border: "1px solid rgba(255,255,255,0.12)",
+                    border: "1px solid color-mix(in srgb, var(--ll-text) 12%, transparent)",
                     borderRadius: "9999px",
                     width: "2.5rem",
                     height: "2.5rem",
@@ -269,9 +269,9 @@ export function RoomPhotoGallery({ photos }: RoomPhotoGalleryProps) {
                   position: "absolute",
                   top: "1.5rem",
                   right: "1.5rem",
-                  color: "rgba(240,235,224,0.7)",
+                  color: "color-mix(in srgb, var(--ll-text) 70%, transparent)",
                   background: "rgba(30,28,20,0.6)",
-                  border: "1px solid rgba(255,255,255,0.12)",
+                  border: "1px solid color-mix(in srgb, var(--ll-text) 12%, transparent)",
                   borderRadius: "9999px",
                   width: "2.2rem",
                   height: "2.2rem",

@@ -84,7 +84,7 @@ export default async function LandlordMyBookingsPage({
           alignItems: "center",
           justifyContent: "space-between",
           padding: "1.4rem 3rem",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "1px solid color-mix(in srgb, var(--ll-text) 8%, transparent)",
         }}
       >
         <Link
@@ -157,7 +157,7 @@ export default async function LandlordMyBookingsPage({
           style={{
             width: "100%",
             height: "1px",
-            background: "rgba(255,255,255,0.08)",
+            background: "color-mix(in srgb, var(--ll-text) 8%, transparent)",
             marginBottom: "2.5rem",
           }}
         />

@@ -62,7 +62,7 @@ export function BookingRangePicker({
               fontSize: "9px",
               lineHeight: 1.2,
               fontWeight: override !== undefined ? 600 : 400,
-              color: override !== undefined ? "#d4956a" : "rgba(240,235,224,0.35)",
+              color: override !== undefined ? "var(--ll-accent)" : "color-mix(in srgb, var(--ll-text) 35%, transparent)",
             }}
           >
             ${displayPrice}

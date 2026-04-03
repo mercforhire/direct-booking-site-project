@@ -3,6 +3,7 @@ import Link from "next/link"
 import { getLandlordBySlug } from "@/lib/landlord"
 import { prisma } from "@/lib/prisma"
 import { getUnavailableDates } from "@/lib/unavailable-dates"
+import { getFromPrice } from "@/lib/from-price"
 import { AvailabilityCalendarReadonly } from "@/components/guest/availability-calendar-readonly"
 import { RoomPhotoGallery } from "@/components/guest/room-photo-gallery"
 import { RoomPricingTable } from "@/components/guest/room-pricing-table"
@@ -50,18 +51,9 @@ export default async function LandlordRoomPage({
 
   if (!room) notFound()
 
-  // Compute "from" price: lowest override in next 30 days, or base rate
-  const today = new Date()
-  const thirtyDaysOut = new Date(today)
-  thirtyDaysOut.setDate(thirtyDaysOut.getDate() + 30)
-  const lowestOverride = await prisma.datePriceOverride.findFirst({
-    where: { roomId: id, date: { gte: today, lte: thirtyDaysOut } },
-    orderBy: { price: "asc" },
-    select: { price: true },
-  })
-
+  // Compute "from" price using only available dates
   const baseNightlyRate = Number(room.baseNightlyRate)
-  const fromPrice = lowestOverride ? Number(lowestOverride.price) : baseNightlyRate
+  const fromPrice = await getFromPrice(id, baseNightlyRate)
   const cleaningFee = Number(room.cleaningFee)
   const extraGuestFee = Number(room.extraGuestFee)
   const addOns = room.addOns.map((a) => ({ ...a, price: Number(a.price) }))

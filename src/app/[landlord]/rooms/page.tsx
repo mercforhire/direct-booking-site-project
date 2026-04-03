@@ -4,6 +4,7 @@ import Link from "next/link"
 import { getLandlordBySlug } from "@/lib/landlord"
 import { prisma } from "@/lib/prisma"
 import { getUnavailableDates } from "@/lib/unavailable-dates"
+import { getFromPrice } from "@/lib/from-price"
 import { coerceRoomDecimals } from "@/lib/room-formatters"
 import { RoomList } from "@/components/guest/room-list"
 
@@ -39,8 +40,6 @@ export default async function LandlordRoomsPage({
   const base = `/${slug}`
 
   const today = new Date()
-  const thirtyDaysOut = new Date(today)
-  thirtyDaysOut.setDate(thirtyDaysOut.getDate() + 30)
 
   const rooms = await prisma.room.findMany({
     where: { landlordId: landlord.id, isActive: true },
@@ -60,28 +59,20 @@ export default async function LandlordRoomsPage({
         orderBy: { position: "asc" },
         take: 1,
       },
-      priceOverrides: {
-        where: { date: { gte: today, lte: thirtyDaysOut } },
-        select: { price: true },
-        orderBy: { price: "asc" },
-        take: 1,
-      },
     },
   })
 
-  // Compute unavailable dates per room (blocked + booked)
-  const unavailableByRoom = await Promise.all(
-    rooms.map((r) => getUnavailableDates(r.id))
-  )
+  // Compute unavailable dates and "from" prices per room in parallel
+  const [unavailableByRoom, fromPrices] = await Promise.all([
+    Promise.all(rooms.map((r) => getUnavailableDates(r.id))),
+    Promise.all(rooms.map((r) => getFromPrice(r.id, Number(r.baseNightlyRate)))),
+  ])
 
-  const roomsForClient = rooms.map(({ priceOverrides, ...rest }, i) => {
+  const roomsForClient = rooms.map((rest, i) => {
     const coerced = coerceRoomDecimals(rest)
-    const fromPrice = priceOverrides.length > 0
-      ? Number(priceOverrides[0].price)
-      : coerced.baseNightlyRate
     return {
       ...coerced,
-      fromPrice,
+      fromPrice: fromPrices[i],
       blockedDateStrings: unavailableByRoom[i],
     }
   })

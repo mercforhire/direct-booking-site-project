@@ -132,103 +132,39 @@ async function scrapePricesFromMulticalendar(
     return []
   }
 
-  // Extract prices from the calendar grid
-  // The multicalendar shows day cells with prices. We need to find
-  // the DOM structure and extract date + price pairs.
-  const prices = await page.evaluate(() => {
+  // Extract prices from the calendar gridcells.
+  // Each gridcell has text like: "Thursday 1 Jan1Unavailable$46 CAD" or "Friday 1 May1$67 CAD"
+  // We extract the month, day number, and price from this text.
+  const prices = await page.evaluate((year: number) => {
+    const MONTHS: Record<string, number> = {
+      Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+      Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
+    }
+    const gridcells = document.querySelectorAll('[role="gridcell"]')
     const results: { date: string; price: number }[] = []
 
-    // Strategy 1: Look for calendar day cells with data attributes and price text
-    // Airbnb multicalendar uses td or div cells with date data and price display
-    const cells = document.querySelectorAll('[data-testid*="calendar-day"], [data-testid*="day-cell"], td[data-date], [class*="CalendarDay"]')
-    
-    if (cells.length > 0) {
-      cells.forEach((cell) => {
-        const dateAttr = cell.getAttribute('data-date') || 
-                        cell.getAttribute('data-testid')?.match(/\d{4}-\d{2}-\d{2}/)?.[0]
-        const priceText = cell.textContent?.match(/\$(\d+(?:\.\d+)?)/)?.[1]
-        if (dateAttr && priceText) {
-          results.push({ date: dateAttr, price: parseFloat(priceText) })
-        }
-      })
-    }
+    for (const gc of Array.from(gridcells)) {
+      const text = gc.textContent || ''
 
-    // Strategy 2: Look for aria-label patterns like "April 5, 2026, $87"
-    if (results.length === 0) {
-      const allElements = document.querySelectorAll('[aria-label]')
-      allElements.forEach((el) => {
-        const label = el.getAttribute('aria-label') || ''
-        // Match patterns like "April 5, 2026, $87" or "Apr 5, $87.87"
-        const priceMatch = label.match(/\$(\d+(?:\.\d+)?)/)
-        const dateMatch = label.match(/(\w+ \d{1,2},?\s*\d{4})/)
-        if (priceMatch && dateMatch) {
-          try {
-            const d = new Date(dateMatch[1])
-            if (!isNaN(d.getTime())) {
-              const dateStr = d.toISOString().slice(0, 10)
-              results.push({ date: dateStr, price: parseFloat(priceMatch[1]) })
-            }
-          } catch {}
-        }
-      })
-    }
+      const monthMatch = text.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/)
+      const dayMatch = text.match(/(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+(\d{1,2})/)
+      const priceMatch = text.match(/\$(\d+(?:\.\d+)?)\s*CAD/)
 
-    // Strategy 3: Search for price spans near date elements
-    if (results.length === 0) {
-      // Find all elements containing dollar amounts
-      const walker = document.createTreeWalker(
-        document.body,
-        NodeFilter.SHOW_TEXT,
-        null
-      )
-      const priceNodes: { text: string; parent: Element }[] = []
-      let node
-      while ((node = walker.nextNode())) {
-        if (node.textContent?.match(/^\$\d+/)) {
-          priceNodes.push({ text: node.textContent, parent: node.parentElement! })
-        }
-      }
-      // Report count for debugging
-      if (priceNodes.length > 0) {
-        (window as any).__priceNodeCount = priceNodes.length
-        // Sample a few
-        ;(window as any).__priceSamples = priceNodes.slice(0, 5).map(n => ({
-          text: n.text,
-          parentTag: n.parent.tagName,
-          parentClass: n.parent.className?.substring(0, 60),
-          ariaLabel: n.parent.closest('[aria-label]')?.getAttribute('aria-label')?.substring(0, 100),
-        }))
+      if (monthMatch && dayMatch && priceMatch) {
+        const month = MONTHS[monthMatch[1]]
+        const day = parseInt(dayMatch[1])
+        const price = parseFloat(priceMatch[1])
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+        results.push({ date: dateStr, price })
       }
     }
 
     return results
-  })
+  }, YEAR)
 
-  // If strategies 1-3 failed, get debug info
+  // If extraction found nothing, log for debugging
   if (prices.length === 0) {
-    const debugInfo = await page.evaluate(() => ({
-      priceNodeCount: (window as any).__priceNodeCount || 0,
-      priceSamples: (window as any).__priceSamples || [],
-      title: document.title,
-      url: window.location.href,
-      bodyText: document.body.innerText.substring(0, 500),
-    }))
-    console.log(`   ℹ️  No prices extracted via standard strategies`)
-    console.log(`   Title: ${debugInfo.title}`)
-    console.log(`   Price nodes found: ${debugInfo.priceNodeCount}`)
-    if (debugInfo.priceSamples.length > 0) {
-      console.log(`   Samples:`)
-      debugInfo.priceSamples.forEach((s: any) => {
-        console.log(`     "${s.text}" in <${s.parentTag} class="${s.parentClass}">`)
-        if (s.ariaLabel) console.log(`       aria-label: "${s.ariaLabel}"`)
-      })
-    }
-    console.log(`   Body preview: ${debugInfo.bodyText.substring(0, 200)}`)
-    
-    // Take a screenshot for debugging
-    const screenshotPath = path.join(process.cwd(), `debug-multical-${mapping.airbnbId}.png`)
-    await page.screenshot({ path: screenshotPath, fullPage: false })
-    console.log(`   📸 Screenshot saved: ${screenshotPath}`)
+    console.log(`   ⚠️  No prices extracted — listing may be fully booked or page structure changed`)
   }
 
   await page.close()

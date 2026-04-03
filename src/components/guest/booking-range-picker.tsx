@@ -72,15 +72,66 @@ export function BookingRangePicker({
     )
   }, [])
 
+  // Build a Set for fast blocked-date lookup
+  const blockedSet = new Set(blockedDateStrings)
+
+  // Custom range selection handler:
+  // - Blocked dates can be selected as checkout (guest leaves that morning)
+  // - Blocked dates cannot be selected as checkin
+  // - Ranges cannot span across blocked nights
+  const handleSelect = useCallback(
+    (range: DateRange | undefined) => {
+      if (!range) {
+        onChange(undefined)
+        return
+      }
+
+      const { from, to } = range
+
+      // If only a start date is being selected (first click), reject if blocked
+      if (from && !to) {
+        const fromStr = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, "0")}-${String(from.getDate()).padStart(2, "0")}`
+        if (blockedSet.has(fromStr)) {
+          // Don't allow blocked date as checkin
+          onChange(undefined)
+          return
+        }
+        onChange({ from, to: undefined })
+        return
+      }
+
+      // Both from and to are set — validate the range
+      if (from && to) {
+        // Check that no blocked night exists between checkin (inclusive) and checkout (exclusive)
+        const cursor = new Date(from.getFullYear(), from.getMonth(), from.getDate())
+        const end = new Date(to.getFullYear(), to.getMonth(), to.getDate())
+        while (cursor < end) {
+          const dateStr = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`
+          if (blockedSet.has(dateStr)) {
+            // Blocked night in range — reject
+            onChange(undefined)
+            return
+          }
+          cursor.setDate(cursor.getDate() + 1)
+        }
+        // Valid range — checkout day can be blocked (guest leaves that morning)
+        onChange({ from, to })
+        return
+      }
+
+      onChange(range)
+    },
+    [blockedSet, onChange]
+  )
+
   return (
     <DayPicker
       mode="range"
       selected={value}
-      onSelect={onChange}
+      onSelect={handleSelect}
       min={minStayNights}
       max={maxStayNights}
-      disabled={[{ before: today }, { after: windowEnd }, ...blockedDates]}
-      excludeDisabled
+      disabled={[{ before: today }, { after: windowEnd }]}
       modifiers={{ blocked: blockedDates }}
       modifiersClassNames={{ blocked: "line-through opacity-50" }}
       components={{ DayButton }}

@@ -17,6 +17,7 @@ interface RoomTileRoom {
   maxGuests: number
   photos: RoomTilePhoto[]
   blockedDateStrings: string[]
+  fromPrice?: number
 }
 
 interface RoomTileProps {
@@ -178,6 +179,17 @@ export function RoomTile({ room, isAvailable, searchParams, basePath = "" }: Roo
           <div>
             <div
               style={{
+                fontSize: "0.6rem",
+                opacity: 0.38,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                marginBottom: "2px",
+              }}
+            >
+              from
+            </div>
+            <div
+              style={{
                 fontFamily: "var(--font-bebas)",
                 fontSize: "2.2rem",
                 letterSpacing: "0.04em",
@@ -185,7 +197,7 @@ export function RoomTile({ room, isAvailable, searchParams, basePath = "" }: Roo
                 color: "#f0ebe0",
               }}
             >
-              ${room.baseNightlyRate.toFixed(0)}
+              ${(room.fromPrice ?? room.baseNightlyRate).toFixed(0)}
             </div>
             <div
               style={{

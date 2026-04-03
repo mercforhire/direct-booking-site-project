@@ -37,6 +37,10 @@ export default async function LandlordRoomsPage({
 
   const base = `/${slug}`
 
+  const today = new Date()
+  const thirtyDaysOut = new Date(today)
+  thirtyDaysOut.setDate(thirtyDaysOut.getDate() + 30)
+
   const rooms = await prisma.room.findMany({
     where: { landlordId: landlord.id, isActive: true },
     select: {
@@ -58,15 +62,29 @@ export default async function LandlordRoomsPage({
       blockedDates: {
         select: { date: true },
       },
+      priceOverrides: {
+        where: { date: { gte: today, lte: thirtyDaysOut } },
+        select: { price: true },
+        orderBy: { price: "asc" },
+        take: 1,
+      },
     },
   })
 
-  const roomsForClient = rooms.map(({ blockedDates, ...rest }) => ({
-    ...coerceRoomDecimals(rest),
-    blockedDateStrings: blockedDates.map((b) =>
-      b.date.toISOString().slice(0, 10)
-    ),
-  }))
+  const roomsForClient = rooms.map(({ blockedDates, priceOverrides, ...rest }) => {
+    const coerced = coerceRoomDecimals(rest)
+    // "From" price: lowest price override in next 30 days, or base rate
+    const fromPrice = priceOverrides.length > 0
+      ? Number(priceOverrides[0].price)
+      : coerced.baseNightlyRate
+    return {
+      ...coerced,
+      fromPrice,
+      blockedDateStrings: blockedDates.map((b) =>
+        b.date.toISOString().slice(0, 10)
+      ),
+    }
+  })
 
   return (
     <>

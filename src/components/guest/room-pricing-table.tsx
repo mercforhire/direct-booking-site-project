@@ -2,6 +2,7 @@ import { differenceInDays } from "date-fns"
 
 interface RoomPricingTableProps {
   baseNightlyRate: number
+  fromPrice?: number
   cleaningFee: number
   extraGuestFee: number
   baseGuests: number
@@ -12,6 +13,7 @@ interface RoomPricingTableProps {
 
 export function RoomPricingTable({
   baseNightlyRate,
+  fromPrice,
   cleaningFee,
   extraGuestFee,
   baseGuests,
@@ -67,6 +69,17 @@ export function RoomPricingTable({
       <div style={{ marginBottom: "1rem" }}>
         <span
           style={{
+            fontSize: "0.6rem",
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            opacity: 0.4,
+            marginRight: "0.3rem",
+          }}
+        >
+          from
+        </span>
+        <span
+          style={{
             fontFamily: "var(--font-bebas, serif)",
             fontSize: "2rem",
             letterSpacing: "0.04em",
@@ -74,7 +87,7 @@ export function RoomPricingTable({
             lineHeight: 1,
           }}
         >
-          ${baseNightlyRate.toFixed(0)}
+          ${(fromPrice ?? baseNightlyRate).toFixed(0)}
         </span>
         <span
           style={{
@@ -91,13 +104,13 @@ export function RoomPricingTable({
       {/* Rows */}
       <div>
         <div style={rowStyle}>
-          <span style={{ opacity: 0.55 }}>Base nightly rate</span>
+          <span style={{ opacity: 0.55 }}>Nightly rate</span>
           <span style={{ fontWeight: 500 }}>
-            ${baseNightlyRate.toFixed(2)}<span style={{ opacity: 0.4, fontWeight: 400 }}>/night</span>
+            <span style={{ opacity: 0.55, fontSize: "0.72rem" }}>varies by date</span>
           </span>
         </div>
 
-        {nights !== null && subtotal !== null && (
+        {nights !== null && (
           <div
             style={{
               ...rowStyle,
@@ -110,10 +123,10 @@ export function RoomPricingTable({
             }}
           >
             <span style={{ opacity: 0.7, fontStyle: "italic" }}>
-              {nights} night{nights !== 1 ? "s" : ""} × ${baseNightlyRate.toFixed(2)}
+              {nights} night{nights !== 1 ? "s" : ""}
             </span>
-            <span style={{ color: "#d4956a", fontWeight: 600 }}>
-              = ${subtotal.toFixed(2)}
+            <span style={{ opacity: 0.5, fontSize: "0.7rem" }}>
+              exact total at booking
             </span>
           </div>
         )}
@@ -193,7 +206,7 @@ export function RoomPricingTable({
           lineHeight: 1.5,
         }}
       >
-        Final price confirmed by Leon at approval
+        Final price confirmed at approval. Rates vary by date.
       </p>
     </div>
   )

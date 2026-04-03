@@ -23,6 +23,7 @@ interface Room {
   bookingWindowMonths: number
   photos: RoomPhoto[]
   blockedDateStrings: string[]
+  fromPrice?: number
 }
 
 interface RoomListProps {

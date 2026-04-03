@@ -392,7 +392,7 @@ export default async function LandlordBookPage({
               {room.name}
             </div>
             <div style={{ fontSize: "0.68rem", opacity: 0.45, lineHeight: 1.2 }}>
-              ${baseNightlyRate.toFixed(2)}/night &middot; up to {room.maxGuests} guest
+              From ${baseNightlyRate.toFixed(0)}/night &middot; up to {room.maxGuests} guest
               {room.maxGuests !== 1 ? "s" : ""}
             </div>
           </div>

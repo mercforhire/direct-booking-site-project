@@ -19,10 +19,31 @@ import { chromium, type BrowserContext } from 'playwright'
 import { PrismaClient } from '@prisma/client'
 import * as fs from 'fs'
 import * as path from 'path'
-import { config } from 'dotenv'
 
-// Load .env.local (Next.js convention) so DATABASE_URL is available
-config({ path: '.env.local' })
+// Ensure .env.local is loaded before anything else
+// Node 20+ supports --env-file but tsx may not pass it through,
+// so we load it manually with a direct file read as fallback
+try {
+  const envPath = path.join(process.cwd(), '.env.local')
+  if (fs.existsSync(envPath) && !process.env.DATABASE_URL) {
+    const lines = fs.readFileSync(envPath, 'utf8').split('\n')
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed || trimmed.startsWith('#')) continue
+      const eqIdx = trimmed.indexOf('=')
+      if (eqIdx === -1) continue
+      const key = trimmed.slice(0, eqIdx).trim()
+      let val = trimmed.slice(eqIdx + 1).trim()
+      // Strip surrounding quotes
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1)
+      }
+      if (!process.env[key]) {
+        process.env[key] = val
+      }
+    }
+  }
+} catch {}
 
 const prisma = new PrismaClient()
 

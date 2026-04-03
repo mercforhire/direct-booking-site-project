@@ -45,4 +45,5 @@ tmp/
 
 # Airbnb scraper session cookies
 .airbnb-session.json
+.airbnb-sessions/
 debug-multical-*.png

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getLandlordBySlug } from "@/lib/landlord"
 import { prisma } from "@/lib/prisma"
+import { getUnavailableDates } from "@/lib/unavailable-dates"
 import { AvailabilityCalendarReadonly } from "@/components/guest/availability-calendar-readonly"
 import { RoomPhotoGallery } from "@/components/guest/room-photo-gallery"
 import { RoomPricingTable } from "@/components/guest/room-pricing-table"
@@ -44,9 +45,6 @@ export default async function LandlordRoomPage({
       addOns: {
         select: { id: true, name: true, price: true },
       },
-      blockedDates: {
-        select: { date: true },
-      },
     },
   })
 
@@ -68,9 +66,7 @@ export default async function LandlordRoomPage({
   const extraGuestFee = Number(room.extraGuestFee)
   const addOns = room.addOns.map((a) => ({ ...a, price: Number(a.price) }))
 
-  const blockedDateStrings = room.blockedDates.map((b) =>
-    b.date.toISOString().slice(0, 10)
-  )
+  const blockedDateStrings = await getUnavailableDates(id)
 
   const bookParams = new URLSearchParams()
   if (checkin) bookParams.set("checkin", checkin)

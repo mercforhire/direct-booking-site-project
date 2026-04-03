@@ -3,6 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { getLandlordBySlug } from "@/lib/landlord"
 import { prisma } from "@/lib/prisma"
+import { getUnavailableDates } from "@/lib/unavailable-dates"
 import { BookingForm } from "@/components/guest/booking-form"
 import { createClient } from "@/lib/supabase/server"
 
@@ -48,9 +49,6 @@ export default async function LandlordBookPage({
       addOns: {
         select: { id: true, name: true, price: true },
       },
-      blockedDates: {
-        select: { date: true },
-      },
     },
   })
 
@@ -79,9 +77,7 @@ export default async function LandlordBookPage({
   const serviceFeePercent = Number(settings.serviceFeePercent)
   const depositAmount = Number(settings.depositAmount)
 
-  const blockedDateStrings = room.blockedDates.map((b) =>
-    b.date.toISOString().slice(0, 10)
-  )
+  const blockedDateStrings = await getUnavailableDates(id)
 
   const rawPriceOverrides = await prisma.datePriceOverride.findMany({
     where: { roomId: room.id },

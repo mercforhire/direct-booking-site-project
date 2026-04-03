@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getLandlordBySlug } from "@/lib/landlord"
 import { prisma } from "@/lib/prisma"
+import { getUnavailableDates } from "@/lib/unavailable-dates"
 import { coerceRoomDecimals } from "@/lib/room-formatters"
 import { RoomList } from "@/components/guest/room-list"
 
@@ -59,9 +60,6 @@ export default async function LandlordRoomsPage({
         orderBy: { position: "asc" },
         take: 1,
       },
-      blockedDates: {
-        select: { date: true },
-      },
       priceOverrides: {
         where: { date: { gte: today, lte: thirtyDaysOut } },
         select: { price: true },
@@ -71,18 +69,20 @@ export default async function LandlordRoomsPage({
     },
   })
 
-  const roomsForClient = rooms.map(({ blockedDates, priceOverrides, ...rest }) => {
+  // Compute unavailable dates per room (blocked + booked)
+  const unavailableByRoom = await Promise.all(
+    rooms.map((r) => getUnavailableDates(r.id))
+  )
+
+  const roomsForClient = rooms.map(({ priceOverrides, ...rest }, i) => {
     const coerced = coerceRoomDecimals(rest)
-    // "From" price: lowest price override in next 30 days, or base rate
     const fromPrice = priceOverrides.length > 0
       ? Number(priceOverrides[0].price)
       : coerced.baseNightlyRate
     return {
       ...coerced,
       fromPrice,
-      blockedDateStrings: blockedDates.map((b) =>
-        b.date.toISOString().slice(0, 10)
-      ),
+      blockedDateStrings: unavailableByRoom[i],
     }
   })
 

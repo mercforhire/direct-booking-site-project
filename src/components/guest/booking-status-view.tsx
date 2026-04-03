@@ -447,14 +447,14 @@ export function BookingStatusView({
       {/* ── Payment section ───────────────────────────────── */}
       <PaymentSection booking={booking} etransferEmail={etransferEmail} />
 
-      {/* ── Date change section ───────────────────────────── */}
-      {booking.status !== "CANCELLED" && booking.status !== "DECLINED" && booking.status !== "COMPLETED" && (
+      {/* ── Date change section — hidden for now, use messaging instead ── */}
+      {/* {booking.status !== "CANCELLED" && booking.status !== "DECLINED" && booking.status !== "COMPLETED" && (
         <DateChangeSection
           booking={{ id: booking.id, status: booking.status, checkin: booking.checkin, checkout: booking.checkout }}
           activeDateChange={activeDateChange ?? null}
           token={token}
         />
-      )}
+      )} */}
 
       {/* ── Messages section ──────────────────────────────── */}
       <MessageSection bookingId={booking.id} token={token} messages={messages} />

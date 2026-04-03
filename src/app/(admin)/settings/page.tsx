@@ -18,6 +18,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     ? {
         serviceFeePercent: Number(settings.serviceFeePercent),
         depositAmount: Number(settings.depositAmount),
+        priceMultiplier: Number(settings.priceMultiplier),
         etransferEmail: settings.etransferEmail ?? "",
       }
     : undefined

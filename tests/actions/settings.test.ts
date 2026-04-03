@@ -36,6 +36,7 @@ const mockLandlord = {
 const validSettingsData = {
   serviceFeePercent: 3,
   depositAmount: 100,
+  priceMultiplier: 1.15,
 }
 
 const mockSettingsRecord = {
@@ -43,6 +44,7 @@ const mockSettingsRecord = {
   landlordId: "landlord-1",
   serviceFeePercent: 3,
   depositAmount: 100,
+  priceMultiplier: 1.15,
   updatedAt: new Date(),
 }
 
@@ -75,7 +77,7 @@ describe("settings actions", () => {
       const zeroFeeRecord = { ...mockSettingsRecord, serviceFeePercent: 0 }
       mockPrisma.settings.upsert.mockResolvedValue(zeroFeeRecord as any)
 
-      const result = await upsertSettings({ serviceFeePercent: 0, depositAmount: 100 })
+      const result = await upsertSettings({ serviceFeePercent: 0, depositAmount: 100, priceMultiplier: 1.15 })
       expect(result).toHaveProperty("settings")
       expect(mockPrisma.settings.upsert).toHaveBeenCalledOnce()
     })
@@ -85,7 +87,7 @@ describe("settings actions", () => {
       const noDepositRecord = { ...mockSettingsRecord, depositAmount: 0 }
       mockPrisma.settings.upsert.mockResolvedValue(noDepositRecord as any)
 
-      const result = await upsertSettings({ serviceFeePercent: 3, depositAmount: 0 })
+      const result = await upsertSettings({ serviceFeePercent: 3, depositAmount: 0, priceMultiplier: 1.15 })
       expect(result).toHaveProperty("settings")
       expect(mockPrisma.settings.upsert).toHaveBeenCalledOnce()
     })
@@ -93,7 +95,7 @@ describe("settings actions", () => {
     it("upsertSettings with a negative serviceFeePercent returns { error } with field-level message", async () => {
       mockAuthenticatedAdmin()
 
-      const result = await upsertSettings({ serviceFeePercent: -1, depositAmount: 100 })
+      const result = await upsertSettings({ serviceFeePercent: -1, depositAmount: 100, priceMultiplier: 1.15 })
       expect(result).toHaveProperty("error")
       expect(mockPrisma.settings.upsert).not.toHaveBeenCalled()
     })
@@ -101,7 +103,7 @@ describe("settings actions", () => {
     it("upsertSettings with a negative depositAmount returns { error } with field-level message", async () => {
       mockAuthenticatedAdmin()
 
-      const result = await upsertSettings({ serviceFeePercent: 3, depositAmount: -50 })
+      const result = await upsertSettings({ serviceFeePercent: 3, depositAmount: -50, priceMultiplier: 1.15 })
       expect(result).toHaveProperty("error")
       expect(mockPrisma.settings.upsert).not.toHaveBeenCalled()
     })
@@ -117,16 +119,16 @@ describe("settings actions", () => {
       mockPrisma.settings.upsert.mockResolvedValue(mockSettingsRecord as any)
 
       // First call
-      await upsertSettings({ serviceFeePercent: 3, depositAmount: 100 })
+      await upsertSettings({ serviceFeePercent: 3, depositAmount: 100, priceMultiplier: 1.15 })
       // Second call with different values
-      await upsertSettings({ serviceFeePercent: 5, depositAmount: 200 })
+      await upsertSettings({ serviceFeePercent: 5, depositAmount: 200, priceMultiplier: 1.20 })
 
       expect(mockPrisma.settings.upsert).toHaveBeenCalledTimes(2)
       // Both calls use where: { landlordId }
       expect(mockPrisma.settings.upsert).toHaveBeenNthCalledWith(2, {
         where: { landlordId: "landlord-1" },
-        create: expect.objectContaining({ landlordId: "landlord-1", serviceFeePercent: 5, depositAmount: 200 }),
-        update: expect.objectContaining({ serviceFeePercent: 5, depositAmount: 200 }),
+        create: expect.objectContaining({ landlordId: "landlord-1", serviceFeePercent: 5, depositAmount: 200, priceMultiplier: 1.20 }),
+        update: expect.objectContaining({ serviceFeePercent: 5, depositAmount: 200, priceMultiplier: 1.20 }),
       })
     })
   })

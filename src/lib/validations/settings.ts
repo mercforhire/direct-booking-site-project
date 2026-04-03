@@ -9,6 +9,10 @@ export const settingsSchema = z.object({
   depositAmount: z
     .number()
     .min(0, "Deposit amount must be 0 or greater"),
+  priceMultiplier: z
+    .number()
+    .min(0.5, "Multiplier must be at least 0.5")
+    .max(3, "Multiplier cannot exceed 3"),
   etransferEmail: z.string().optional(),
 })
 
@@ -21,6 +25,10 @@ export const settingsSchemaCoerced = z.object({
   depositAmount: z.coerce
     .number()
     .min(0, "Deposit amount must be 0 or greater"),
+  priceMultiplier: z.coerce
+    .number()
+    .min(0.5, "Multiplier must be at least 0.5")
+    .max(3, "Multiplier cannot exceed 3"),
   etransferEmail: z.string().optional(),
 })
 

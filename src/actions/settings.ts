@@ -17,11 +17,13 @@ export async function upsertSettings(data: unknown, landlordId?: string) {
       landlordId: landlord.id,
       serviceFeePercent: parsed.data.serviceFeePercent,
       depositAmount: parsed.data.depositAmount,
+      priceMultiplier: parsed.data.priceMultiplier,
       etransferEmail: parsed.data.etransferEmail || null,
     },
     update: {
       serviceFeePercent: parsed.data.serviceFeePercent,
       depositAmount: parsed.data.depositAmount,
+      priceMultiplier: parsed.data.priceMultiplier,
       etransferEmail: parsed.data.etransferEmail || null,
     },
   })

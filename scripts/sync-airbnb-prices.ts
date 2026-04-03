@@ -201,6 +201,23 @@ async function writePricesToDB(
 // ── Sync one landlord ──────────────────────────────────────
 
 async function syncLandlord(slug: string) {
+  // Load landlord settings to get price multiplier
+  const landlord = await prisma.landlord.findFirst({
+    where: { slug },
+    select: { id: true, name: true },
+  })
+  if (!landlord) {
+    console.log(`\nLandlord "${slug}" not found.`)
+    return
+  }
+
+  const settings = await prisma.settings.findUnique({
+    where: { landlordId: landlord.id },
+    select: { priceMultiplier: true },
+  })
+  const multiplier = settings ? Number(settings.priceMultiplier) : 1.15
+  console.log(`\n📊 Price multiplier for "${slug}": ${multiplier}x`)
+
   const rooms = await prisma.room.findMany({
     where: { isActive: true, landlord: { slug } },
     include: {
@@ -224,11 +241,11 @@ async function syncLandlord(slug: string) {
   }
 
   if (mappings.length === 0) {
-    console.log(`\nNo Airbnb-linked rooms found for "${slug}".`)
+    console.log(`No Airbnb-linked rooms found for "${slug}".`)
     return
   }
 
-  console.log(`\n🔄 Syncing ${mappings.length} listing(s) for "${slug}"...\n`)
+  console.log(`🔄 Syncing ${mappings.length} listing(s) for "${slug}"...\n`)
 
   const browser = await chromium.launch({ headless: true })
   const context = await browser.newContext({
@@ -246,7 +263,12 @@ async function syncLandlord(slug: string) {
   for (let i = 0; i < mappings.length; i++) {
     try {
       const prices = await scrapePricesFromMulticalendar(context, mappings[i])
-      await writePricesToDB(mappings[i].roomId, prices)
+      // Apply price multiplier and round to nearest dollar
+      const adjusted = prices.map((p) => ({
+        date: p.date,
+        price: Math.round(p.price * multiplier),
+      }))
+      await writePricesToDB(mappings[i].roomId, adjusted)
     } catch (err: any) {
       console.error(`   ❌ Error: ${err.message?.slice(0, 100)}`)
     }

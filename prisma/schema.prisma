@@ -81,6 +81,7 @@ model Settings {
   landlord          Landlord  @relation(fields: [landlordId], references: [id])
   serviceFeePercent Decimal   @db.Decimal(5, 2)
   depositAmount     Decimal   @db.Decimal(10, 2)
+  priceMultiplier   Decimal   @default(1.15) @db.Decimal(4, 2)
   etransferEmail    String?
   updatedAt         DateTime  @updatedAt
 }

@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface SettingsFormProps {
-  defaultValues?: { serviceFeePercent: number; depositAmount: number; etransferEmail?: string | null }
+  defaultValues?: { serviceFeePercent: number; depositAmount: number; priceMultiplier: number; etransferEmail?: string | null }
   landlordId: string
 }
 
@@ -31,9 +31,10 @@ export function SettingsForm({ defaultValues, landlordId }: SettingsFormProps) {
       ? {
           serviceFeePercent: defaultValues.serviceFeePercent,
           depositAmount: defaultValues.depositAmount,
+          priceMultiplier: defaultValues.priceMultiplier,
           etransferEmail: defaultValues.etransferEmail ?? "",
         }
-      : { serviceFeePercent: 0, depositAmount: 0, etransferEmail: "" },
+      : { serviceFeePercent: 0, depositAmount: 0, priceMultiplier: 1.15, etransferEmail: "" },
   })
 
   async function onSubmit(data: SettingsFormData) {
@@ -81,6 +82,22 @@ export function SettingsForm({ defaultValues, landlordId }: SettingsFormProps) {
                   </FormControl>
                   <FormDescription>
                     Set to 0 to disable. Collected as part of booking payment.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="priceMultiplier"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Airbnb Price Multiplier</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" placeholder="1.15" {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
+                  </FormControl>
+                  <FormDescription>
+                    Multiplied against Airbnb prices when syncing. E.g. 1.15 = 15% markup. Prices are rounded to the nearest dollar.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

@@ -49,11 +49,34 @@ const DRY_RUN = process.argv.includes('--dry-run')
 // Add new mappings here as listings are added to Beyond Pricing
 
 const BP_MAPPINGS: { bpId: string; roomId: string; label: string }[] = [
-  { bpId: '4209833', roomId: 'cmnjimdxj0006vnandlbkxx2c', label: "Kelly — Couple's Best Comfy Room /3" },
-  { bpId: '4217457', roomId: 'cmnii28zm000avnn9iuu6jkdz', label: 'Anna — Romance Trip B2' },
+  // Leon's (9 Highhill Dr)
+  { bpId: '2898094', roomId: 'cmn7yb9pe0000vn0m9exir75a', label: 'Leon — Master bedroom (Room 1)' },
+  { bpId: '2898101', roomId: 'cmn957tym0000vnd2zh5cd6y3', label: 'Leon — Studio room (Room 4)' },
+  { bpId: '2898103', roomId: 'cmn959y9n000vvnd2mj24b37m', label: 'Leon — 2 rooms dining area (Room 5+6)' },
+  { bpId: '2898111', roomId: 'cmn93z48x0002vni3udz1j7on', label: 'Leon — Cozy room (Room 3)' },
+  // Henry's (18 Logandale Rd)
+  { bpId: '3248251', roomId: 'cmnh1tr8w0001vnz2z5r5yfy7', label: 'Henry — Sofa room (Room 0)' },
+  { bpId: '3307999', roomId: 'cmnh1tre50003vnz2ruiokvpx', label: 'Henry — Ensuite washroom (Room 1)' },
+  { bpId: '3308388', roomId: 'cmnh1trgi0005vnz2ffnyo17g', label: 'Henry — Private washroom (Room 2)' },
+  { bpId: '3394525', roomId: 'cmnh1triv0007vnz2ssnn7o4c', label: 'Henry — Basement Ensuite (Room 3)' },
+  { bpId: '3248293', roomId: 'cmnh1trnf0009vnz26x63rsgh', label: 'Henry — 2 Bedrooms Combo (Room 1+2)' },
+  // Jane's (8 Allenbury / Don Mills)
+  { bpId: '3171069', roomId: 'cmnhvghsy0001vn9zs9zr3tt8', label: 'Jane — 2nd floor Room 1' },
+  { bpId: '3173494', roomId: 'cmnhvghyg0003vn9zozanyvio', label: 'Jane — Room 2 (monthly)' },
+  { bpId: '3173635', roomId: 'cmnhvgi2g0005vn9zmv72r4q6', label: 'Jane — 2nd floor Room 3' },
+  { bpId: '3173908', roomId: 'cmnhvgi4s0007vn9zymeru0tt', label: 'Jane — Room 4 (monthly)' },
+  { bpId: '2898191', roomId: 'cmnhvgi700009vn9zn3a6bl4j', label: 'Jane — Room 5 (monthly)' },
+  { bpId: '2898201', roomId: 'cmnhvgi9c000bvn9zu2qde9ez', label: 'Jane — Room 6' },
+  // Anna's (339 Byng / Bayview)
   { bpId: '4188153', roomId: 'cmnii27n50001vnn949rkgye4', label: 'Anna — Cozy Trip R2' },
   { bpId: '4188145', roomId: 'cmnii28az0004vnn9tckggqvu', label: 'Anna — Cozy Trip R5' },
-  { bpId: '3394525', roomId: 'cmnh1triv0007vnz2ssnn7o4c', label: 'Henry — Basement Ensuite (Room 3)' },
+  { bpId: '4188149', roomId: 'cmnii28n00007vnn9ng6ofunr', label: 'Anna — Family Trip B1' },
+  { bpId: '4217457', roomId: 'cmnii28zm000avnn9iuu6jkdz', label: 'Anna — Romance Trip B2' },
+  // Kelly's (124 New Forest / Kennedy)
+  { bpId: '4223348', roomId: 'cmnjimczz0001vnanznfw7cwb', label: 'Kelly — Family 2 Beds /1' },
+  { bpId: '4209833', roomId: 'cmnjimdxj0006vnandlbkxx2c', label: "Kelly — Couple's Room /3" },
+  { bpId: '4247644', roomId: 'cmnjimec40009vnanyjw0xly5', label: 'Kelly — Ensuite Room /4' },
+  { bpId: '4223349', roomId: 'cmnjimeqp000cvnanirnhhrxd', label: 'Kelly — Basement Suite' },
 ]
 
 // ── Price extraction ───────────────────────────────────────

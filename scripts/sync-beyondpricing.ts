@@ -104,11 +104,21 @@ async function extractMonthPrices(page: Page): Promise<{ date: string; price: nu
 
 async function clickMonth(page: Page, monthLabel: string): Promise<boolean> {
   try {
-    // The month navigation is a sidebar with month abbreviations (APR, MAY, JUN, etc.)
     const clicked = await page.evaluate((label) => {
+      const upper = label.toUpperCase()
       const els = document.querySelectorAll('div, span, button, a')
       for (const el of Array.from(els)) {
-        if (el.textContent?.trim().toUpperCase() === label.toUpperCase() && el.clientHeight > 0) {
+        const text = el.textContent?.trim().toUpperCase() || ''
+        // Match if text equals the label, or starts with it (handles "APR\n" etc.)
+        if ((text === upper || text === upper + '\n') && el.clientHeight > 0 && el.clientWidth < 100) {
+          ;(el as HTMLElement).click()
+          return true
+        }
+      }
+      // Fallback: look for elements whose innerText (not textContent) matches
+      for (const el of Array.from(els)) {
+        const inner = (el as HTMLElement).innerText?.trim().toUpperCase() || ''
+        if (inner === upper && el.clientHeight > 0 && el.clientWidth < 100) {
           ;(el as HTMLElement).click()
           return true
         }
@@ -141,12 +151,17 @@ async function scrapeListing(
 
   const allPrices: { date: string; price: number }[] = []
 
+  // Extract prices from the initially loaded month first
+  const initialPrices = await extractMonthPrices(page)
+  allPrices.push(...initialPrices)
+  console.log(`   Initial load: ${initialPrices.length} prices`)
+
   // Get current month name from the calendar
   const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
   const now = new Date()
   const startMonth = now.getMonth() // 0-indexed
 
-  for (let offset = 0; offset < MAX_MONTHS_AHEAD; offset++) {
+  for (let offset = 1; offset < MAX_MONTHS_AHEAD; offset++) {
     const monthIdx = (startMonth + offset) % 12
     const monthLabel = MONTHS[monthIdx]
 

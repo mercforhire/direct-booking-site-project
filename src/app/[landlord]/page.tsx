@@ -278,6 +278,7 @@ export default async function LandlordHomePage({
                 borderRadius: "8px",
                 padding: "0.65rem 1rem",
                 fontSize: "0.75rem",
+                color: "#f0ebe0",
               }}
             >
               <div style={{ fontWeight: 600, marginBottom: "1px" }}>
@@ -413,7 +414,7 @@ export default async function LandlordHomePage({
                     position: "relative",
                     height: "200px",
                     overflow: "hidden",
-                    background: "#2a2618",
+                    background: "color-mix(in srgb, var(--ll-bg) 80%, black)",
                   }}
                 >
                   {room.photos[0] && (

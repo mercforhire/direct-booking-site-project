@@ -79,9 +79,11 @@ const BP_MAPPINGS: { bpId: string; roomId: string; label: string }[] = [
   { bpId: '4223349', roomId: 'cmnjimeqp000cvnanirnhhrxd', label: 'Kelly — Basement Suite' },
   // Rose's (302 Cook Rd / York U)
   { bpId: '4286592', roomId: 'cmnjtb0as0001vn9adr5sz4gz', label: 'Rose — 0C Cozy ensuite' },
+  { bpId: '4210625', roomId: 'cmnjtb0zv0004vn9alm2f4fin', label: 'Rose — 0B Cozy ensuite' },
   { bpId: '4275995', roomId: 'cmnjtb1e80007vn9abmjktv46', label: 'Rose — 1A Ensuite' },
   { bpId: '4209363', roomId: 'cmnjtb1pz000avn9arxotexn0', label: 'Rose — 2B Ensuite' },
   { bpId: '4273195', roomId: 'cmnjtb21z000dvn9ayzlempud', label: 'Rose — 2D Sofa room' },
+  { bpId: '4209361', roomId: 'cmnjtb2e1000gvn9a0pxyy1s4', label: 'Rose — 2C Cozy room' },
   { bpId: '4209362', roomId: 'cmnjtb2qm000jvn9am5r0h513', label: 'Rose — 3E Ensuite top floor' },
 ]
 

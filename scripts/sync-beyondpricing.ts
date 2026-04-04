@@ -1,0 +1,242 @@
+/**
+ * Beyond Pricing Calendar Scraper
+ * 
+ * Scrapes per-day nightly rates from Beyond Pricing's dashboard calendar
+ * and syncs them to the direct booking site's DatePriceOverride table.
+ * 
+ * Runs in visible browser mode (Beyond Pricing sessions don't survive
+ * headless cookie replay).
+ * 
+ * Usage:
+ *   npx tsx scripts/sync-beyondpricing.ts          # Scrape all mapped listings
+ *   npx tsx scripts/sync-beyondpricing.ts --dry-run # Show prices without writing to DB
+ */
+
+import { chromium, type Page } from 'playwright'
+import { PrismaClient } from '@prisma/client'
+import * as fs from 'fs'
+import * as path from 'path'
+
+// ── Load .env.local ────────────────────────────────────────
+
+try {
+  const envPath = path.join(process.cwd(), '.env.local')
+  if (fs.existsSync(envPath) && !process.env.DATABASE_URL) {
+    const lines = fs.readFileSync(envPath, 'utf8').split('\n')
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed || trimmed.startsWith('#')) continue
+      const eqIdx = trimmed.indexOf('=')
+      if (eqIdx === -1) continue
+      const key = trimmed.slice(0, eqIdx).trim()
+      let val = trimmed.slice(eqIdx + 1).trim()
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1)
+      }
+      if (!process.env[key]) process.env[key] = val
+    }
+  }
+} catch {}
+
+const prisma = new PrismaClient()
+
+const DELAY_BETWEEN_MONTHS_MS = 2000
+const DELAY_BETWEEN_LISTINGS_MS = 3000
+const MAX_MONTHS_AHEAD = parseInt(process.env.MAX_MONTHS || '6')
+const DRY_RUN = process.argv.includes('--dry-run')
+
+// ── Beyond Pricing listing ID → Room ID mapping ───────────
+// Add new mappings here as listings are added to Beyond Pricing
+
+const BP_MAPPINGS: { bpId: string; roomId: string; label: string }[] = [
+  { bpId: '4209833', roomId: 'cmnjimdxj0006vnandlbkxx2c', label: "Kelly — Couple's Best Comfy Room /3" },
+  { bpId: '4217457', roomId: 'cmnii28zm000avnn9iuu6jkdz', label: 'Anna — Romance Trip B2' },
+  { bpId: '4188153', roomId: 'cmnii27n50001vnn949rkgye4', label: 'Anna — Cozy Trip R2' },
+  { bpId: '4188145', roomId: 'cmnii28az0004vnn9tckggqvu', label: 'Anna — Cozy Trip R5' },
+  { bpId: '3394525', roomId: 'cmnh1triv0007vnz2ssnn7o4c', label: 'Henry — Basement Ensuite (Room 3)' },
+]
+
+// ── Price extraction ───────────────────────────────────────
+
+async function extractMonthPrices(page: Page): Promise<{ date: string; price: number }[]> {
+  return await page.evaluate(() => {
+    const results: { date: string; price: number }[] = []
+    const dayCells = document.querySelectorAll('[data-day]')
+
+    for (const cell of Array.from(dayCells)) {
+      const dateStr = cell.getAttribute('data-day')
+      if (!dateStr) continue
+
+      // Price is inside a child div — extract $ amount from cell text
+      const text = cell.textContent || ''
+      const priceMatch = text.match(/\$(\d+)/)
+      if (priceMatch) {
+        results.push({ date: dateStr, price: parseInt(priceMatch[1], 10) })
+      }
+    }
+
+    return results
+  })
+}
+
+async function clickMonth(page: Page, monthLabel: string): Promise<boolean> {
+  try {
+    // The month navigation is a sidebar with month abbreviations (APR, MAY, JUN, etc.)
+    const clicked = await page.evaluate((label) => {
+      const els = document.querySelectorAll('div, span, button, a')
+      for (const el of Array.from(els)) {
+        if (el.textContent?.trim().toUpperCase() === label.toUpperCase() && el.clientHeight > 0) {
+          ;(el as HTMLElement).click()
+          return true
+        }
+      }
+      return false
+    }, monthLabel)
+    return clicked
+  } catch {
+    return false
+  }
+}
+
+async function scrapeListing(
+  page: Page,
+  bpId: string,
+  label: string
+): Promise<{ date: string; price: number }[]> {
+  console.log(`\n📋 ${label} (BP: ${bpId})`)
+
+  await page.goto(`https://v2.beyondpricing.com/dashboard/pricing/${bpId}`, {
+    waitUntil: 'domcontentloaded',
+    timeout: 60000,
+  })
+  await page.waitForTimeout(4000)
+
+  if (page.url().includes('/login')) {
+    console.log('   ❌ Session expired')
+    return []
+  }
+
+  const allPrices: { date: string; price: number }[] = []
+
+  // Get current month name from the calendar
+  const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+  const now = new Date()
+  const startMonth = now.getMonth() // 0-indexed
+
+  for (let offset = 0; offset < MAX_MONTHS_AHEAD; offset++) {
+    const monthIdx = (startMonth + offset) % 12
+    const monthLabel = MONTHS[monthIdx]
+
+    // Click the month in the sidebar
+    const clicked = await clickMonth(page, monthLabel)
+    if (!clicked) {
+      console.log(`   ⚠️  Could not click month ${monthLabel}`)
+      continue
+    }
+    await page.waitForTimeout(DELAY_BETWEEN_MONTHS_MS)
+
+    // Extract prices for this month
+    const monthPrices = await extractMonthPrices(page)
+    allPrices.push(...monthPrices)
+    console.log(`   ${monthLabel}: ${monthPrices.length} prices`)
+  }
+
+  // Deduplicate by date (in case of overlap)
+  const seen = new Map<string, number>()
+  for (const p of allPrices) {
+    seen.set(p.date, p.price)
+  }
+
+  const today = now.toISOString().slice(0, 10)
+  const filtered = [...seen.entries()]
+    .filter(([date]) => date >= today)
+    .map(([date, price]) => ({ date, price }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+
+  console.log(`   ✓ ${filtered.length} unique future prices`)
+  return filtered
+}
+
+// ── DB write ───────────────────────────────────────────────
+
+async function writePricesToDB(
+  roomId: string,
+  landlordSlug: string,
+  prices: { date: string; price: number }[]
+) {
+  if (prices.length === 0) return
+
+  // Get landlord's price multiplier
+  const room = await prisma.room.findUnique({
+    where: { id: roomId },
+    select: { landlord: { select: { id: true } } },
+  })
+  if (!room) return
+
+  const settings = await prisma.settings.findUnique({
+    where: { landlordId: room.landlord.id },
+    select: { priceMultiplier: true },
+  })
+  const multiplier = settings ? Number(settings.priceMultiplier) : 1.15
+
+  let written = 0
+  for (const { date, price } of prices) {
+    const adjustedPrice = Math.round(price * multiplier)
+    await prisma.datePriceOverride.upsert({
+      where: { roomId_date: { roomId, date: new Date(date + 'T12:00:00.000Z') } },
+      update: { price: adjustedPrice },
+      create: { roomId, date: new Date(date + 'T12:00:00.000Z'), price: adjustedPrice },
+    })
+    written++
+  }
+
+  console.log(`   💾 Wrote ${written} prices (×${multiplier} multiplier)`)
+}
+
+// ── Main ───────────────────────────────────────────────────
+
+async function main() {
+  console.log(`🔄 Beyond Pricing sync — ${BP_MAPPINGS.length} listings, ${MAX_MONTHS_AHEAD} months ahead`)
+  if (DRY_RUN) console.log('   (dry run — no DB writes)\n')
+
+  const browser = await chromium.launch({ headless: false })
+  const context = await browser.newContext({
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    viewport: { width: 1440, height: 900 },
+  })
+
+  const page = await context.newPage()
+  console.log('🔐 Log in to Beyond Pricing, then press Enter.\n')
+  await page.goto('https://v2.beyondpricing.com/login')
+  await new Promise<void>((resolve) => { process.stdin.once('data', () => resolve()) })
+
+  for (let i = 0; i < BP_MAPPINGS.length; i++) {
+    const m = BP_MAPPINGS[i]
+    try {
+      const prices = await scrapeListing(page, m.bpId, m.label)
+
+      if (DRY_RUN) {
+        prices.slice(0, 5).forEach(p => console.log(`   ${p.date}: $${p.price}`))
+        if (prices.length > 5) console.log(`   ... and ${prices.length - 5} more`)
+      } else {
+        // Determine landlord slug from label for multiplier lookup
+        await writePricesToDB(m.roomId, '', prices)
+      }
+    } catch (err: any) {
+      console.error(`   ❌ Error: ${err.message?.slice(0, 100)}`)
+    }
+
+    if (i < BP_MAPPINGS.length - 1) {
+      await new Promise((r) => setTimeout(r, DELAY_BETWEEN_LISTINGS_MS))
+    }
+  }
+
+  await browser.close()
+  await prisma.$disconnect()
+  console.log('\n✅ Done.')
+}
+
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})

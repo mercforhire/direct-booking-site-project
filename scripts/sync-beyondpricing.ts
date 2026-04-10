@@ -21,7 +21,7 @@ import * as path from 'path'
 
 try {
   const envPath = path.join(process.cwd(), '.env.local')
-  if (fs.existsSync(envPath) && !process.env.DATABASE_URL) {
+  if (fs.existsSync(envPath)) {
     const lines = fs.readFileSync(envPath, 'utf8').split('\n')
     for (const line of lines) {
       const trimmed = line.trim()
@@ -33,7 +33,7 @@ try {
       if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
         val = val.slice(1, -1)
       }
-      if (!process.env[key]) process.env[key] = val
+      process.env[key] = val
     }
   }
 } catch {}
@@ -269,7 +269,7 @@ async function main() {
         await writePricesToDB(m.roomId, '', prices)
       }
     } catch (err: any) {
-      console.error(`   ❌ Error: ${err.message?.slice(0, 100)}`)
+      console.error(`   ❌ Error: ${err.message}`)
     }
 
     if (i < BP_MAPPINGS.length - 1) {

@@ -60,6 +60,7 @@ type Props = {
   blockedDates?: string[]
   messages: SerializedMessage[]
   token: string | null
+  landlordName?: string
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -292,6 +293,7 @@ export function BookingStatusView({
   blockedDates = [],
   messages,
   token,
+  landlordName,
 }: Props) {
   const checkinStr = booking.checkin.slice(0, 10)
   const checkoutStr = booking.checkout.slice(0, 10)
@@ -457,7 +459,7 @@ export function BookingStatusView({
       )} */}
 
       {/* ── Messages section ──────────────────────────────── */}
-      <MessageSection bookingId={booking.id} token={token} messages={messages} />
+      <MessageSection bookingId={booking.id} token={token} messages={messages} recipientName={landlordName} />
 
       {/* ── Booking reference ─────────────────────────────── */}
       <p

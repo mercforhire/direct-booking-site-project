@@ -462,6 +462,7 @@ export default async function LandlordBookingPage({
           blockedDates={blockedDateStrings}
           messages={serializedMessages}
           token={token ?? null}
+          landlordName={landlord.name}
         />
       </div>
     </div>

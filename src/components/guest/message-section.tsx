@@ -18,9 +18,10 @@ type Props = {
   token: string | null
   messages: SerializedMessage[]
   isAdmin?: boolean
+  recipientName?: string
 }
 
-export function MessageSection({ bookingId, token, messages, isAdmin = false }: Props) {
+export function MessageSection({ bookingId, token, messages, isAdmin = false, recipientName }: Props) {
   const router = useRouter()
   const [body, setBody] = useState("")
   const [isPending, startTransition] = useTransition()
@@ -120,7 +121,7 @@ export function MessageSection({ bookingId, token, messages, isAdmin = false }: 
         >
           {messages.length === 0 ? (
             <p style={{ fontSize: "0.8rem", color: c.emptyText, margin: 0 }}>
-              No messages yet. Send Leon a message below.
+              No messages yet. Send {recipientName ?? "your host"} a message below.
             </p>
           ) : (
             messages.map((msg) => {
@@ -184,7 +185,7 @@ export function MessageSection({ bookingId, token, messages, isAdmin = false }: 
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Write a message to Leon…"
+            placeholder={`Write a message to ${recipientName ?? "your host"}…`}
             rows={3}
             disabled={isPending}
             style={{

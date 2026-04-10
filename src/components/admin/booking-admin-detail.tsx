@@ -784,7 +784,7 @@ export function BookingAdminDetail({
       {/* Extension Request Section — disabled for v1.0; JSX removed to avoid TS errors on dead code */}
 
       {/* Messages section */}
-      <MessageSection bookingId={booking.id} token={null} messages={messages} isAdmin={true} />
+      <MessageSection bookingId={booking.id} token={null} messages={messages} isAdmin={true} recipientName={booking.guestName} />
     </div>
   )
 }

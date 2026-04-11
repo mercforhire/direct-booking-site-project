@@ -466,6 +466,40 @@ export default async function LandlordHomePage({
         </section>
       )}
 
+      {/* ── Contact strip ───────────────────────────────── */}
+      <div
+        className="section-pad"
+        style={{
+          padding: "1.8rem 3rem",
+          borderTop: "1px solid color-mix(in srgb, var(--ll-text) 7%, transparent)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: "1.5rem",
+          flexWrap: "wrap",
+          textAlign: "center",
+        }}
+      >
+        <div style={{ fontSize: "0.8rem", opacity: 0.45, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+          Questions? Contact us
+        </div>
+        <a
+          href="tel:6477797828"
+          style={{
+            fontFamily: "var(--font-bebas)",
+            fontSize: "1.5rem",
+            letterSpacing: "0.08em",
+            color: landlord.accentColor,
+            textDecoration: "none",
+          }}
+        >
+          647-779-7828
+        </a>
+        <div style={{ fontSize: "0.82rem", opacity: 0.55, lineHeight: 1.5 }}>
+          Text or WhatsApp &mdash; Leon replies quickly
+        </div>
+      </div>
+
       {/* ── Returning guest strip ───────────────────────── */}
       <div
         className="footer-pad"

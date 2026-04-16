@@ -5,6 +5,7 @@ import { stripe } from "@/lib/stripe"
 import { prisma } from "@/lib/prisma"
 import { Resend } from "resend"
 import { BookingPaymentConfirmationEmail } from "@/emails/booking-payment-confirmation"
+import { BookingPaymentNotificationEmail } from "@/emails/booking-payment-notification"
 import { BookingExtensionPaidEmail } from "@/emails/booking-extension-paid"
 import { BookingDateChangePaidEmail } from "@/emails/booking-date-change-paid"
 import { render } from "@react-email/render"
@@ -169,14 +170,17 @@ export async function POST(request: Request) {
       if (result.count > 0) {
         const booking = await prisma.booking.findUnique({
           where: { id: bookingId },
-          include: { room: { select: { name: true } } },
+          include: { room: { select: { name: true, landlord: { select: { email: true } } } } },
         })
 
         if (booking) {
           try {
             const resend = new Resend(process.env.RESEND_API_KEY)
+            const fromEmail = process.env.RESEND_FROM_EMAIL ?? "noreply@example.com"
+
+            // Email to guest
             await resend.emails.send({
-              from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
+              from: fromEmail,
               to: booking.guestEmail,
               subject: `Payment received — ${booking.room.name}`,
               react: BookingPaymentConfirmationEmail({
@@ -188,6 +192,27 @@ export async function POST(request: Request) {
                 bookingId: booking.id,
               }),
             })
+
+            // Email to landlord
+            const landlordEmail = booking.room.landlord.email
+            if (landlordEmail) {
+              const html = await render(
+                BookingPaymentNotificationEmail({
+                  guestName: booking.guestName,
+                  bookingId: booking.id,
+                  roomName: booking.room.name,
+                  checkin: formatDateET(booking.checkin),
+                  checkout: formatDateET(booking.checkout),
+                  amountPaid: Number(booking.confirmedPrice),
+                })
+              )
+              await resend.emails.send({
+                from: fromEmail,
+                to: landlordEmail,
+                subject: `Payment received from ${booking.guestName} — ${booking.room.name}`,
+                html,
+              })
+            }
           } catch {
             // Non-fatal: email failure does not fail the webhook
           }

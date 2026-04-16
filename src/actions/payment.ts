@@ -10,9 +10,15 @@ import { Resend } from "resend"
 import { render } from "@react-email/render"
 import { markAsPaidSchema } from "@/lib/validations/payment"
 import { BookingPaymentConfirmationEmail } from "@/emails/booking-payment-confirmation"
+import { BookingPaymentNotificationEmail } from "@/emails/booking-payment-notification"
 import { BookingExtensionPaidEmail } from "@/emails/booking-extension-paid"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 import { formatDateET } from "@/lib/format-date-et"
+
+/** Sanitize room name for Stripe statement_descriptor_suffix (max 22 chars, alphanumeric/spaces only) */
+function stmtSuffix(roomName: string): string {
+  return roomName.replace(/[^a-zA-Z0-9 ]/g, "").trim().slice(0, 22)
+}
 
 export async function createStripeCheckoutSession(bookingId: string) {
   const booking = await prisma.booking.findUnique({
@@ -42,6 +48,7 @@ export async function createStripeCheckoutSession(bookingId: string) {
         quantity: 1,
       },
     ],
+    statement_descriptor_suffix: stmtSuffix(booking.room.name),
     metadata: { bookingId: booking.id },
     success_url: `${origin}/${landlordSlug}/bookings/${booking.id}?paid=1&token=${booking.accessToken}`,
     cancel_url: `${origin}/${landlordSlug}/bookings/${booking.id}?token=${booking.accessToken}`,
@@ -76,14 +83,14 @@ export async function markBookingAsPaid(bookingId: string) {
     checkin: Date
     checkout: Date
     confirmedPrice: import("@prisma/client").Prisma.Decimal | null
-    room: { name: string }
+    room: { name: string; landlord: { email: string } }
   }
 
   try {
     booking = await prisma.booking.update({
       where: { id: bookingId, status: "APPROVED" },
       data: { status: "PAID" },
-      include: { room: { select: { name: true } } },
+      include: { room: { select: { name: true, landlord: { select: { email: true } } } } },
     })
   } catch (err) {
     if (err instanceof PrismaClientKnownRequestError && err.code === "P2025") {
@@ -94,7 +101,10 @@ export async function markBookingAsPaid(bookingId: string) {
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const html = await render(
+    const fromEmail = process.env.RESEND_FROM_EMAIL ?? "noreply@example.com"
+
+    // Email to guest
+    const guestHtml = await render(
       BookingPaymentConfirmationEmail({
         bookingId: booking.id,
         guestName: booking.guestName,
@@ -105,11 +115,32 @@ export async function markBookingAsPaid(bookingId: string) {
       })
     )
     await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
+      from: fromEmail,
       to: booking.guestEmail,
       subject: `Payment received — ${booking.room.name}`,
-      html,
+      html: guestHtml,
     })
+
+    // Email to landlord
+    const landlordEmail = booking.room.landlord.email
+    if (landlordEmail) {
+      const landlordHtml = await render(
+        BookingPaymentNotificationEmail({
+          guestName: booking.guestName,
+          bookingId: booking.id,
+          roomName: booking.room.name,
+          checkin: formatDateET(booking.checkin),
+          checkout: formatDateET(booking.checkout),
+          amountPaid: Number(booking.confirmedPrice ?? 0),
+        })
+      )
+      await resend.emails.send({
+        from: fromEmail,
+        to: landlordEmail,
+        subject: `Payment received from ${booking.guestName} — ${booking.room.name}`,
+        html: landlordHtml,
+      })
+    }
   } catch (emailErr) {
     console.error("[markBookingAsPaid] email send failed:", emailErr)
   }
@@ -160,6 +191,7 @@ export async function createExtensionStripeCheckoutSession(extensionId: string) 
         quantity: 1,
       },
     ],
+    statement_descriptor_suffix: stmtSuffix(extension.booking.room.name),
     metadata: { type: "extension", extensionId: extension.id },
     success_url: `${origin}/${landlordSlug}/bookings/${extension.booking.id}?extension_paid=1&token=${extension.booking.accessToken}`,
     cancel_url: `${origin}/${landlordSlug}/bookings/${extension.booking.id}?token=${extension.booking.accessToken}`,

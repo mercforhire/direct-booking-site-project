@@ -122,3 +122,15 @@ export async function getLandlordIdsForAdmin(): Promise<string[]> {
 export async function getLandlordBySlug(slug: string) {
   return prisma.landlord.findUnique({ where: { slug } })
 }
+
+/**
+ * Returns deduplicated email addresses of all admin landlords.
+ * Used to notify all property managers about booking events.
+ */
+export async function getAllAdminEmails(): Promise<string[]> {
+  const landlords = await prisma.landlord.findMany({
+    select: { email: true },
+  })
+  const emails = [...new Set(landlords.map((l) => l.email).filter(Boolean))]
+  return emails
+}

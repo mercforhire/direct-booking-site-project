@@ -9,6 +9,7 @@ import { render } from "@react-email/render"
 import { BookingConfirmationEmail } from "@/emails/booking-confirmation"
 import { BookingNotificationEmail } from "@/emails/booking-notification"
 import { formatDateET } from "@/lib/format-date-et"
+import { getAllAdminEmails } from "@/lib/landlord"
 
 export async function submitBooking(data: unknown) {
   const parsed = bookingSchemaCoerced.safeParse(data)
@@ -96,8 +97,9 @@ export async function submitBooking(data: unknown) {
     console.error("[submitBooking] guest confirmation email failed:", err)
   }
 
-  if (process.env.LANDLORD_EMAIL) {
-    try {
+  try {
+    const adminEmails = await getAllAdminEmails()
+    if (adminEmails.length > 0) {
       const landlordHtml = await render(
         BookingNotificationEmail({
           guestName,
@@ -111,13 +113,13 @@ export async function submitBooking(data: unknown) {
       )
       await resend.emails.send({
         from: fromEmail,
-        to: process.env.LANDLORD_EMAIL,
+        to: adminEmails,
         subject: `New booking request from ${guestName}`,
         html: landlordHtml,
       })
-    } catch (err) {
-      console.error("[submitBooking] landlord notification email failed:", err)
     }
+  } catch (err) {
+    console.error("[submitBooking] landlord notification email failed:", err)
   }
 
   redirect(`/${landlordSlug}/bookings/${created.id}?token=${accessToken}&new=1`)

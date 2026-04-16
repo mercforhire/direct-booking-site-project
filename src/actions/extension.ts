@@ -8,6 +8,7 @@ import { submitExtensionSchema, cancelExtensionSchema } from "@/lib/validations/
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 import { BookingExtensionRequestEmail } from "@/emails/booking-extension-request"
 import { formatDateET } from "@/lib/format-date-et"
+import { getAllAdminEmails } from "@/lib/landlord"
 
 export async function submitExtension(bookingId: string, data: unknown) {
   const parsed = submitExtensionSchema.safeParse(data)
@@ -46,7 +47,8 @@ export async function submitExtension(bookingId: string, data: unknown) {
 
   // Non-fatal landlord notification email
   try {
-    if (process.env.LANDLORD_EMAIL) {
+    const adminEmails = await getAllAdminEmails()
+    if (adminEmails.length > 0) {
       const resend = new Resend(process.env.RESEND_API_KEY)
       const html = await render(
         BookingExtensionRequestEmail({
@@ -59,7 +61,7 @@ export async function submitExtension(bookingId: string, data: unknown) {
       )
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
-        to: process.env.LANDLORD_EMAIL,
+        to: adminEmails,
         subject: `Extension request — ${booking.room.name}`,
         html,
       })

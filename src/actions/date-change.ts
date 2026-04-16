@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { prisma } from "@/lib/prisma"
-import { getLandlordIdsForAdmin } from "@/lib/landlord"
+import { getLandlordIdsForAdmin, getAllAdminEmails } from "@/lib/landlord"
 import { stripe } from "@/lib/stripe"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -15,6 +15,11 @@ import { BookingDateChangeRequestEmail } from "@/emails/booking-date-change-requ
 import { BookingDateChangeApprovedEmail } from "@/emails/booking-date-change-approved"
 import { BookingDateChangeDeclinedEmail } from "@/emails/booking-date-change-declined"
 import { formatDateET } from "@/lib/format-date-et"
+
+/** Sanitize room name for Stripe statement_descriptor_suffix (max 22 chars, alphanumeric/spaces only) */
+function stmtSuffix(roomName: string): string {
+  return roomName.replace(/[^a-zA-Z0-9 ]/g, "").trim().slice(0, 22)
+}
 
 export async function submitDateChange(bookingId: string, data: unknown) {
   const parsed = submitDateChangeSchema.safeParse(data)
@@ -44,7 +49,8 @@ export async function submitDateChange(bookingId: string, data: unknown) {
   })
 
   try {
-    if (process.env.LANDLORD_EMAIL) {
+    const adminEmails = await getAllAdminEmails()
+    if (adminEmails.length > 0) {
       const resend = new Resend(process.env.RESEND_API_KEY)
       const html = await render(
         BookingDateChangeRequestEmail({
@@ -60,7 +66,7 @@ export async function submitDateChange(bookingId: string, data: unknown) {
       )
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
-        to: process.env.LANDLORD_EMAIL,
+        to: adminEmails,
         subject: `Date change request — ${booking.room.name} — ${booking.guestName}`,
         html,
       })
@@ -191,6 +197,7 @@ export async function approveDateChange(dateChangeId: string, data: unknown) {
             quantity: 1,
           },
         ],
+        statement_descriptor_suffix: stmtSuffix(booking.room.name),
         metadata: { type: "date_change_topup", dateChangeId },
         success_url: `${origin}/${landlordSlug}/bookings/${booking.id}?date_change_paid=1&token=${booking.accessToken}`,
         cancel_url: `${origin}/${landlordSlug}/bookings/${booking.id}?token=${booking.accessToken}`,
@@ -407,6 +414,7 @@ export async function createDateChangeStripeCheckoutSession(dateChangeId: string
         quantity: 1,
       },
     ],
+    statement_descriptor_suffix: stmtSuffix(dateChange.booking.room.name),
     metadata: { type: "date_change_topup", dateChangeId },
     success_url: `${origin}/${landlordSlug}/bookings/${dateChange.booking.id}?date_change_paid=1&token=${dateChange.booking.accessToken}`,
     cancel_url: `${origin}/${landlordSlug}/bookings/${dateChange.booking.id}?token=${dateChange.booking.accessToken}`,

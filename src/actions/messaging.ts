@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getLandlordIdsForAdmin } from "@/lib/landlord"
+import { getLandlordIdsForAdmin, getAllAdminEmails } from "@/lib/landlord"
 import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
 import { render } from "@react-email/render"
@@ -35,7 +35,8 @@ export async function submitMessage(bookingId: string, token: string, data: unkn
   })
 
   try {
-    if (process.env.LANDLORD_EMAIL) {
+    const adminEmails = await getAllAdminEmails()
+    if (adminEmails.length > 0) {
       const resend = new Resend(process.env.RESEND_API_KEY)
       const subject = `New message from ${booking.guestName} — ${booking.room.name}, ${formatDate(booking.checkin)}–${formatDate(booking.checkout)}`
       const html = await render(
@@ -50,7 +51,7 @@ export async function submitMessage(bookingId: string, token: string, data: unkn
       )
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
-        to: process.env.LANDLORD_EMAIL,
+        to: adminEmails,
         subject,
         html,
       })

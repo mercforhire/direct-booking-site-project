@@ -10,6 +10,7 @@ import { BookingExtensionPaidEmail } from "@/emails/booking-extension-paid"
 import { BookingDateChangePaidEmail } from "@/emails/booking-date-change-paid"
 import { render } from "@react-email/render"
 import { formatDateET } from "@/lib/format-date-et"
+import { getAllAdminEmails } from "@/lib/landlord"
 
 export async function POST(request: Request) {
   const body = await request.text() // MUST be text() — raw body for HMAC verification
@@ -170,7 +171,7 @@ export async function POST(request: Request) {
       if (result.count > 0) {
         const booking = await prisma.booking.findUnique({
           where: { id: bookingId },
-          include: { room: { select: { name: true, landlord: { select: { email: true } } } } },
+          include: { room: { select: { name: true } } },
         })
 
         if (booking) {
@@ -193,9 +194,9 @@ export async function POST(request: Request) {
               }),
             })
 
-            // Email to landlord
-            const landlordEmail = booking.room.landlord.email
-            if (landlordEmail) {
+            // Email to all admins
+            const adminEmails = await getAllAdminEmails()
+            if (adminEmails.length > 0) {
               const html = await render(
                 BookingPaymentNotificationEmail({
                   guestName: booking.guestName,
@@ -208,7 +209,7 @@ export async function POST(request: Request) {
               )
               await resend.emails.send({
                 from: fromEmail,
-                to: landlordEmail,
+                to: adminEmails,
                 subject: `Payment received from ${booking.guestName} — ${booking.room.name}`,
                 html,
               })

@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getLandlordIdsForAdmin } from "@/lib/landlord"
+import { getLandlordIdsForAdmin, getAllAdminEmails } from "@/lib/landlord"
 import { stripe } from "@/lib/stripe"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -78,14 +78,14 @@ export async function markBookingAsPaid(bookingId: string) {
     checkin: Date
     checkout: Date
     confirmedPrice: import("@prisma/client").Prisma.Decimal | null
-    room: { name: string; landlord: { email: string } }
+    room: { name: string }
   }
 
   try {
     booking = await prisma.booking.update({
       where: { id: bookingId, status: "APPROVED" },
       data: { status: "PAID" },
-      include: { room: { select: { name: true, landlord: { select: { email: true } } } } },
+      include: { room: { select: { name: true } } },
     })
   } catch (err) {
     if (err instanceof PrismaClientKnownRequestError && err.code === "P2025") {
@@ -116,9 +116,9 @@ export async function markBookingAsPaid(bookingId: string) {
       html: guestHtml,
     })
 
-    // Email to landlord
-    const landlordEmail = booking.room.landlord.email
-    if (landlordEmail) {
+    // Email to all admins
+    const adminEmails = await getAllAdminEmails()
+    if (adminEmails.length > 0) {
       const landlordHtml = await render(
         BookingPaymentNotificationEmail({
           guestName: booking.guestName,
@@ -131,7 +131,7 @@ export async function markBookingAsPaid(bookingId: string) {
       )
       await resend.emails.send({
         from: fromEmail,
-        to: landlordEmail,
+        to: adminEmails,
         subject: `Payment received from ${booking.guestName} — ${booking.room.name}`,
         html: landlordHtml,
       })

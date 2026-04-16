@@ -16,10 +16,6 @@ import { BookingDateChangeApprovedEmail } from "@/emails/booking-date-change-app
 import { BookingDateChangeDeclinedEmail } from "@/emails/booking-date-change-declined"
 import { formatDateET } from "@/lib/format-date-et"
 
-/** Sanitize room name for Stripe statement_descriptor_suffix (max 22 chars, alphanumeric/spaces only) */
-function stmtSuffix(roomName: string): string {
-  return roomName.replace(/[^a-zA-Z0-9 ]/g, "").trim().slice(0, 22)
-}
 
 export async function submitDateChange(bookingId: string, data: unknown) {
   const parsed = submitDateChangeSchema.safeParse(data)
@@ -197,7 +193,6 @@ export async function approveDateChange(dateChangeId: string, data: unknown) {
             quantity: 1,
           },
         ],
-        statement_descriptor_suffix: stmtSuffix(booking.room.name),
         metadata: { type: "date_change_topup", dateChangeId },
         success_url: `${origin}/${landlordSlug}/bookings/${booking.id}?date_change_paid=1&token=${booking.accessToken}`,
         cancel_url: `${origin}/${landlordSlug}/bookings/${booking.id}?token=${booking.accessToken}`,
@@ -414,7 +409,6 @@ export async function createDateChangeStripeCheckoutSession(dateChangeId: string
         quantity: 1,
       },
     ],
-    statement_descriptor_suffix: stmtSuffix(dateChange.booking.room.name),
     metadata: { type: "date_change_topup", dateChangeId },
     success_url: `${origin}/${landlordSlug}/bookings/${dateChange.booking.id}?date_change_paid=1&token=${dateChange.booking.accessToken}`,
     cancel_url: `${origin}/${landlordSlug}/bookings/${dateChange.booking.id}?token=${dateChange.booking.accessToken}`,

@@ -68,10 +68,11 @@ const BP_MAPPINGS: { bpId: string; roomId: string; label: string }[] = [
   { bpId: '2898191', roomId: 'cmnhvgi700009vn9zn3a6bl4j', label: 'Jane — Room 5 (monthly)' },
   { bpId: '2898201', roomId: 'cmnhvgi9c000bvn9zu2qde9ez', label: 'Jane — Room 6' },
   // Anna's (339 Byng / Bayview)
-  { bpId: '4188153', roomId: 'cmnii27n50001vnn949rkgye4', label: 'Anna — Cozy Trip R2' },
-  { bpId: '4188145', roomId: 'cmnii28az0004vnn9tckggqvu', label: 'Anna — Cozy Trip R5' },
-  { bpId: '4188149', roomId: 'cmnii28n00007vnn9ng6ofunr', label: 'Anna — Family Trip B1' },
-  { bpId: '4217457', roomId: 'cmnii28zm000avnn9iuu6jkdz', label: 'Anna — Romance Trip B2' },
+  { bpId: '4427268', roomId: 'cmnii27n50001vnn949rkgye4', label: 'Anna — Cozy Trip R2' },
+  { bpId: '4428366', roomId: 'cmnii28az0004vnn9tckggqvu', label: 'Anna — Cozy Trip R5' },
+  { bpId: '4427439', roomId: 'cmnii28n00007vnn9ng6ofunr', label: 'Anna — Family Trip B1' },
+  { bpId: '4427440', roomId: 'cmnii28zm000avnn9iuu6jkdz', label: 'Anna — Romance Trip B2' },
+  { bpId: '4427438', roomId: 'cmo10y8k50001lh04bk2cbzn9', label: 'Anna — Ensuite R1' },
   // Kelly's (124 New Forest / Kennedy)
   { bpId: '4223348', roomId: 'cmnjimczz0001vnanznfw7cwb', label: 'Kelly — Family 2 Beds /1' },
   { bpId: '4209833', roomId: 'cmnjimdxj0006vnandlbkxx2c', label: "Kelly — Couple's Room /3" },

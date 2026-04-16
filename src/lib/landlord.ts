@@ -3,45 +3,64 @@ import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 
 /**
- * For server actions — throws on failure (action returns error).
- * Returns the first Landlord row for the currently logged-in admin.
- * If landlordId is provided, verifies the admin owns that landlord.
+ * Verify the current user is an admin (has at least one landlord linked to them).
+ * Returns the Supabase user or throws.
  */
-export async function getLandlordForAdmin(landlordId?: string) {
+async function requireAdmin() {
   const supabase = await createClient()
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) throw new Error("Unauthorized")
 
+  const linked = await prisma.landlord.findFirst({
+    where: { adminUserId: user.id },
+    select: { id: true },
+  })
+  if (!linked) throw new Error("Unauthorized — not an admin user")
+
+  return user
+}
+
+/**
+ * For server actions — throws on failure (action returns error).
+ * Returns the first Landlord row (all admins share access to all properties).
+ * If landlordId is provided, verifies it exists.
+ */
+export async function getLandlordForAdmin(landlordId?: string) {
+  await requireAdmin()
+
   if (landlordId) {
     const landlord = await prisma.landlord.findFirst({
-      where: { id: landlordId, adminUserId: user.id },
+      where: { id: landlordId },
     })
-    if (!landlord) throw new Error("Landlord not found or not owned by this admin")
+    if (!landlord) throw new Error("Landlord not found")
     return landlord
   }
 
-  const landlord = await prisma.landlord.findFirst({
-    where: { adminUserId: user.id },
-  })
-  if (!landlord) throw new Error("No landlord found for this admin user")
+  const landlord = await prisma.landlord.findFirst()
+  if (!landlord) throw new Error("No landlord found")
 
   return landlord
 }
 
 /**
  * For RSC pages — redirects on failure instead of throwing.
- * Returns all Landlord rows for the currently logged-in admin.
+ * Returns all Landlord rows (all admins share access to all properties).
  */
 export async function requireLandlordsForAdmin() {
   const supabase = await createClient()
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) redirect("/login")
 
-  const landlords = await prisma.landlord.findMany({
+  // Verify user is an admin (linked to at least one landlord)
+  const linked = await prisma.landlord.findFirst({
     where: { adminUserId: user.id },
+    select: { id: true },
+  })
+  if (!linked) redirect("/login?error=no_landlord")
+
+  const landlords = await prisma.landlord.findMany({
     orderBy: { createdAt: "asc" },
   })
-  if (landlords.length === 0) redirect("/login?error=no_landlord")
 
   return landlords
 }
@@ -60,7 +79,7 @@ export async function requireLandlordsWithSelected(landlordSlug?: string) {
 
 /**
  * For RSC pages — redirects on failure instead of throwing.
- * Returns the first Landlord row for the currently logged-in admin.
+ * Returns the first Landlord row.
  * @deprecated Use requireLandlordsForAdmin() for multi-landlord support.
  */
 export async function requireLandlordForAdmin() {
@@ -68,9 +87,14 @@ export async function requireLandlordForAdmin() {
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) redirect("/login")
 
-  const landlord = await prisma.landlord.findFirst({
+  // Verify user is an admin
+  const linked = await prisma.landlord.findFirst({
     where: { adminUserId: user.id },
+    select: { id: true },
   })
+  if (!linked) redirect("/login?error=no_landlord")
+
+  const landlord = await prisma.landlord.findFirst()
   if (!landlord) redirect("/login?error=no_landlord")
 
   return landlord
@@ -78,18 +102,15 @@ export async function requireLandlordForAdmin() {
 
 /**
  * For server actions — throws on failure.
- * Returns all landlord IDs for the admin. Used for ownership guards.
+ * Returns all landlord IDs (all admins share access). Used for ownership guards.
  */
 export async function getLandlordIdsForAdmin(): Promise<string[]> {
-  const supabase = await createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
-  if (error || !user) throw new Error("Unauthorized")
+  await requireAdmin()
 
   const landlords = await prisma.landlord.findMany({
-    where: { adminUserId: user.id },
     select: { id: true },
   })
-  if (landlords.length === 0) throw new Error("No landlords found for this admin user")
+  if (landlords.length === 0) throw new Error("No landlords found")
 
   return landlords.map((l) => l.id)
 }

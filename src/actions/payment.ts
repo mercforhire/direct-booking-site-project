@@ -15,11 +15,6 @@ import { BookingExtensionPaidEmail } from "@/emails/booking-extension-paid"
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 import { formatDateET } from "@/lib/format-date-et"
 
-/** Sanitize room name for Stripe statement_descriptor_suffix (max 22 chars, alphanumeric/spaces only) */
-function stmtSuffix(roomName: string): string {
-  return roomName.replace(/[^a-zA-Z0-9 ]/g, "").trim().slice(0, 22)
-}
-
 export async function createStripeCheckoutSession(bookingId: string) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId, status: "APPROVED" },
@@ -48,7 +43,7 @@ export async function createStripeCheckoutSession(bookingId: string) {
         quantity: 1,
       },
     ],
-    statement_descriptor_suffix: stmtSuffix(booking.room.name),
+
     metadata: { bookingId: booking.id },
     success_url: `${origin}/${landlordSlug}/bookings/${booking.id}?paid=1&token=${booking.accessToken}`,
     cancel_url: `${origin}/${landlordSlug}/bookings/${booking.id}?token=${booking.accessToken}`,
@@ -191,7 +186,6 @@ export async function createExtensionStripeCheckoutSession(extensionId: string) 
         quantity: 1,
       },
     ],
-    statement_descriptor_suffix: stmtSuffix(extension.booking.room.name),
     metadata: { type: "extension", extensionId: extension.id },
     success_url: `${origin}/${landlordSlug}/bookings/${extension.booking.id}?extension_paid=1&token=${extension.booking.accessToken}`,
     cancel_url: `${origin}/${landlordSlug}/bookings/${extension.booking.id}?token=${extension.booking.accessToken}`,

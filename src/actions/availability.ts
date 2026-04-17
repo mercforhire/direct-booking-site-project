@@ -74,7 +74,6 @@ export async function saveBlockedRange(
       where: {
         roomId,
         date: { in: dates },
-        source: "MANUAL",
       },
     })
   }

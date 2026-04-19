@@ -175,11 +175,11 @@ export async function POST(request: Request) {
         })
 
         if (booking) {
-          try {
-            const resend = new Resend(process.env.RESEND_API_KEY)
-            const fromEmail = process.env.RESEND_FROM_EMAIL ?? "noreply@example.com"
+          const resend = new Resend(process.env.RESEND_API_KEY)
+          const fromEmail = process.env.RESEND_FROM_EMAIL ?? "noreply@example.com"
 
-            // Email to guest
+          // Guest email — isolated so a failure here doesn't skip admin notification
+          try {
             await resend.emails.send({
               from: fromEmail,
               to: booking.guestEmail,
@@ -193,8 +193,11 @@ export async function POST(request: Request) {
                 bookingId: booking.id,
               }),
             })
+          } catch {
+            // Non-fatal: webhook always returns 200
+          }
 
-            // Email to all admins
+          try {
             const adminEmails = await getAllAdminEmails()
             if (adminEmails.length > 0) {
               const html = await render(
@@ -215,7 +218,7 @@ export async function POST(request: Request) {
               })
             }
           } catch {
-            // Non-fatal: email failure does not fail the webhook
+            // Non-fatal: webhook always returns 200
           }
         }
       }

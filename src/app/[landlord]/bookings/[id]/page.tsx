@@ -1,15 +1,17 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { getLandlordBySlug } from "@/lib/landlord"
+import { getLandlordBySlug, getAllAdminEmails } from "@/lib/landlord"
 import { prisma } from "@/lib/prisma"
 import { stripe } from "@/lib/stripe"
 import { createClient } from "@/lib/supabase/server"
 import { Resend } from "resend"
 import { render } from "@react-email/render"
 import { BookingPaymentConfirmationEmail } from "@/emails/booking-payment-confirmation"
+import { BookingPaymentNotificationEmail } from "@/emails/booking-payment-notification"
 import { BookingExtensionPaidEmail } from "@/emails/booking-extension-paid"
 import { BookingDateChangePaidEmail } from "@/emails/booking-date-change-paid"
+import { formatDateET } from "@/lib/format-date-et"
 import { BookingStatusView } from "@/components/guest/booking-status-view"
 import type { SerializedDateChange } from "@/components/guest/booking-status-view"
 
@@ -77,8 +79,10 @@ export default async function LandlordBookingPage({
           })
           if (freshBooking) {
             booking.status = "PAID"
+            const resend = new Resend(process.env.RESEND_API_KEY)
+            const fromEmail = process.env.RESEND_FROM_EMAIL ?? "noreply@example.com"
+
             try {
-              const resend = new Resend(process.env.RESEND_API_KEY)
               const html = await render(
                 BookingPaymentConfirmationEmail({
                   guestName: freshBooking.guestName,
@@ -90,11 +94,33 @@ export default async function LandlordBookingPage({
                 })
               )
               await resend.emails.send({
-                from: process.env.RESEND_FROM_EMAIL ?? "noreply@example.com",
+                from: fromEmail,
                 to: freshBooking.guestEmail,
                 subject: `Booking confirmed — ${freshBooking.room.name}`,
                 html,
               })
+            } catch { /* Non-fatal */ }
+
+            try {
+              const adminEmails = await getAllAdminEmails()
+              if (adminEmails.length > 0) {
+                const adminHtml = await render(
+                  BookingPaymentNotificationEmail({
+                    guestName: freshBooking.guestName,
+                    bookingId: freshBooking.id,
+                    roomName: freshBooking.room.name,
+                    checkin: formatDateET(freshBooking.checkin),
+                    checkout: formatDateET(freshBooking.checkout),
+                    amountPaid: Number(freshBooking.confirmedPrice),
+                  })
+                )
+                await resend.emails.send({
+                  from: fromEmail,
+                  to: adminEmails,
+                  subject: `Payment received from ${freshBooking.guestName} — ${freshBooking.room.name}`,
+                  html: adminHtml,
+                })
+              }
             } catch { /* Non-fatal */ }
           }
         }

@@ -94,11 +94,11 @@ export async function markBookingAsPaid(bookingId: string) {
     throw err
   }
 
-  try {
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    const fromEmail = process.env.RESEND_FROM_EMAIL ?? "noreply@example.com"
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  const fromEmail = process.env.RESEND_FROM_EMAIL ?? "noreply@example.com"
 
-    // Email to guest
+  // Guest email — isolated so a failure here doesn't skip admin notification
+  try {
     const guestHtml = await render(
       BookingPaymentConfirmationEmail({
         bookingId: booking.id,
@@ -115,8 +115,11 @@ export async function markBookingAsPaid(bookingId: string) {
       subject: `Payment received — ${booking.room.name}`,
       html: guestHtml,
     })
+  } catch (emailErr) {
+    console.error("[markBookingAsPaid] guest email failed:", emailErr)
+  }
 
-    // Email to all admins
+  try {
     const adminEmails = await getAllAdminEmails()
     if (adminEmails.length > 0) {
       const landlordHtml = await render(
@@ -137,7 +140,7 @@ export async function markBookingAsPaid(bookingId: string) {
       })
     }
   } catch (emailErr) {
-    console.error("[markBookingAsPaid] email send failed:", emailErr)
+    console.error("[markBookingAsPaid] admin email failed:", emailErr)
   }
 
   revalidatePath(`/admin/bookings/${bookingId}`)

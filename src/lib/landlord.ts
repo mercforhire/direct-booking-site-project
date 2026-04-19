@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 
@@ -124,13 +125,26 @@ export async function getLandlordBySlug(slug: string) {
 }
 
 /**
- * Returns deduplicated email addresses of all admin landlords.
- * Used to notify all property managers about booking events.
+ * Returns deduplicated email addresses of all admin users across all landlords.
+ * Looks up emails from Supabase auth via each landlord's adminUserId — the
+ * Landlord.email column stores the property contact, not the admin's login.
  */
 export async function getAllAdminEmails(): Promise<string[]> {
   const landlords = await prisma.landlord.findMany({
-    select: { email: true },
+    select: { adminUserId: true },
   })
-  const emails = [...new Set(landlords.map((l) => l.email).filter(Boolean))]
-  return emails
+  const adminUserIds = [...new Set(landlords.map((l) => l.adminUserId).filter(Boolean))]
+  if (adminUserIds.length === 0) return []
+
+  const adminClient = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const results = await Promise.all(
+    adminUserIds.map((id) => adminClient.auth.admin.getUserById(id))
+  )
+  const emails = results
+    .map((r) => r.data.user?.email)
+    .filter((e): e is string => Boolean(e))
+  return [...new Set(emails)]
 }

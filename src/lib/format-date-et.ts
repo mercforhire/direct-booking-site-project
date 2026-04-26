@@ -1,12 +1,13 @@
 /**
- * Format a Date for human-readable display in Eastern Time.
- * Use for email template date props ONLY — not for DB storage or YYYY-MM-DD serialization.
+ * Format a calendar date (Postgres @db.Date) for human-readable display in emails.
+ * Reads the UTC date components — Postgres returns DATE columns as midnight UTC,
+ * so any timezone west of UTC (including ET) would render the previous day.
  *
  * Example output: "Fri, May 1, 2026"
  */
 export function formatDateET(date: Date): string {
   return date.toLocaleDateString('en-US', {
-    timeZone: 'America/New_York',
+    timeZone: 'UTC',
     weekday: 'short',
     month: 'long',
     day: 'numeric',

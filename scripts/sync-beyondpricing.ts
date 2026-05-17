@@ -40,10 +40,14 @@ try {
 
 const prisma = new PrismaClient()
 
-const DELAY_BETWEEN_MONTHS_MS = 2000
+const DELAY_BETWEEN_MONTHS_MS = 4000
 const DELAY_BETWEEN_LISTINGS_MS = 3000
+const INITIAL_LOAD_TIMEOUT_MS = 30000
 const MAX_MONTHS_AHEAD = parseInt(process.env.MAX_MONTHS || '6')
 const DRY_RUN = process.argv.includes('--dry-run')
+// Optional positional landlord-name filter. Matches the leading word before "—" in BP_MAPPINGS labels.
+// e.g.  npx tsx scripts/sync-beyondpricing.ts ryan
+const LANDLORD_FILTER = process.argv.slice(2).find((a) => !a.startsWith('-'))?.toLowerCase()
 
 // ── Beyond Pricing listing ID → Room ID mapping ───────────
 // Add new mappings here as listings are added to Beyond Pricing
@@ -62,10 +66,10 @@ const BP_MAPPINGS: { bpId: string; roomId: string; label: string }[] = [
   { bpId: '3248293', roomId: 'cmnh1trnf0009vnz26x63rsgh', label: 'Henry — 2 Bedrooms Combo (Room 1+2)' },
   // Jane's (8 Allenbury / Don Mills)
   { bpId: '3171069', roomId: 'cmnhvghsy0001vn9zs9zr3tt8', label: 'Jane — 2nd floor Room 1' },
-  { bpId: '3173494', roomId: 'cmnhvghyg0003vn9zozanyvio', label: 'Jane — Room 2 (monthly)' },
+  { bpId: '4209382', roomId: 'cmnhvghyg0003vn9zozanyvio', label: 'Jane — Room 2 (monthly)' },
   { bpId: '3173635', roomId: 'cmnhvgi2g0005vn9zmv72r4q6', label: 'Jane — 2nd floor Room 3' },
-  { bpId: '3173908', roomId: 'cmnhvgi4s0007vn9zymeru0tt', label: 'Jane — Room 4 (monthly)' },
-  { bpId: '2898191', roomId: 'cmnhvgi700009vn9zn3a6bl4j', label: 'Jane — Room 5 (monthly)' },
+  { bpId: '4209704', roomId: 'cmnhvgi4s0007vn9zymeru0tt', label: 'Jane — Room 4 (monthly)' },
+  { bpId: '4500408', roomId: 'cmnhvgi700009vn9zn3a6bl4j', label: 'Jane — Room 5 (monthly)' },
   { bpId: '2898201', roomId: 'cmnhvgi9c000bvn9zu2qde9ez', label: 'Jane — Room 6' },
   // Anna's (339 Byng / Bayview)
   { bpId: '4427268', roomId: 'cmnii27n50001vnn949rkgye4', label: 'Anna — Cozy Trip R2' },
@@ -86,9 +90,42 @@ const BP_MAPPINGS: { bpId: string; roomId: string; label: string }[] = [
   { bpId: '4273195', roomId: 'cmnjtb21z000dvn9ayzlempud', label: 'Rose — 2D Sofa room' },
   { bpId: '4209361', roomId: 'cmnjtb2e1000gvn9a0pxyy1s4', label: 'Rose — 2C Cozy room' },
   { bpId: '4209362', roomId: 'cmnjtb2qm000jvn9am5r0h513', label: 'Rose — 3E Ensuite top floor' },
+  // Ryan's (7 Margaret Ave / Don Mills)
+  { bpId: '4504762', roomId: 'cmp976b3s0001vnz9q6azo2t9', label: 'Ryan — 2nd floor Ensuite (Room 1)' },
+  { bpId: '4448042', roomId: 'cmp976bpw0004vnz9rq3bgyds', label: 'Ryan — 1st floor (Room 3)' },
+  { bpId: '4442767', roomId: 'cmp976c6m0007vnz9db52ba23', label: 'Ryan — Basement A (Room 4)' },
+  { bpId: '4440356', roomId: 'cmp976cnm000bvnz9m9bfrqwo', label: 'Ryan — Basement B (Room 5)' },
+  { bpId: '4442769', roomId: 'cmp976d5i000fvnz90yvwhubj', label: 'Ryan — Basement Combo (A+B)' },
 ]
 
 // ── Price extraction ───────────────────────────────────────
+
+async function waitForCalendarReady(page: Page, timeoutMs: number): Promise<boolean> {
+  // Wait for day cells to appear
+  try {
+    await page.waitForSelector('[data-day]', { timeout: timeoutMs })
+  } catch {
+    return false
+  }
+
+  // Then wait for at least some prices to populate inside those cells
+  try {
+    await page.waitForFunction(
+      () => {
+        const cells = document.querySelectorAll('[data-day]')
+        let withPrice = 0
+        for (const cell of Array.from(cells)) {
+          if (/\$\d+/.test(cell.textContent || '')) withPrice++
+        }
+        return withPrice >= 3
+      },
+      { timeout: timeoutMs, polling: 500 }
+    )
+    return true
+  } catch {
+    return false
+  }
+}
 
 async function extractMonthPrices(page: Page): Promise<{ date: string; price: number }[]> {
   return await page.evaluate(() => {
@@ -151,12 +188,20 @@ async function scrapeListing(
     waitUntil: 'domcontentloaded',
     timeout: 60000,
   })
-  await page.waitForTimeout(4000)
 
   if (page.url().includes('/login')) {
     console.log('   ❌ Session expired')
     return []
   }
+
+  // Wait for the calendar to actually render with prices populated
+  const ready = await waitForCalendarReady(page, INITIAL_LOAD_TIMEOUT_MS)
+  if (!ready) {
+    console.log('   ⚠️  Calendar did not load in time — skipping')
+    return []
+  }
+  // Extra settle time so all visible prices finish rendering
+  await page.waitForTimeout(1500)
 
   const allPrices: { date: string; price: number }[] = []
 
@@ -174,13 +219,25 @@ async function scrapeListing(
     const monthIdx = (startMonth + offset) % 12
     const monthLabel = MONTHS[monthIdx]
 
-    // Click the month in the sidebar
-    const clicked = await clickMonth(page, monthLabel)
+    // Click the month in the sidebar — retry briefly in case the UI is still settling
+    let clicked = false
+    for (let attempt = 0; attempt < 3; attempt++) {
+      clicked = await clickMonth(page, monthLabel)
+      if (clicked) break
+      await page.waitForTimeout(1500)
+    }
     if (!clicked) {
       console.log(`   ⚠️  Could not click month ${monthLabel}`)
       continue
     }
-    await page.waitForTimeout(DELAY_BETWEEN_MONTHS_MS)
+
+    // Wait for the new month's prices to render before extracting
+    const ready = await waitForCalendarReady(page, DELAY_BETWEEN_MONTHS_MS * 3)
+    if (!ready) {
+      console.log(`   ⚠️  ${monthLabel} did not finish loading`)
+      continue
+    }
+    await page.waitForTimeout(800)
 
     // Extract prices for this month
     const monthPrices = await extractMonthPrices(page)
@@ -208,7 +265,6 @@ async function scrapeListing(
 
 async function writePricesToDB(
   roomId: string,
-  landlordSlug: string,
   prices: { date: string; price: number }[]
 ) {
   if (prices.length === 0) return
@@ -243,7 +299,17 @@ async function writePricesToDB(
 // ── Main ───────────────────────────────────────────────────
 
 async function main() {
-  console.log(`🔄 Beyond Pricing sync — ${BP_MAPPINGS.length} listings, ${MAX_MONTHS_AHEAD} months ahead`)
+  const mappings = LANDLORD_FILTER
+    ? BP_MAPPINGS.filter((m) => m.label.toLowerCase().startsWith(LANDLORD_FILTER + ' '))
+    : BP_MAPPINGS
+
+  if (mappings.length === 0) {
+    console.log(`No mappings match landlord filter "${LANDLORD_FILTER}".`)
+    return
+  }
+
+  const filterNote = LANDLORD_FILTER ? ` (filtered to "${LANDLORD_FILTER}")` : ''
+  console.log(`🔄 Beyond Pricing sync — ${mappings.length} listings${filterNote}, ${MAX_MONTHS_AHEAD} months ahead`)
   if (DRY_RUN) console.log('   (dry run — no DB writes)\n')
 
   const browser = await chromium.launch({ headless: false })
@@ -257,8 +323,8 @@ async function main() {
   await page.goto('https://v2.beyondpricing.com/login')
   await new Promise<void>((resolve) => { process.stdin.once('data', () => resolve()) })
 
-  for (let i = 0; i < BP_MAPPINGS.length; i++) {
-    const m = BP_MAPPINGS[i]
+  for (let i = 0; i < mappings.length; i++) {
+    const m = mappings[i]
     try {
       const prices = await scrapeListing(page, m.bpId, m.label)
 
@@ -266,14 +332,13 @@ async function main() {
         prices.slice(0, 5).forEach(p => console.log(`   ${p.date}: $${p.price}`))
         if (prices.length > 5) console.log(`   ... and ${prices.length - 5} more`)
       } else {
-        // Determine landlord slug from label for multiplier lookup
-        await writePricesToDB(m.roomId, '', prices)
+        await writePricesToDB(m.roomId, prices)
       }
     } catch (err: any) {
       console.error(`   ❌ Error: ${err.message}`)
     }
 
-    if (i < BP_MAPPINGS.length - 1) {
+    if (i < mappings.length - 1) {
       await new Promise((r) => setTimeout(r, DELAY_BETWEEN_LISTINGS_MS))
     }
   }

@@ -1,3 +1,10 @@
 {
-  "crons": [{ "path": "/api/cron/ical-sync", "schedule": "0 8 * * *" }]
+  "crons": [{ "path": "/api/cron/ical-sync", "schedule": "0 8 * * *" }],
+  "redirects": [
+    { "source": "/clickme", "destination": "/clickme/", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/clickme/", "destination": "https://click-me2026-landing-site.vercel.app/" },
+    { "source": "/clickme/:path*", "destination": "https://click-me2026-landing-site.vercel.app/:path*" }
+  ]
 }

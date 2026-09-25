@@ -279,18 +279,25 @@ async function writePricesToDB(
   })
   const multiplier = settings ? Number(settings.priceMultiplier) : 1.15
 
+  const WRITE_BATCH_SIZE = 50
   let written = 0
-  for (const { date, price } of prices) {
-    const adjustedPrice = Math.round(price * multiplier)
-    await prisma.datePriceOverride.upsert({
-      where: { roomId_date: { roomId, date: new Date(date + 'T12:00:00.000Z') } },
-      update: { price: adjustedPrice },
-      create: { roomId, date: new Date(date + 'T12:00:00.000Z'), price: adjustedPrice },
-    })
-    written++
+  for (let i = 0; i < prices.length; i += WRITE_BATCH_SIZE) {
+    const batch = prices.slice(i, i + WRITE_BATCH_SIZE)
+    await prisma.$transaction(
+      batch.map(({ date, price }) => {
+        const adjustedPrice = Math.round(price * multiplier)
+        return prisma.datePriceOverride.upsert({
+          where: { roomId_date: { roomId, date: new Date(date + 'T12:00:00.000Z') } },
+          update: { price: adjustedPrice },
+          create: { roomId, date: new Date(date + 'T12:00:00.000Z'), price: adjustedPrice },
+        })
+      })
+    )
+    written += batch.length
+    process.stdout.write(`\r   💾 Writing prices... ${written}/${prices.length}`)
   }
 
-  console.log(`   💾 Wrote ${written} prices (×${multiplier} multiplier)`)
+  console.log(`\r   💾 Wrote ${written} prices (×${multiplier} multiplier)         `)
 }
 
 // ── Main ───────────────────────────────────────────────────

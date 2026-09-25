@@ -40,6 +40,8 @@ try {
 
 const prisma = new PrismaClient()
 
+const SESSION_FILE = path.join(process.cwd(), '.airbnb-sessions', 'beyondpricing.json')
+const LOGIN_TIMEOUT_MS = 8 * 60 * 1000
 const DELAY_BETWEEN_MONTHS_MS = 4000
 const DELAY_BETWEEN_LISTINGS_MS = 3000
 const INITIAL_LOAD_TIMEOUT_MS = 30000
@@ -77,11 +79,6 @@ const BP_MAPPINGS: { bpId: string; roomId: string; label: string }[] = [
   { bpId: '4427439', roomId: 'cmnii28n00007vnn9ng6ofunr', label: 'Anna — Family Trip B1' },
   { bpId: '4427440', roomId: 'cmnii28zm000avnn9iuu6jkdz', label: 'Anna — Romance Trip B2' },
   { bpId: '4427438', roomId: 'cmo10y8k50001lh04bk2cbzn9', label: 'Anna — Ensuite R1' },
-  // Kelly's (124 New Forest / Kennedy)
-  { bpId: '4223348', roomId: 'cmnjimczz0001vnanznfw7cwb', label: 'Kelly — Family 2 Beds /1' },
-  { bpId: '4209833', roomId: 'cmnjimdxj0006vnandlbkxx2c', label: "Kelly — Couple's Room /3" },
-  { bpId: '4247644', roomId: 'cmnjimec40009vnanyjw0xly5', label: 'Kelly — Ensuite Room /4' },
-  { bpId: '4223349', roomId: 'cmnjimeqp000cvnanirnhhrxd', label: 'Kelly — Basement Suite' },
   // Rose's (302 Cook Rd / York U)
   { bpId: '4286592', roomId: 'cmnjtb0as0001vn9adr5sz4gz', label: 'Rose — 0C Cozy ensuite' },
   { bpId: '4210625', roomId: 'cmnjtb0zv0004vn9alm2f4fin', label: 'Rose — 0B Cozy ensuite' },
@@ -90,12 +87,12 @@ const BP_MAPPINGS: { bpId: string; roomId: string; label: string }[] = [
   { bpId: '4273195', roomId: 'cmnjtb21z000dvn9ayzlempud', label: 'Rose — 2D Sofa room' },
   { bpId: '4209361', roomId: 'cmnjtb2e1000gvn9a0pxyy1s4', label: 'Rose — 2C Cozy room' },
   { bpId: '4209362', roomId: 'cmnjtb2qm000jvn9am5r0h513', label: 'Rose — 3E Ensuite top floor' },
-  // Ryan's (7 Margaret Ave / Don Mills)
-  { bpId: '4504762', roomId: 'cmp976b3s0001vnz9q6azo2t9', label: 'Ryan — 2nd floor Ensuite (Room 1)' },
-  { bpId: '4448042', roomId: 'cmp976bpw0004vnz9rq3bgyds', label: 'Ryan — 1st floor (Room 3)' },
-  { bpId: '4442767', roomId: 'cmp976c6m0007vnz9db52ba23', label: 'Ryan — Basement A (Room 4)' },
-  { bpId: '4440356', roomId: 'cmp976cnm000bvnz9m9bfrqwo', label: 'Ryan — Basement B (Room 5)' },
-  { bpId: '4442769', roomId: 'cmp976d5i000fvnz90yvwhubj', label: 'Ryan — Basement Combo (A+B)' },
+  // Ryan's (7 Margaret Ave / Don Mills) — relisted on BP 2026-08/09, IDs remapped 2026-09-25
+  { bpId: '5093423', roomId: 'cmp976b3s0001vnz9q6azo2t9', label: 'Ryan — 2nd floor Ensuite (Room 1)' },
+  { bpId: '5098678', roomId: 'cmp976bpw0004vnz9rq3bgyds', label: 'Ryan — 1st floor (Room 3)' },
+  { bpId: '5385032', roomId: 'cmp976c6m0007vnz9db52ba23', label: 'Ryan — Basement A (Room 4)' },
+  { bpId: '5385040', roomId: 'cmp976cnm000bvnz9m9bfrqwo', label: 'Ryan — Basement B (Room 5)' },
+  { bpId: '5098680', roomId: 'cmp976d5i000fvnz90yvwhubj', label: 'Ryan — Basement Combo (A+B)' },
 ]
 
 // ── Price extraction ───────────────────────────────────────
@@ -318,10 +315,49 @@ async function main() {
     viewport: { width: 1440, height: 900 },
   })
 
+  // Reuse a saved session when possible; fall back to manual login.
+  if (fs.existsSync(SESSION_FILE)) {
+    try {
+      await context.addCookies(JSON.parse(fs.readFileSync(SESSION_FILE, 'utf8')))
+      console.log('✓ Loaded saved Beyond Pricing session')
+    } catch {
+      console.log('⚠️  Saved session unreadable — manual login needed')
+    }
+  }
+
   const page = await context.newPage()
-  console.log('🔐 Log in to Beyond Pricing, then press Enter.\n')
-  await page.goto('https://v2.beyondpricing.com/login')
-  await new Promise<void>((resolve) => { process.stdin.once('data', () => resolve()) })
+  await page.goto('https://v2.beyondpricing.com/dashboard', {
+    waitUntil: 'domcontentloaded',
+    timeout: 60000,
+  })
+  await page.waitForTimeout(4000)
+
+  if (page.url().includes('/login') || page.url().includes('/signin')) {
+    console.log('\n🔐 Session expired. Log in to Beyond Pricing in the open browser window.')
+    console.log(`   Waiting up to ${Math.round(LOGIN_TIMEOUT_MS / 60000)} minutes...\n`)
+    const deadline = Date.now() + LOGIN_TIMEOUT_MS
+    let loggedIn = false
+    while (Date.now() < deadline) {
+      await page.waitForTimeout(3000)
+      if (page.url().includes('/login') || page.url().includes('/signin')) continue
+      // Confirm it stays off the login page rather than bouncing back
+      await page.waitForTimeout(6000)
+      if (!page.url().includes('/login')) { loggedIn = true; break }
+    }
+    if (!loggedIn) {
+      console.log('❌ Login not detected — aborting.')
+      await browser.close()
+      await prisma.$disconnect()
+      process.exit(1)
+    }
+  }
+  console.log(`✓ Logged in — ${page.url()}`)
+
+  // Persist the (possibly refreshed) session for next time
+  try {
+    fs.mkdirSync(path.dirname(SESSION_FILE), { recursive: true })
+    fs.writeFileSync(SESSION_FILE, JSON.stringify(await context.cookies(), null, 2))
+  } catch {}
 
   for (let i = 0; i < mappings.length; i++) {
     const m = mappings[i]

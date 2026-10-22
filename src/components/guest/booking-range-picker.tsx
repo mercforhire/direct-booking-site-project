@@ -78,9 +78,15 @@ export function BookingRangePicker({
   // Custom range selection handler:
   // - Blocked dates can be selected as checkout (guest leaves that morning)
   // - Blocked dates cannot be selected as checkin
-  // - Ranges cannot span across blocked nights
+  // - Ranges cannot span across blocked nights — an invalid range restarts at
+  //   the clicked day so it can still become the new checkin
   const handleSelect = useCallback(
-    (range: DateRange | undefined) => {
+    (range: DateRange | undefined, triggerDate: Date) => {
+      const restartAt = (date: Date) => {
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+        onChange(blockedSet.has(dateStr) ? undefined : { from: date, to: undefined })
+      }
+
       if (!range) {
         onChange(undefined)
         return
@@ -108,8 +114,8 @@ export function BookingRangePicker({
         while (cursor < end) {
           const dateStr = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`
           if (blockedSet.has(dateStr)) {
-            // Blocked night in range — reject
-            onChange(undefined)
+            // Blocked night in range — start over from the clicked day
+            restartAt(triggerDate)
             return
           }
           cursor.setDate(cursor.getDate() + 1)
@@ -129,6 +135,7 @@ export function BookingRangePicker({
       mode="range"
       selected={value}
       onSelect={handleSelect}
+      resetOnSelect
       min={minStayNights}
       max={maxStayNights}
       disabled={[{ before: today }, { after: windowEnd }]}

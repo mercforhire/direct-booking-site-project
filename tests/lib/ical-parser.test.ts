@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { parseIcalDates } from "@/lib/ical-parser";
 
 // Realistic Airbnb iCal content based on actual exports
@@ -22,6 +22,16 @@ END:VEVENT
 END:VCALENDAR`;
 
 describe("parseIcalDates", () => {
+  // Fixtures use fixed 2026 dates and the parser skips past bookings — pin
+  // "today" before all of them so the tests don't expire with the calendar
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-01-01T12:00:00Z"));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("extracts multi-day range with DTEND exclusive (Apr 5–10 = 5 dates: Apr 5–9)", () => {
     const single = `BEGIN:VCALENDAR
 VERSION:2.0

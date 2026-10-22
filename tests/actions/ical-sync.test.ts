@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import "../lib/prisma-mock"
 import { mockPrisma } from "../lib/prisma-mock"
 
@@ -70,6 +70,15 @@ function mockFetchFailure(status: number) {
 // ── Tests ────────────────────────────────────────────────────
 
 describe("ical-sync actions", () => {
+  // Fixtures use fixed 2026 dates and the parser skips past bookings — pin
+  // "today" before all of them so the tests don't expire with the calendar
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-01-01T12:00:00Z"))
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
   beforeEach(() => {
     vi.clearAllMocks()
     // Re-apply defaults that prisma-mock's beforeEach sets (cleared above)

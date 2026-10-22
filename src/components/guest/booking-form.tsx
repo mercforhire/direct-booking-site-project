@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import type { DateRange } from "react-day-picker"
-import { differenceInDays } from "date-fns"
+import { differenceInCalendarDays } from "date-fns"
 import { bookingSchema, type BookingFormValues } from "@/lib/validations/booking"
 import { calculatePriceEstimate } from "@/lib/price-estimate"
 import { submitBooking } from "@/actions/booking"
@@ -159,7 +159,7 @@ export function BookingForm({
 
     const checkinDate = new Date(checkin + "T00:00:00")
     const checkoutDate = new Date(checkout + "T00:00:00")
-    const nights = differenceInDays(checkoutDate, checkinDate)
+    const nights = differenceInCalendarDays(checkoutDate, checkinDate)
 
     if (nights <= 0) return true
     if (nights < room.minStayNights || nights > room.maxStayNights) return true

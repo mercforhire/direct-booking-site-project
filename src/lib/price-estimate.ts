@@ -1,4 +1,4 @@
-import { differenceInDays } from "date-fns"
+import { differenceInCalendarDays } from "date-fns"
 
 export type PriceInput = {
   checkin: string | undefined
@@ -44,10 +44,10 @@ export function calculatePriceEstimate(input: PriceInput): PriceEstimate | null 
 
   if (!checkin || !checkout) return null
 
-  // Parse as noon UTC — both dates shift by the same 12h so differenceInDays is unaffected
+  // Parse as noon UTC — both dates shift by the same 12h so differenceInCalendarDays is unaffected
   const checkinDate = new Date(checkin + "T12:00:00.000Z")
   const checkoutDate = new Date(checkout + "T12:00:00.000Z")
-  const nights = differenceInDays(checkoutDate, checkinDate)
+  const nights = differenceInCalendarDays(checkoutDate, checkinDate)
 
   if (nights <= 0) return null
 

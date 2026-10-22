@@ -1,4 +1,4 @@
-import { differenceInDays } from "date-fns"
+import { differenceInCalendarDays } from "date-fns"
 
 interface RoomPricingTableProps {
   baseNightlyRate: number
@@ -24,7 +24,7 @@ export function RoomPricingTable({
   let nights: number | null = null
 
   if (checkin && checkout) {
-    const n = differenceInDays(
+    const n = differenceInCalendarDays(
       new Date(checkout + "T00:00:00"),
       new Date(checkin + "T00:00:00")
     )

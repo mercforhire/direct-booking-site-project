@@ -37,6 +37,12 @@ vi.mock("@supabase/supabase-js", () => ({
   })),
 }))
 
+// Landlord notifications go to every admin's email, looked up via Supabase
+const { mockGetAllAdminEmails } = vi.hoisted(() => ({
+  mockGetAllAdminEmails: vi.fn(),
+}))
+vi.mock("@/lib/landlord", () => ({ getAllAdminEmails: mockGetAllAdminEmails }))
+
 import { submitBooking } from "@/actions/booking"
 import { redirect } from "next/navigation"
 
@@ -81,6 +87,7 @@ describe("submitBooking", () => {
     // Default: no account creation (createAccount=false path doesn't call these)
     mockAdminCreateUser.mockResolvedValue({ data: { user: null }, error: null })
     mockAdminListUsers.mockResolvedValue({ data: { users: [] }, error: null })
+    mockGetAllAdminEmails.mockResolvedValue([])
   })
 
   it("returns { error } when input is invalid", async () => {
@@ -213,19 +220,18 @@ describe("submitBooking", () => {
     )
   })
 
-  it("sends landlord notification email to LANDLORD_EMAIL with subject containing 'New booking request'", async () => {
-    process.env.LANDLORD_EMAIL = "landlord@example.com"
+  it("sends landlord notification email to all admin emails with subject containing 'New booking request'", async () => {
+    mockGetAllAdminEmails.mockResolvedValue(["landlord@example.com"])
     try {
       await submitBooking(validBookingData)
     } catch {
       // redirect throws
     }
-    delete process.env.LANDLORD_EMAIL
     // Two emails sent: guest confirmation + landlord notification
     expect(mockEmailSend).toHaveBeenCalledTimes(2)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const calls = mockEmailSend.mock.calls.map((c: any[]) => c[0] as { to: string; subject: string })
-    const landlordCall = calls.find((c: { to: string }) => c.to === "landlord@example.com")
+    const calls = mockEmailSend.mock.calls.map((c: any[]) => c[0] as { to: string | string[]; subject: string })
+    const landlordCall = calls.find((c) => Array.isArray(c.to) && c.to.includes("landlord@example.com"))
     expect(landlordCall).toBeDefined()
     expect(landlordCall?.subject).toMatch(/New booking request/i)
   })
